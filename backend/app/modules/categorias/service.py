@@ -152,13 +152,17 @@ class CategoriaService:
                     detail="Categoría no encontrada"
                 )
 
-            # 2. Stub de integridad de productos (RN-CA03)
-            # TODO: Cablear validación real con ProductoRepository en el change us-003-productos
-            has_active_products = False
-            if has_active_products:
+            # 2. Validar integridad de productos (RN-CA03)
+            from app.modules.productos.model import Producto, ProductoCategoria
+            statement_prod = select(Producto).join(ProductoCategoria).where(
+                ProductoCategoria.categoria_id == categoria_id,
+                Producto.deleted_at == None
+            )
+            product_using_it = uow.session.exec(statement_prod).first()
+            if product_using_it:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="No se puede eliminar una categoría que tiene productos activos asociados"
+                    detail=f"No se puede eliminar la categoría porque está asociada al producto activo '{product_using_it.nombre}'"
                 )
 
             # 3. Desasociar categorías hijas directas (parent_id = NULL)

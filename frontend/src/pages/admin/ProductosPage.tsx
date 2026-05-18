@@ -11,9 +11,9 @@ import {
   Cookie
 } from 'lucide-react';
 import { useAuthStore } from '../../shared/stores/authStore';
-import { CategoriasManager } from '../../features/categorias/CategoriasManager';
+import { ProductosManager } from '../../features/productos/ProductosManager';
 
-export const CategoriasPage = () => {
+export const ProductosPage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -26,8 +26,8 @@ export const CategoriasPage = () => {
   };
 
   const navItems = [
-    { name: 'Categorías', path: '/admin/categorias', icon: <Layers size={20} />, active: true },
-    { name: 'Productos', path: '/admin/productos', icon: <ShoppingBag size={20} />, active: false },
+    { name: 'Categorías', path: '/admin/categorias', icon: <Layers size={20} />, active: false },
+    { name: 'Productos', path: '/admin/productos', icon: <ShoppingBag size={20} />, active: true },
     { name: 'Ingredientes', path: '/admin/ingredientes', icon: <Cookie size={20} />, active: false },
     { name: 'Pedidos', path: '#', icon: <Receipt size={20} />, active: false, disabled: true },
   ];
@@ -92,8 +92,8 @@ export const CategoriasPage = () => {
           </button>
 
           <div className="hidden sm:block">
-            <h1 className="text-xl font-extrabold text-gray-800">Administración de Categorías</h1>
-            <p className="text-xs text-gray-500 mt-0.5">Estructura y jerarquía del catálogo de comida</p>
+            <h1 className="text-xl font-extrabold text-gray-800">Administración de Productos</h1>
+            <p className="text-xs text-gray-500 mt-0.5">Gestión de catálogo, precios y vinculación de ingredientes</p>
           </div>
 
           {/* Perfil del Usuario */}
@@ -173,11 +173,11 @@ export const CategoriasPage = () => {
         <main className="flex-1 p-6 overflow-y-auto max-w-7xl w-full mx-auto space-y-6">
           {/* Título móvil */}
           <div className="sm:hidden mb-2">
-            <h1 className="text-2xl font-black text-gray-800">Categorías</h1>
-            <p className="text-xs text-gray-500">Jerarquía del catálogo de comida</p>
+            <h1 className="text-2xl font-black text-gray-800">Productos</h1>
+            <p className="text-xs text-gray-500">Gestión de catálogo y precios</p>
           </div>
 
-          <CategoriasManager />
+          <ProductosManager />
         </main>
       </div>
     </div>

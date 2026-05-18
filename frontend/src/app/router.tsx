@@ -2,6 +2,9 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { ProtectedRoute } from './providers/ProtectedRoute';
 import { CategoriasPage } from '../pages/admin/CategoriasPage';
+import { ProductosPage } from '../pages/admin/ProductosPage';
+import { IngredientesPage } from '../pages/admin/IngredientesPage';
+import { CatalogPage } from '../pages/CatalogPage';
 
 export const router = createBrowserRouter([
   {
@@ -9,13 +12,12 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    element: <ProtectedRoute />, // Requiere autenticación básica
-    children: [
-      {
-        path: '/',
-        element: <Navigate to="/admin/categorias" replace />, // Redirige por defecto a categorías
-      },
-    ],
+    path: '/',
+    element: <CatalogPage />,
+  },
+  {
+    path: '/catalog',
+    element: <CatalogPage />,
   },
   {
     element: <ProtectedRoute allowedRoles={['ADMIN', 'STOCK']} />,
@@ -23,6 +25,14 @@ export const router = createBrowserRouter([
       {
         path: '/admin/categorias',
         element: <CategoriasPage />,
+      },
+      {
+        path: '/admin/productos',
+        element: <ProductosPage />,
+      },
+      {
+        path: '/admin/ingredientes',
+        element: <IngredientesPage />,
       },
     ],
   },

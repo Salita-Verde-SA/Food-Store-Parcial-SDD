@@ -6,6 +6,8 @@ from app.modules.auth.model import Usuario, Rol, UsuarioRol
 from app.modules.pedidos.model import EstadoPedido
 from app.modules.pagos.model import FormaPago
 from app.modules.categorias.repository import CategoriaRepository
+from app.modules.productos.repository import ProductoRepository
+from app.modules.ingredientes.repository import IngredienteRepository
 
 
 class UnitOfWork:
@@ -20,6 +22,8 @@ class UnitOfWork:
         self.estados = BaseRepository(EstadoPedido, self.session)
         self.pagos = BaseRepository(FormaPago, self.session)
         self.categorias = CategoriaRepository(self.session)
+        self.productos = ProductoRepository(self.session)
+        self.ingredientes = IngredienteRepository(self.session)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
