@@ -51,23 +51,59 @@ Esto genera la carpeta `openspec/` donde van a vivir todos los artefactos del pr
 
 ### 3. Backend
 
+#### ⚙️ Configuración Inicial
 ```bash
 cd backend
 cp .env.example .env
-# Completar las variables de entorno en .env
+```
+> [!IMPORTANT]
+> **Simulador de Mercado Pago offline local (Recomendado para Dev):**  
+> Para poder usar el checkout de forma local sin requerir credenciales reales ni internet (evitando el error `403 Forbidden`), configurá en tu `.env`:  
+> `MP_ACCESS_TOKEN="TEST-MP-TOKEN"`
 
-python -m venv .venv
-source .venv/bin/activate   # Linux/Mac
-.venv\Scripts\activate      # Windows
+#### 📦 Creación de Entorno Virtual e Instalación
+```bash
+# 1. Crear el entorno virtual en la carpeta 'venv' (sin el punto delante)
+python -m venv venv
 
-pip install -r requirements.txt
-alembic upgrade head
-python -m app.db.seed
-uvicorn app.main:app --reload
+# 2. Instalar las dependencias utilizando el pip del entorno virtual de forma segura
+# En Windows (PowerShell/CMD):
+.\venv\Scripts\pip install -r requirements.txt
+
+# En Linux/macOS (Bash):
+./venv/bin/pip install -r requirements.txt
 ```
 
-API disponible en `http://localhost:8000`  
-Documentación Swagger en `http://localhost:8000/docs`
+#### 🗄️ Inicialización de Base de Datos y Semillero (Seed)
+```bash
+# Correr las migraciones iniciales de base de datos
+# En Windows:
+.\venv\Scripts\alembic upgrade head
+# En Linux/macOS:
+./venv/bin/alembic upgrade head
+
+# Poblar la base de datos con usuarios y catálogo inicial de prueba (Clientes, Admin, Productos, etc.)
+# En Windows:
+.\venv\Scripts\python -m app.db.seed
+# En Linux/macOS:
+./venv/bin/python -m app.db.seed
+```
+
+#### 🚀 Ejecutar el Servidor de Desarrollo (Sin errores de dependencias globales)
+Para garantizar al 100% que FastAPI corra con las dependencias del entorno virtual, ejecutalo llamando directamente al módulo de uvicorn desde el interprete de la `venv` especificando el puerto `8000`:
+
+*   **En Windows (PowerShell / CMD):**
+    ```powershell
+    .\venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
+    ```
+
+*   **En Linux / macOS (Terminal):**
+    ```bash
+    ./venv/bin/python -m uvicorn app.main:app --reload --port 8000
+    ```
+
+API disponible en `http://127.0.0.1:8000`  
+Documentación interactiva Swagger en `http://127.0.0.1:8000/docs`
 
 ### 4. Frontend
 

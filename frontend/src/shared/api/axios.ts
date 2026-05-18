@@ -10,6 +10,35 @@ export const api = axios.create({
   },
 });
 
+export const extractErrorMessage = (err: any): string => {
+  if (!err) return 'Ocurrió un error inesperado';
+  if (typeof err === 'string') return err;
+  
+  if (err.detail) {
+    if (typeof err.detail === 'string') {
+      return err.detail;
+    }
+    if (Array.isArray(err.detail)) {
+      // Mapear errores de validación de Pydantic [ { loc: ["body", "ciudad"], msg: "..." } ]
+      return err.detail
+        .map((e: any) => {
+          const field = e.loc ? e.loc[e.loc.length - 1] : '';
+          return `${field ? `Campo "${field}": ` : ''}${e.msg}`;
+        })
+        .join(', ');
+    }
+    if (typeof err.detail === 'object') {
+      return JSON.stringify(err.detail);
+    }
+  }
+
+  if (err.message && typeof err.message === 'string') {
+    return err.message;
+  }
+
+  return 'Error al procesar la solicitud';
+};
+
 // Interceptor para adjuntar token
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;

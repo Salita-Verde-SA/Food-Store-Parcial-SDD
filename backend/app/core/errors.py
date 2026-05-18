@@ -6,6 +6,15 @@ from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 def setup_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
+        headers = exc.headers or {}
+        # Inyectar cabeceras CORS dinámicas para que el navegador no bloquee respuestas de error
+        origin = request.headers.get("origin")
+        if origin:
+            headers["Access-Control-Allow-Origin"] = origin
+            headers["Access-Control-Allow-Credentials"] = "true"
+            headers["Access-Control-Allow-Methods"] = "*"
+            headers["Access-Control-Allow-Headers"] = "*"
+
         return JSONResponse(
             status_code=exc.status_code,
             content={
@@ -15,11 +24,19 @@ def setup_error_handlers(app: FastAPI) -> None:
                 "detail": str(exc.detail),
                 "instance": request.url.path,
             },
-            headers=exc.headers,
+            headers=headers,
         )
 
     @app.exception_handler(Exception)
     async def general_exception_handler(request: Request, exc: Exception):
+        headers = {}
+        origin = request.headers.get("origin")
+        if origin:
+            headers["Access-Control-Allow-Origin"] = origin
+            headers["Access-Control-Allow-Credentials"] = "true"
+            headers["Access-Control-Allow-Methods"] = "*"
+            headers["Access-Control-Allow-Headers"] = "*"
+
         return JSONResponse(
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
             content={
@@ -29,4 +46,5 @@ def setup_error_handlers(app: FastAPI) -> None:
                 "detail": str(exc),
                 "instance": request.url.path,
             },
+            headers=headers,
         )

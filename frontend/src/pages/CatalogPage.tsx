@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   ShoppingBag, 
   Search, 
@@ -14,16 +15,25 @@ import {
   Utensils,
   Plus,
   Minus,
-  AlertTriangle
+  AlertTriangle,
+  MapPin,
+  Navigation,
+  Briefcase
 } from 'lucide-react';
 
 import { productosApi } from '../shared/api/productos';
 import { categoriasApi } from '../shared/api/categorias';
 import { ingredientesApi } from '../shared/api/ingredientes';
 import { useCartStore } from '../shared/stores/cartStore';
+import { useAuthStore } from '../shared/stores/authStore';
 import type { Producto, CategoriaTree, Ingrediente } from '../shared/types';
 
+
 export const CatalogPage = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuthStore();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
   const { 
     items: cartItems, 
     addItem, 
@@ -127,16 +137,16 @@ export const CatalogPage = () => {
       {/* HEADER DE CLIENTE */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+          <Link to="/" className="w-10 h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center text-white font-extrabold text-xl shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-all">
             FS
-          </div>
+          </Link>
           <div>
             <span className="font-extrabold text-gray-800 text-lg">Food Store</span>
             <span className="block text-[10px] text-orange-600 tracking-widest uppercase font-black">Nuestro Menú</span>
           </div>
         </div>
 
-        {/* Floating Cart Button (Badge reactivo) */}
+        {/* Floating Cart Button & User Dropdown */}
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setIsCartOpen(!isCartOpen)}
@@ -150,6 +160,72 @@ export const CatalogPage = () => {
               </span>
             )}
           </button>
+
+          {isAuthenticated ? (
+            <div className="relative">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="w-10 h-10 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center text-orange-600 font-bold shadow-sm cursor-pointer hover:bg-orange-200 active:scale-95 transition-all"
+              >
+                {user ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}` : 'US'}
+              </button>
+
+              {isUserMenuOpen && (
+                <>
+                  <div 
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="fixed inset-0 z-45"
+                  ></div>
+                  <div className="absolute right-0 mt-2.5 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-50 animate-scaleUp text-left">
+                    <div className="px-3 py-2 border-b border-gray-50 mb-1">
+                      <span className="block font-bold text-gray-800 text-xs">{user?.nombre} {user?.apellido}</span>
+                      <span className="block text-[9px] text-gray-400 font-medium truncate">{user?.email}</span>
+                    </div>
+                    <Link
+                      to="/direcciones"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-gray-650 hover:bg-gray-50 hover:text-gray-800 font-bold text-xs transition-all"
+                    >
+                      <MapPin size={14} />
+                      <span>Mis Direcciones</span>
+                    </Link>
+                    <Link
+                      to="/pedidos"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-gray-650 hover:bg-gray-50 hover:text-gray-800 font-bold text-xs transition-all"
+                    >
+                      <Navigation size={14} />
+                      <span>Mis Pedidos</span>
+                    </Link>
+                    {user?.roles.some((r: string) => ['ADMIN', 'PEDIDOS', 'STOCK'].includes(r)) && (
+                      <Link
+                        to="/admin/categorias"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-gray-655 hover:bg-gray-50 hover:text-gray-800 font-bold text-xs transition-all"
+                      >
+                        <Briefcase size={14} />
+                        <span>Panel Admin</span>
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => { setIsUserMenuOpen(false); if (window.confirm('¿Deseas cerrar sesión?')) { logout(); navigate('/login'); } }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-red-650 hover:bg-red-50 font-bold text-xs transition-all cursor-pointer border-t border-gray-50 mt-1"
+                    >
+                      <X size={14} />
+                      <span>Cerrar Sesión</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              className="py-2 px-4 bg-orange-100 hover:bg-orange-200 text-orange-700 font-extrabold rounded-xl text-xs transition-all cursor-pointer"
+            >
+              Iniciar Sesión
+            </button>
+          )}
         </div>
       </header>
 
@@ -598,7 +674,10 @@ export const CatalogPage = () => {
                     <span>Vaciar</span>
                   </button>
                   <button
-                    onClick={() => alert('🛒 ¡Pedido Simulado!\nEn la próxima US integraremos la creación de pedidos en el backend y los flujos transaccionales.')}
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      navigate('/checkout');
+                    }}
                     className="flex items-center justify-center bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition-all cursor-pointer"
                   >
                     Confirmar

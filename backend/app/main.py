@@ -11,6 +11,9 @@ from app.modules.auth.router import router as auth_router
 from app.modules.categorias.router import router as categorias_router
 from app.modules.productos.router import router as productos_router
 from app.modules.ingredientes.router import router as ingredientes_router
+from app.modules.usuarios.router import router as usuarios_router
+from app.modules.pedidos.router import router as pedidos_router
+from app.modules.pagos.router import router as pagos_router
 
 def create_application() -> FastAPI:
     application = FastAPI(
@@ -52,6 +55,9 @@ def create_application() -> FastAPI:
     application.include_router(categorias_router, prefix=settings.API_V1_STR)
     application.include_router(productos_router, prefix=settings.API_V1_STR)
     application.include_router(ingredientes_router, prefix=settings.API_V1_STR)
+    application.include_router(usuarios_router, prefix=settings.API_V1_STR)
+    application.include_router(pedidos_router, prefix=settings.API_V1_STR)
+    application.include_router(pagos_router, prefix=settings.API_V1_STR)
 
     # Base Root
     @application.get("/")

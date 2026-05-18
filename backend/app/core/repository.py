@@ -11,7 +11,9 @@ class BaseRepository(Generic[T]):
 
     def get_by_id(self, id: Any) -> Optional[T]:
         """Obtiene un registro por ID. Filtra eliminados por defecto."""
-        query = select(self.model).where(self.model.id == id)
+        from sqlalchemy import inspect
+        pk_column = inspect(self.model).primary_key[0]
+        query = select(self.model).where(pk_column == id)
         # Si el modelo tiene deleted_at, filtrar
         if hasattr(self.model, "deleted_at"):
             query = query.where(self.model.deleted_at == None)
