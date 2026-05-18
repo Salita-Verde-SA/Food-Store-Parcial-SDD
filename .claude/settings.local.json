@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "Bash(uipro --version)",
+      "Bash(uipro --help)",
+      "Bash(uipro init *)",
+      "Bash(python scripts/search.py \"ecommerce food restaurant warm appetizing modern\" --design-system -p \"FoodStore\" -f markdown)"
+    ]
+  }
+}

@@ -1,37 +1,56 @@
 @import "tailwindcss";
-
-/* Fuente principal: Inter (alternativa libre al Speedee de McDonald's) */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500&display=swap');
 
 @theme {
-  /* ===== TIPOGRAFÍA ===== */
+  /* ─────────────────────────────────────────────────────────
+   * Tipografía
+   * Inter            ── body / UI (legible, geométrica)
+   * Playfair Display ── titulares editoriales (apetitoso, restaurant)
+   * ───────────────────────────────────────────────────────── */
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Playfair Display", "Georgia", "Cambria", "Times New Roman", serif;
 
-  /* ===== PALETA DE MARCA — Rojo McDonald's ===== */
-  --color-brand-red-50:  #FFF1F0;
-  --color-brand-red-100: #FFD9D5;
-  --color-brand-red-200: #FFB3AB;
-  --color-brand-red-300: #FF8A7E;
+  /* ─────────────────────────────────────────────────────────
+   * Brand · Rojo apetitoso (tomate / chile maduro)
+   * ───────────────────────────────────────────────────────── */
+  --color-brand-red-50:  #FFF5F3;
+  --color-brand-red-100: #FFE0DA;
+  --color-brand-red-200: #FFB8AB;
+  --color-brand-red-300: #FF8A78;
   --color-brand-red-400: #F25444;
-  --color-brand-red-500: #DA291C;  /* Rojo oficial McDonald's */
+  --color-brand-red-500: #DA291C;
   --color-brand-red-600: #B71C12;
   --color-brand-red-700: #8F140A;
   --color-brand-red-800: #6E0F08;
   --color-brand-red-900: #4A0905;
 
-  /* ===== PALETA DE MARCA — Amarillo Arcos Dorados ===== */
+  /* ─────────────────────────────────────────────────────────
+   * Brand · Amarillo dorado (mostaza / queso fundido)
+   * ───────────────────────────────────────────────────────── */
   --color-brand-yellow-50:  #FFFBEB;
   --color-brand-yellow-100: #FFF3C4;
   --color-brand-yellow-200: #FFE58A;
   --color-brand-yellow-300: #FFD45E;
-  --color-brand-yellow-400: #FFC72C;  /* Amarillo oficial McDonald's */
+  --color-brand-yellow-400: #FFC72C;
   --color-brand-yellow-500: #FFB400;
   --color-brand-yellow-600: #E09E00;
   --color-brand-yellow-700: #B57E00;
   --color-brand-yellow-800: #8A6000;
   --color-brand-yellow-900: #5A3E00;
 
-  /* ===== NEUTRALES — Tinta (texto) ===== */
+  /* ─────────────────────────────────────────────────────────
+   * Accent · Vino borgoña (titulares editoriales)
+   * ───────────────────────────────────────────────────────── */
+  --color-wine-50:  #FBF2F0;
+  --color-wine-100: #F1D9D4;
+  --color-wine-500: #8B1E14;
+  --color-wine-600: #6E170F;
+  --color-wine-700: #54100A;
+  --color-wine-800: #3A0905;
+
+  /* ─────────────────────────────────────────────────────────
+   * Neutros · Tinta (texto / iconos)
+   * ───────────────────────────────────────────────────────── */
   --color-ink-50:  #F7F7F7;
   --color-ink-100: #E8E8E8;
   --color-ink-200: #CFCFCF;
@@ -39,20 +58,34 @@
   --color-ink-400: #7A7A7A;
   --color-ink-500: #595959;
   --color-ink-600: #404040;
-  --color-ink-700: #292929;  /* Texto fuerte / botones secundarios sobre amarillo */
+  --color-ink-700: #292929;
   --color-ink-800: #1F1F1F;
-  --color-ink-900: #141414;  /* Headings principales */
+  --color-ink-900: #141414;
 
-  /* ===== NEUTRALES — Papel (superficies) ===== */
-  --color-paper-0:   #FFFFFF;  /* Tarjetas, modales */
-  --color-paper-50:  #FAFAFA;  /* Fondo de página */
-  --color-paper-100: #F4F4F5;  /* Fondos sutiles, hover de filas */
-  --color-paper-200: #E7E7E9;  /* Bordes suaves */
-  --color-paper-300: #D4D4D8;  /* Bordes activos */
+  /* ─────────────────────────────────────────────────────────
+   * Neutros · Papel (superficies frías / cards admin)
+   * ───────────────────────────────────────────────────────── */
+  --color-paper-0:   #FFFFFF;
+  --color-paper-50:  #FAFAFA;
+  --color-paper-100: #F4F4F5;
+  --color-paper-200: #E7E7E9;
+  --color-paper-300: #D4D4D8;
 
-  /* ===== SEMÁNTICOS — calibrados a la misma temperatura que la marca ===== */
+  /* ─────────────────────────────────────────────────────────
+   * Crema · Superficies cálidas (catálogo / hero / empty states)
+   * Tono ligeramente avainillado → sensación de "comedor"
+   * ───────────────────────────────────────────────────────── */
+  --color-cream-50:  #FFFBF5;
+  --color-cream-100: #FDF5EB;
+  --color-cream-200: #F8E9D3;
+  --color-cream-300: #EFD6B0;
+
+  /* ─────────────────────────────────────────────────────────
+   * Semánticos
+   * ───────────────────────────────────────────────────────── */
   --color-success-50:  #E8F5E9;
   --color-success-100: #C8E6C9;
+  --color-success-400: #4CAF50;
   --color-success-500: #2E7D32;
   --color-success-600: #256628;
   --color-success-700: #1B501F;
@@ -65,40 +98,56 @@
 
   --color-danger-50:  #FFEBEE;
   --color-danger-100: #FFCDD2;
-  --color-danger-500: #C62828;   /* Familia roja para coherencia con marca */
+  --color-danger-200: #FBA5AB;
+  --color-danger-500: #C62828;
   --color-danger-600: #A52020;
   --color-danger-700: #7F1818;
 
   --color-info-50:  #E3F2FD;
   --color-info-100: #BBDEFB;
+  --color-info-200: #90CAF9;
   --color-info-500: #1565C0;
   --color-info-600: #104F9C;
   --color-info-700: #0B3B78;
 
-  /* ===== RADIOS — Escala atómica ===== */
-  --radius-xs: 4px;    /* Badges chicos */
-  --radius-sm: 6px;    /* Inputs, chips */
-  --radius-md: 10px;   /* Botones */
-  --radius-lg: 14px;   /* Cards */
-  --radius-xl: 20px;   /* Modales, hero containers */
-  --radius-2xl: 28px;  /* Bloques destacados */
+  /* ─────────────────────────────────────────────────────────
+   * Radios (escala consistente)
+   * ───────────────────────────────────────────────────────── */
+  --radius-xs:  4px;
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+  --radius-2xl: 28px;
+  --radius-3xl: 36px;
 
-  /* ===== SOMBRAS — sutiles ===== */
+  /* ─────────────────────────────────────────────────────────
+   * Sombras refinadas (con calidez)
+   * ───────────────────────────────────────────────────────── */
   --shadow-xs: 0 1px 2px 0 rgba(20, 20, 20, 0.04);
-  --shadow-sm: 0 1px 3px 0 rgba(20, 20, 20, 0.06), 0 1px 2px -1px rgba(20, 20, 20, 0.04);
-  --shadow-md: 0 4px 12px -2px rgba(20, 20, 20, 0.08), 0 2px 4px -2px rgba(20, 20, 20, 0.04);
-  --shadow-lg: 0 12px 24px -6px rgba(20, 20, 20, 0.12), 0 4px 8px -4px rgba(20, 20, 20, 0.06);
-  --shadow-brand: 0 8px 20px -6px rgba(218, 41, 28, 0.30);  /* Para CTAs primarios destacados */
-  --shadow-yellow: 0 8px 20px -6px rgba(255, 199, 44, 0.45);
+  --shadow-sm: 0 1px 3px 0 rgba(20, 20, 20, 0.05), 0 1px 2px -1px rgba(20, 20, 20, 0.03);
+  --shadow-md: 0 4px 14px -2px rgba(20, 20, 20, 0.08), 0 2px 4px -2px rgba(20, 20, 20, 0.04);
+  --shadow-lg: 0 14px 30px -6px rgba(20, 20, 20, 0.12), 0 6px 12px -4px rgba(20, 20, 20, 0.06);
+  --shadow-xl: 0 22px 44px -10px rgba(20, 20, 20, 0.16), 0 10px 20px -6px rgba(20, 20, 20, 0.08);
+
+  --shadow-card:       0 1px 3px 0 rgba(20, 20, 20, 0.04), 0 1px 2px -1px rgba(20, 20, 20, 0.03);
+  --shadow-card-hover: 0 10px 28px -8px rgba(20, 20, 20, 0.12), 0 4px 12px -4px rgba(20, 20, 20, 0.06);
+
+  --shadow-brand:  0 10px 24px -8px rgba(218, 41, 28, 0.34);
+  --shadow-yellow: 0 10px 24px -8px rgba(255, 199, 44, 0.45);
+  --shadow-warm:   0 8px 24px -6px rgba(218, 41, 28, 0.10), 0 4px 10px -4px rgba(255, 199, 44, 0.08);
 }
 
-/* ===== RESET / BASE ===== */
+/* ─────────────────────────────────────────────────────────
+ * Base / reset
+ * ───────────────────────────────────────────────────────── */
 :root {
   font-family: var(--font-sans);
   line-height: 1.5;
   color-scheme: light;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 html, body {
@@ -110,15 +159,58 @@ html, body {
 body {
   min-height: 100vh;
   font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01", "ss03";
 }
 
-/* ===== UTILS GLOBALES ===== */
 *::selection {
   background: var(--color-brand-yellow-400);
   color: var(--color-ink-900);
 }
 
-/* Animación de pulso suave para skeletons y loading */
+/* Scrollbar discreto */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-paper-300);
+  border-radius: 999px;
+  border: 2px solid var(--color-paper-50);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-300); }
+
+/* Focus accesible global */
+:focus-visible {
+  outline: 2px solid var(--color-brand-red-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────
+ * Helpers
+ * ───────────────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.012em;
+}
+
+/* Mesh decorativo cálido (radial gradients) para hero / banners */
+.bg-warm-mesh {
+  background-image:
+    radial-gradient(at 18% 12%, rgba(255, 199, 44, 0.18) 0px, transparent 55%),
+    radial-gradient(at 86% 28%, rgba(218, 41, 28, 0.12) 0px, transparent 60%),
+    radial-gradient(at 50% 95%, rgba(255, 199, 44, 0.10) 0px, transparent 55%);
+}
+
+/* Hatched paper-cream texture (sutil overlay) */
+.bg-cream-grain {
+  background-color: var(--color-cream-50);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(218, 41, 28, 0.05) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* ─────────────────────────────────────────────────────────
+ * Animaciones
+ * ───────────────────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -129,4 +221,57 @@ body {
   from { transform: translateX(100%); }
   to   { transform: translateX(0); }
 }
-.animate-slideInRight { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-slideInRight { animation: slideInRight 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-scaleUp { animation: scaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slideDown { animation: slideDown 0.25s ease-out; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-5px); }
+  40%      { transform: translateX(5px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(3px); }
+}
+.animate-shake { animation: shake 0.42s ease-in-out; }
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.animate-floatY { animation: floatY 4s ease-in-out infinite; }
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(218, 41, 28, 0.40); }
+  50%      { box-shadow: 0 0 0 10px rgba(218, 41, 28, 0); }
+}
+.animate-pulseGlow { animation: pulseGlow 2s ease-out infinite; }
+
+@keyframes shimmer {
+  0%   { background-position: -1200px 0; }
+  100% { background-position: 1200px 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 199, 44, 0.18), transparent);
+  background-size: 1200px 100%;
+  animation: shimmer 2.4s infinite linear;
+}
+
+/* Respeto a prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

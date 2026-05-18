@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   MapPin,
   Plus,
@@ -9,26 +9,22 @@ import {
   ChevronLeft,
   Home,
   Briefcase,
-  Navigation,
   X,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 
 import { direccionesApi } from '../shared/api/direcciones';
-import { useAuthStore } from '../shared/stores/authStore';
 import { extractErrorMessage } from '../shared/api/axios';
 import type { DireccionEntrega, DireccionEntregaCreate } from '../shared/types';
 import { useFeedback } from '../shared/ui/FeedbackProvider';
-import { Logo } from '../shared/ui/Logo';
+import { ClientHeader } from '../shared/ui/ClientHeader';
+import { ClientFooter } from '../shared/ui/ClientFooter';
 
 export const AddressesPage = () => {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, logout } = useAuthStore();
   const { showAlert, showConfirm } = useFeedback();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<DireccionEntrega | null>(null);
 
   const [alias, setAlias] = useState('Casa');
@@ -51,9 +47,7 @@ export const AddressesPage = () => {
       queryClient.invalidateQueries({ queryKey: ['direcciones'] });
       closeModal();
     },
-    onError: (err: any) => {
-      setFormError(extractErrorMessage(err));
-    }
+    onError: (err: any) => setFormError(extractErrorMessage(err)),
   });
 
   const updateMutation = useMutation({
@@ -63,29 +57,29 @@ export const AddressesPage = () => {
       queryClient.invalidateQueries({ queryKey: ['direcciones'] });
       closeModal();
     },
-    onError: (err: any) => {
-      setFormError(extractErrorMessage(err));
-    }
+    onError: (err: any) => setFormError(extractErrorMessage(err)),
   });
 
   const deleteMutation = useMutation({
     mutationFn: direccionesApi.eliminarDireccion,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['direcciones'] });
-    },
-    onError: (err: any) => {
-      showAlert({ title: 'No se pudo eliminar', message: err.detail || 'Error al eliminar la dirección', variant: 'danger' });
-    }
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['direcciones'] }),
+    onError: (err: any) =>
+      showAlert({
+        title: 'No se pudo eliminar',
+        message: err.detail || 'Error al eliminar la dirección',
+        variant: 'danger',
+      }),
   });
 
   const setPrincipalMutation = useMutation({
     mutationFn: direccionesApi.establecerPrincipal,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['direcciones'] });
-    },
-    onError: (err: any) => {
-      showAlert({ title: 'Error', message: err.detail || 'Error al establecer dirección principal', variant: 'danger' });
-    }
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['direcciones'] }),
+    onError: (err: any) =>
+      showAlert({
+        title: 'Error',
+        message: err.detail || 'Error al establecer dirección principal',
+        variant: 'danger',
+      }),
   });
 
   const openCreateModal = () => {
@@ -143,19 +137,6 @@ export const AddressesPage = () => {
     }
   };
 
-  const handleLogout = async () => {
-    const ok = await showConfirm({
-      title: 'Cerrar sesión',
-      message: '¿Deseas cerrar sesión en Food Store?',
-      variant: 'warning',
-      confirmText: 'Cerrar sesión',
-    });
-    if (ok) {
-      logout();
-      navigate('/login');
-    }
-  };
-
   const handleDelete = async (id: number) => {
     const ok = await showConfirm({
       title: 'Eliminar dirección',
@@ -166,107 +147,44 @@ export const AddressesPage = () => {
     if (ok) deleteMutation.mutate(id);
   };
 
-  const eyebrow = 'text-[11px] font-black uppercase tracking-[0.15em] text-brand-red-500';
-  const cardBase = 'bg-paper-0 border border-paper-200 rounded-lg shadow-sm';
-  const inputBase = 'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-md text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/20 transition-colors duration-150';
-  const labelBase = 'block text-xs font-bold uppercase tracking-wider text-ink-600 mb-1.5';
+  const eyebrow = 'text-[11px] font-black uppercase tracking-[0.18em] text-brand-red-600';
+  const cardBase = 'bg-paper-0 border border-paper-200 rounded-2xl shadow-card';
+  const inputBase =
+    'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/15 transition-colors duration-150';
+  const labelBase = 'block text-xs font-bold uppercase tracking-[0.16em] text-ink-600 mb-1.5';
+
+  const getAliasIcon = (a: string) => {
+    const lower = a.toLowerCase();
+    if (lower === 'casa') return <Home size={16} />;
+    if (lower === 'trabajo' || lower === 'oficina') return <Briefcase size={16} />;
+    return <MapPin size={16} />;
+  };
 
   return (
-    <div className="min-h-screen bg-paper-50 flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col bg-cream-50 font-sans">
+      <ClientHeader eyebrow="Mis direcciones" showBackToMenu activeMenu="direcciones" />
 
-      {/* HEADER DE CLIENTE */}
-      <header className="sticky top-0 z-40 bg-paper-0 border-b-2 border-brand-yellow-400 px-6 py-4 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="cursor-pointer hover:scale-105 active:scale-95 transition-transform">
-            <Logo size="md" variant="red" />
-          </Link>
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
+        <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <span className="font-black text-ink-900 text-lg leading-tight block">Food Store</span>
-            <span className={`block ${eyebrow}`}>Mis direcciones</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <Link
-            to="/"
-            className="hidden sm:flex items-center gap-1.5 text-sm text-ink-700 hover:text-brand-red-500 font-semibold transition-colors"
-          >
-            <ChevronLeft size={16} />
-            <span>Volver al menú</span>
-          </Link>
-
-          <div className="relative">
-            <button
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="w-10 h-10 rounded-md bg-brand-yellow-100 border border-brand-yellow-300 flex items-center justify-center text-ink-900 font-bold cursor-pointer hover:bg-brand-yellow-200 active:scale-95 transition-all duration-150"
+            <Link
+              to="/"
+              className="sm:hidden inline-flex items-center gap-1 text-[11px] text-ink-500 font-bold uppercase tracking-wider mb-1"
             >
-              {user ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}` : 'US'}
-            </button>
-
-            {isUserMenuOpen && (
-              <>
-                <div onClick={() => setIsUserMenuOpen(false)} className="fixed inset-0 z-45"></div>
-                <div className="absolute right-0 mt-2 w-56 bg-paper-0 rounded-lg shadow-md border border-paper-200 p-2 z-50 animate-fadeIn">
-                  <div className="px-3 py-2 border-b border-paper-200 mb-1">
-                    <span className="block font-bold text-ink-900 text-sm">{user?.nombre} {user?.apellido}</span>
-                    <span className="block text-[11px] text-ink-400 font-medium truncate">{user?.email}</span>
-                  </div>
-                  <Link
-                    to="/direcciones"
-                    onClick={() => setIsUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md bg-brand-red-50 text-brand-red-700 font-semibold text-sm"
-                  >
-                    <MapPin size={14} />
-                    <span>Mis Direcciones</span>
-                  </Link>
-                  <Link
-                    to="/pedidos"
-                    onClick={() => setIsUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-ink-700 hover:bg-paper-100 hover:text-ink-900 font-semibold text-sm transition-colors duration-150"
-                  >
-                    <Navigation size={14} />
-                    <span>Mis Pedidos</span>
-                  </Link>
-                  {user?.roles.some((r: string) => ['ADMIN', 'PEDIDOS', 'STOCK'].includes(r)) && (
-                    <Link
-                      to="/admin/categorias"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-ink-700 hover:bg-paper-100 hover:text-ink-900 font-semibold text-sm transition-colors duration-150"
-                    >
-                      <Briefcase size={14} />
-                      <span>Panel Admin</span>
-                    </Link>
-                  )}
-                  <button
-                    onClick={() => { setIsUserMenuOpen(false); handleLogout(); }}
-                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-danger-600 hover:bg-danger-50 hover:text-danger-700 font-semibold text-sm transition-colors duration-150 cursor-pointer border-t border-paper-200 mt-1"
-                  >
-                    <X size={14} />
-                    <span>Cerrar Sesión</span>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* CUERPO */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
-
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <Link to="/" className="sm:hidden flex items-center gap-1 text-[11px] text-ink-500 font-bold uppercase tracking-wider mb-1">
               <ChevronLeft size={12} />
               <span>Menú</span>
             </Link>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-ink-900 tracking-tight">Mis Direcciones</h2>
-            <p className="text-sm text-ink-500 mt-1">Administrá los lugares donde recibís tu comida</p>
+            <h1 className="font-display text-4xl md:text-5xl font-black text-ink-900 tracking-tight">
+              Mis Direcciones
+            </h1>
+            <p className="text-sm text-ink-500 mt-1.5 font-medium">
+              Administrá los lugares donde recibís tu comida.
+            </p>
           </div>
 
           <button
             onClick={openCreateModal}
-            className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm flex items-center gap-2"
+            className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm flex items-center gap-2"
           >
             <Plus size={16} />
             <span className="hidden sm:inline">Agregar dirección</span>
@@ -275,12 +193,12 @@ export const AddressesPage = () => {
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="w-12 h-12 border-4 border-brand-red-500 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-ink-500 font-medium text-sm">Cargando ubicaciones...</span>
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <div className="w-14 h-14 border-4 border-brand-red-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-ink-500 font-bold text-sm">Cargando ubicaciones…</span>
           </div>
         ) : isError ? (
-          <div className="bg-danger-50 border border-danger-100 rounded-lg p-6 flex items-start gap-4">
+          <div className="bg-danger-50 border border-danger-200 rounded-2xl p-6 flex items-start gap-4">
             <AlertCircle className="text-danger-600 shrink-0" size={24} />
             <div>
               <h3 className="font-bold text-danger-700">Error al cargar</h3>
@@ -289,84 +207,90 @@ export const AddressesPage = () => {
           </div>
         ) : direcciones.length === 0 ? (
           <div className={`text-center py-16 ${cardBase} p-8 max-w-md mx-auto space-y-4`}>
-            <div className="w-16 h-16 bg-brand-yellow-100 rounded-lg flex items-center justify-center text-brand-yellow-700 mx-auto">
-              <MapPin size={32} />
+            <div className="w-20 h-20 rounded-2xl bg-cream-100 flex items-center justify-center text-brand-yellow-700 mx-auto">
+              <MapPin size={36} className="stroke-1" />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-bold text-ink-900">Sin direcciones guardadas</h3>
-              <p className="text-sm text-ink-500 leading-relaxed">Registrá tu casa, oficina o cualquier dirección para hacer pedidos más rápido.</p>
+            <div className="space-y-1.5">
+              <h3 className="font-display text-2xl font-extrabold text-ink-900">
+                Sin direcciones guardadas
+              </h3>
+              <p className="text-sm text-ink-500 leading-relaxed">
+                Registrá tu casa, oficina o cualquier dirección para hacer pedidos más rápido.
+              </p>
             </div>
             <button
               onClick={openCreateModal}
-              className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm inline-flex items-center gap-2"
+              className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm inline-flex items-center gap-2"
             >
               <Plus size={14} />
               Crear mi primera dirección
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {direcciones.map(dir => (
               <div
                 key={dir.id}
-                className={`p-5 rounded-lg shadow-sm relative overflow-hidden ${
+                className={`p-5 rounded-2xl shadow-card relative overflow-hidden transition-all duration-200 ${
                   dir.es_principal
                     ? 'bg-paper-0 border-2 border-brand-yellow-400'
-                    : 'bg-paper-0 border border-paper-200 hover:border-paper-300 transition-colors duration-150'
+                    : 'bg-paper-0 border border-paper-200 hover:border-brand-yellow-300 hover:shadow-card-hover'
                 }`}
               >
                 {dir.es_principal && (
-                  <span className="absolute top-3 right-3 inline-flex items-center gap-1 bg-brand-yellow-100 text-brand-yellow-800 border border-brand-yellow-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  <div className="absolute top-0 right-0 bg-brand-yellow-400 text-ink-900 px-3 py-1 rounded-bl-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
                     Predeterminada
-                  </span>
+                  </div>
                 )}
 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2.5">
-                    <span className="p-2 bg-brand-red-50 rounded-md text-brand-red-700 shrink-0">
-                      {dir.alias.toLowerCase() === 'casa' ? <Home size={16} /> :
-                       dir.alias.toLowerCase() === 'trabajo' || dir.alias.toLowerCase() === 'oficina' ? <Briefcase size={16} /> :
-                       <MapPin size={16} />}
+                  <div className="flex items-center gap-3">
+                    <span className="w-11 h-11 bg-cream-100 rounded-xl text-brand-red-700 shrink-0 flex items-center justify-center border border-cream-200">
+                      {getAliasIcon(dir.alias)}
                     </span>
-                    <h4 className="font-black text-ink-900 text-base uppercase tracking-wider">{dir.alias}</h4>
+                    <h4 className="font-display text-xl font-extrabold text-ink-900 uppercase tracking-wide">
+                      {dir.alias}
+                    </h4>
                   </div>
 
                   <div className="text-sm text-ink-700">
-                    <p className="font-bold text-ink-900">{dir.calle} {dir.numero}</p>
+                    <p className="font-bold text-ink-900 text-base">
+                      {dir.calle} {dir.numero}
+                    </p>
                     {dir.piso_depto && (
-                      <p className="text-xs text-ink-500 mt-0.5">{dir.piso_depto}</p>
+                      <p className="text-xs text-ink-500 mt-1 font-medium">{dir.piso_depto}</p>
                     )}
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between border-t border-paper-200 pt-4 mt-4">
                   {dir.es_principal ? (
-                    <span className="flex items-center gap-1 text-[11px] text-success-600 font-bold">
+                    <span className="flex items-center gap-1 text-[11px] text-success-700 font-bold uppercase tracking-wider">
                       <Check size={12} className="stroke-[3]" />
                       <span>Activa para envíos</span>
                     </span>
                   ) : (
                     <button
                       onClick={() => setPrincipalMutation.mutate(dir.id)}
-                      className="text-[11px] text-ink-500 hover:text-brand-red-600 font-bold cursor-pointer transition-colors"
+                      className="text-[11px] text-ink-500 hover:text-brand-red-600 font-bold uppercase tracking-wider cursor-pointer transition-colors"
                     >
                       Establecer predeterminada
                     </button>
                   )}
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => openEditModal(dir)}
-                      className="px-2.5 py-1.5 text-xs font-semibold text-ink-700 hover:bg-paper-100 rounded-md transition-colors cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-bold text-ink-700 hover:bg-paper-100 rounded-lg transition-colors cursor-pointer"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => handleDelete(dir.id)}
-                      className="w-8 h-8 flex items-center justify-center bg-paper-0 border border-danger-100 hover:bg-danger-50 text-danger-600 rounded-md transition-colors cursor-pointer"
-                      title="Eliminar"
+                      className="w-9 h-9 flex items-center justify-center bg-paper-0 border border-danger-100 hover:bg-danger-50 text-danger-600 rounded-lg transition-colors cursor-pointer"
+                      aria-label="Eliminar"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -376,39 +300,44 @@ export const AddressesPage = () => {
         )}
       </main>
 
-      {/* MODAL DE CREACIÓN / EDICIÓN */}
+      <ClientFooter />
+
+      {/* Modal · Crear / Editar */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             onClick={closeModal}
-            className="fixed inset-0 bg-ink-900/50 backdrop-blur-sm animate-fadeIn"
-          ></div>
+            className="fixed inset-0 bg-ink-900/55 backdrop-blur-sm animate-fadeIn"
+          />
 
           <form
             onSubmit={handleSubmit}
-            className="relative bg-paper-0 rounded-xl shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto animate-scaleUp border border-paper-200"
+            className="relative bg-paper-0 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col animate-scaleUp border border-paper-200"
           >
-            <div className="px-6 py-5 border-b border-paper-200 flex items-center justify-between">
+            <div className="h-1.5 bg-gradient-to-r from-brand-red-500 via-brand-yellow-400 to-brand-red-500" />
+
+            <div className="px-6 py-5 border-b border-paper-200 flex items-center justify-between shrink-0">
               <div>
                 <span className={eyebrow}>
                   {editingAddress ? 'Modificación' : 'Nueva ubicación'}
                 </span>
-                <h3 className="text-lg font-bold text-ink-900 leading-tight mt-1">
+                <h3 className="font-display text-xl font-extrabold text-ink-900 leading-tight mt-1">
                   {editingAddress ? 'Editar dirección' : 'Registrar dirección'}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={closeModal}
-                className="w-10 h-10 flex items-center justify-center rounded-md bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors duration-150 cursor-pointer"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors duration-150 cursor-pointer"
+                aria-label="Cerrar"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="px-6 py-5 space-y-4">
+            <div className="px-6 py-5 space-y-4 overflow-y-auto">
               {formError && (
-                <div className="bg-danger-50 border border-danger-100 text-danger-700 px-4 py-3 rounded-md text-sm flex items-center gap-2 font-medium animate-shake">
+                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2 font-medium animate-shake">
                   <AlertCircle size={16} className="shrink-0" />
                   <span>{formError}</span>
                 </div>
@@ -417,15 +346,15 @@ export const AddressesPage = () => {
               <div>
                 <label className={labelBase}>Alias</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {['Casa', 'Trabajo', 'Otro'].map(a => (
+                  {(['Casa', 'Trabajo', 'Otro'] as const).map(a => (
                     <button
                       key={a}
                       type="button"
                       onClick={() => setAlias(a)}
-                      className={`py-2 px-3 rounded-md text-sm font-bold transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`py-2.5 px-3 rounded-xl text-sm font-bold transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 border-2 ${
                         alias === a
-                          ? 'bg-brand-red-50 border-2 border-brand-red-500 text-brand-red-700'
-                          : 'bg-paper-0 border-2 border-paper-200 hover:border-paper-300 text-ink-700'
+                          ? 'bg-brand-red-50 border-brand-red-500 text-brand-red-700'
+                          : 'bg-paper-0 border-paper-200 hover:border-brand-yellow-300 text-ink-700'
                       }`}
                     >
                       {a === 'Casa' ? <Home size={14} /> : a === 'Trabajo' ? <Briefcase size={14} /> : <MapPin size={14} />}
@@ -486,7 +415,7 @@ export const AddressesPage = () => {
               <div>
                 <label className={labelBase}>Indicaciones (opc.)</label>
                 <textarea
-                  placeholder="Ej: Timbre roto, golpear puerta..."
+                  placeholder="Ej: Timbre roto, golpear puerta…"
                   rows={2}
                   value={indicaciones}
                   onChange={e => setIndicaciones(e.target.value)}
@@ -496,32 +425,38 @@ export const AddressesPage = () => {
 
               <div
                 onClick={() => setEsPrincipal(!esPrincipal)}
-                className="flex items-center gap-2.5 p-3 rounded-md border border-dashed border-paper-300 cursor-pointer select-none hover:bg-paper-50 transition-colors"
+                className={`flex items-center gap-2.5 p-3.5 rounded-xl border-2 border-dashed cursor-pointer select-none transition-colors ${
+                  esPrincipal
+                    ? 'bg-brand-yellow-50 border-brand-yellow-300'
+                    : 'border-paper-300 hover:bg-paper-50'
+                }`}
               >
                 <input
                   type="checkbox"
                   checked={esPrincipal}
                   readOnly
-                  className="w-4 h-4 rounded border-2 border-ink-300 checked:bg-brand-red-500 checked:border-brand-red-500 accent-brand-red-500 cursor-pointer"
+                  className="w-4 h-4 rounded border-2 border-ink-300 accent-brand-red-500 cursor-pointer"
                 />
-                <span className="text-sm font-semibold text-ink-700">Establecer como dirección predeterminada</span>
+                <span className="text-sm font-semibold text-ink-700">
+                  Establecer como dirección predeterminada
+                </span>
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-paper-200 bg-paper-50 rounded-b-xl flex items-center justify-end gap-3">
+            <div className="px-6 py-4 border-t border-paper-200 bg-paper-50 flex items-center justify-end gap-3 shrink-0">
               <button
                 type="button"
                 onClick={closeModal}
-                className="bg-paper-0 border-2 border-paper-200 hover:border-ink-900 hover:bg-paper-50 text-ink-900 font-semibold px-4 py-2 rounded-md transition-all duration-150 cursor-pointer text-sm"
+                className="bg-paper-0 border-2 border-paper-200 hover:border-ink-700 hover:bg-paper-100 text-ink-900 font-semibold px-4 py-2.5 rounded-xl transition-all duration-150 cursor-pointer text-sm"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer text-sm"
+                className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer text-sm"
               >
-                {createMutation.isPending || updateMutation.isPending ? 'Guardando...' : 'Guardar'}
+                {createMutation.isPending || updateMutation.isPending ? 'Guardando…' : 'Guardar'}
               </button>
             </div>
           </form>

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Folder, 
-  FolderPlus, 
-  Edit, 
-  Trash2, 
-  ChevronDown, 
-  ChevronRight, 
-  Plus, 
-  X, 
-  Search, 
+import {
+  Folder,
+  FolderPlus,
+  Edit,
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  X,
+  Search,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
 } from 'lucide-react';
 
 import { categoriasApi } from '../../shared/api/categorias';
@@ -26,66 +26,55 @@ export const CategoriasManager = () => {
   const isAdmin = user?.roles.some((r: string) => r === 'ADMIN') ?? false;
   const { showAlert, showConfirm } = useFeedback();
 
-  // Estados locales
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Record<number, boolean>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null);
-  
-  // Campos del Formulario
+
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [parentId, setParentId] = useState<number | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Query - Obtener árbol
   const { data: tree = [], isLoading, isError, error } = useQuery<CategoriaTree[]>({
     queryKey: ['categorias'],
     queryFn: categoriasApi.getTree,
   });
 
-  // Mutación - Crear
   const createMutation = useMutation({
     mutationFn: categoriasApi.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categorias'] });
       closeModal();
     },
-    onError: (err: any) => {
-      setFormError(err.detail || 'Error al crear la categoría');
-    }
+    onError: (err: any) => setFormError(err.detail || 'Error al crear la categoría'),
   });
 
-  // Mutación - Editar
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: Partial<Omit<Categoria, 'id'>> }) => 
+    mutationFn: ({ id, data }: { id: number; data: Partial<Omit<Categoria, 'id'>> }) =>
       categoriasApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categorias'] });
       closeModal();
     },
-    onError: (err: any) => {
-      setFormError(err.detail || 'Error al actualizar la categoría');
-    }
+    onError: (err: any) => setFormError(err.detail || 'Error al actualizar la categoría'),
   });
 
-  // Mutación - Eliminar
   const deleteMutation = useMutation({
     mutationFn: categoriasApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categorias'] });
-    },
-    onError: (err: any) => {
-      showAlert({ title: 'Error', message: err.detail || 'No se puede eliminar la categoría', variant: 'danger' });
-    }
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categorias'] }),
+    onError: (err: any) =>
+      showAlert({
+        title: 'Error',
+        message: err.detail || 'No se puede eliminar la categoría',
+        variant: 'danger',
+      }),
   });
 
-  // Alternar expansión de nodos
   const toggleExpand = (id: number) => {
     setExpandedNodes(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Abrir Modal para crear (raíz o subcategoría)
   const openCreateModal = (defaultParentId: number | null = null) => {
     setEditingCategoria(null);
     setNombre('');
@@ -95,13 +84,12 @@ export const CategoriasManager = () => {
     setIsModalOpen(true);
   };
 
-  // Abrir Modal para editar
   const openEditModal = (cat: CategoriaTree) => {
     setEditingCategoria({
       id: cat.id,
       nombre: cat.nombre,
       descripcion: cat.descripcion,
-      parent_id: cat.parent_id
+      parent_id: cat.parent_id,
     });
     setNombre(cat.nombre);
     setDescripcion(cat.descripcion || '');
@@ -119,20 +107,15 @@ export const CategoriasManager = () => {
     setFormError(null);
   };
 
-  // Enviar formulario
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-
-    if (!nombre.trim()) {
-      setFormError('El nombre de la categoría es obligatorio.');
-      return;
-    }
+    if (!nombre.trim()) return setFormError('El nombre de la categoría es obligatorio.');
 
     const payload = {
       nombre: nombre.trim(),
       descripcion: descripcion.trim() || null,
-      parent_id: parentId
+      parent_id: parentId,
     };
 
     if (editingCategoria) {
@@ -142,24 +125,20 @@ export const CategoriasManager = () => {
     }
   };
 
-  // Confirmar eliminación
   const handleDelete = async (id: number, nombre: string) => {
-    const msg = isAdmin 
+    const msg = isAdmin
       ? `¿Estás seguro de que deseas eliminar la categoría "${nombre}"?\nLas subcategorías hijas se moverán de forma segura a la raíz.`
       : `¿Estás seguro de que deseas eliminar la categoría "${nombre}"?`;
-    
+
     const ok = await showConfirm({
       title: 'Eliminar Categoría',
       message: msg,
       variant: 'danger',
-      confirmText: 'Eliminar'
+      confirmText: 'Eliminar',
     });
-    if (ok) {
-      deleteMutation.mutate(id);
-    }
+    if (ok) deleteMutation.mutate(id);
   };
 
-  // Helpers para obtener categorías planas y excluir descendientes (prevención de ciclos en UI)
   const getFlattenedList = (nodesList: CategoriaTree[]): Categoria[] => {
     let flat: Categoria[] = [];
     nodesList.forEach(node => {
@@ -167,7 +146,7 @@ export const CategoriasManager = () => {
         id: node.id,
         nombre: node.nombre,
         descripcion: node.descripcion,
-        parent_id: node.parent_id
+        parent_id: node.parent_id,
       });
       if (node.children && node.children.length > 0) {
         flat.push(...getFlattenedList(node.children));
@@ -189,10 +168,9 @@ export const CategoriasManager = () => {
 
   const allFlatCategories = getFlattenedList(tree);
 
-  // Calcular cuáles son categorías padre válidas
   const getEligibleParents = (): Categoria[] => {
     if (!editingCategoria) return allFlatCategories;
-    
+
     const findNodeInTree = (nodesList: CategoriaTree[], id: number): CategoriaTree | null => {
       for (const node of nodesList) {
         if (node.id === id) return node;
@@ -213,89 +191,101 @@ export const CategoriasManager = () => {
 
   const eligibleParents = getEligibleParents();
 
-  // Renderizado recursivo de categorías en el árbol
   const renderCategoryNode = (node: CategoriaTree) => {
     const hasChildren = node.children && node.children.length > 0;
-    const isExpanded = expandedNodes[node.id] ?? true; 
-    
-    const matchesSearch = node.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const isExpanded = expandedNodes[node.id] ?? true;
+
+    const matchesSearch =
+      node.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (node.descripcion && node.descripcion.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const childrenMatchSearch = node.children && getFlattenedList(node.children).some(
-      c => c.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
+    const childrenMatchSearch =
+      node.children &&
+      getFlattenedList(node.children).some(c =>
+        c.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
     if (searchTerm && !matchesSearch && !childrenMatchSearch) {
       return null;
     }
 
     const levelColors = [
-      'bg-brand-yellow-100 text-brand-yellow-800 border-brand-yellow-200',
-      'bg-info-50 text-info-700 border-info-100',
-      'bg-success-50 text-success-700 border-success-100',
-      'bg-danger-50 text-danger-700 border-danger-100'
+      'bg-brand-yellow-100 text-brand-yellow-800 border-brand-yellow-300',
+      'bg-info-50 text-info-700 border-info-200',
+      'bg-success-50 text-success-700 border-success-200',
+      'bg-cream-100 text-wine-700 border-cream-300',
     ];
     const badgeStyle = levelColors[node.nivel % levelColors.length];
 
     return (
-      <div key={node.id} className="ml-1 pl-3 border-l border-paper-200 mt-2">
-        <div className="flex items-center justify-between p-3 bg-paper-0 rounded-md border border-paper-200 hover:border-brand-yellow-400 shadow-sm hover:shadow transition-all group duration-200">
-          <div className="flex items-center gap-3">
-            {/* Despliegue */}
+      <div key={node.id} className="ml-1 pl-3 border-l-2 border-paper-200 mt-2">
+        <div className="flex items-center justify-between p-3.5 bg-paper-0 rounded-xl border border-paper-200 hover:border-brand-yellow-300 hover:shadow-card-hover transition-all group duration-200">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {hasChildren ? (
-              <button 
+              <button
                 onClick={() => toggleExpand(node.id)}
-                className="p-1 rounded-md hover:bg-paper-100 text-ink-500 transition-colors"
+                className="p-1 rounded-lg hover:bg-paper-100 text-ink-500 transition-colors shrink-0"
               >
                 {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
               </button>
             ) : (
-              <div className="w-6 h-6 flex items-center justify-center text-ink-300">
-                •
-              </div>
+              <div className="w-6 h-6 flex items-center justify-center text-ink-300 shrink-0">•</div>
             )}
 
-            {/* Icono Carpeta */}
-            <div className={`p-2 rounded-md ${hasChildren ? 'bg-brand-yellow-100 text-brand-yellow-800' : 'bg-paper-100 text-ink-500'}`}>
+            <div
+              className={`p-2.5 rounded-xl shrink-0 ${
+                hasChildren
+                  ? 'bg-brand-yellow-100 text-brand-yellow-800'
+                  : 'bg-cream-100 text-ink-500'
+              }`}
+            >
               <Folder size={18} />
             </div>
 
-            {/* Títulos */}
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-ink-900 text-sm sm:text-base">{node.nombre}</span>
-                <span className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase tracking-wider ${badgeStyle}`}>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-ink-900 text-sm sm:text-base truncate">
+                  {node.nombre}
+                </span>
+                <span
+                  className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase tracking-widest ${badgeStyle}`}
+                >
                   Nivel {node.nivel}
                 </span>
               </div>
               {node.descripcion && (
-                <p className="text-xs text-ink-500 mt-0.5 line-clamp-1 font-medium">{node.descripcion}</p>
+                <p className="text-xs text-ink-500 mt-0.5 line-clamp-1 font-medium">
+                  {node.descripcion}
+                </p>
               )}
             </div>
           </div>
 
-          {/* Acciones */}
           {isManager && (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all duration-200">
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all duration-200 shrink-0">
               <button
                 onClick={() => openCreateModal(node.id)}
                 title="Agregar subcategoría"
-                className="p-1.5 rounded-md text-ink-500 hover:bg-brand-yellow-100 hover:text-brand-yellow-800 transition-all"
+                className="p-2 rounded-lg text-ink-500 hover:bg-brand-yellow-100 hover:text-brand-yellow-800 transition-all cursor-pointer"
               >
                 <Plus size={16} />
               </button>
               <button
                 onClick={() => openEditModal(node)}
                 title="Editar categoría"
-                className="p-1.5 rounded-md text-ink-500 hover:bg-info-50 hover:text-info-600 transition-all"
+                className="p-2 rounded-lg text-ink-500 hover:bg-info-50 hover:text-info-700 transition-all cursor-pointer"
               >
                 <Edit size={16} />
               </button>
               <button
                 onClick={() => handleDelete(node.id, node.nombre)}
-                disabled={node.nivel === 0 && !isAdmin} 
-                title={node.nivel === 0 && !isAdmin ? "Solo los administradores pueden borrar categorías raíz" : "Eliminar categoría"}
-                className={`p-1.5 rounded-md text-ink-500 hover:bg-danger-50 hover:text-danger-600 transition-all ${
+                disabled={node.nivel === 0 && !isAdmin}
+                title={
+                  node.nivel === 0 && !isAdmin
+                    ? 'Solo los administradores pueden borrar categorías raíz'
+                    : 'Eliminar categoría'
+                }
+                className={`p-2 rounded-lg text-ink-500 hover:bg-danger-50 hover:text-danger-600 transition-all cursor-pointer ${
                   node.nivel === 0 && !isAdmin ? 'cursor-not-allowed opacity-30' : ''
                 }`}
               >
@@ -305,7 +295,6 @@ export const CategoriasManager = () => {
           )}
         </div>
 
-        {/* Renderizado de Hijos */}
         {hasChildren && isExpanded && (
           <div className="space-y-1">
             {node.children.map(child => renderCategoryNode(child))}
@@ -315,26 +304,27 @@ export const CategoriasManager = () => {
     );
   };
 
-  const cardBase = "bg-paper-0 border border-paper-200 rounded-lg shadow-sm";
-  const inputBase = "w-full px-4 py-2 bg-paper-0 border border-paper-200 rounded-md text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/20 transition-colors duration-150";
+  const cardBase = 'bg-paper-0 border border-paper-200 rounded-2xl shadow-card';
+  const inputBase =
+    'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/15 transition-colors duration-150';
+  const labelBase = 'block text-xs font-bold uppercase tracking-[0.16em] text-ink-600 mb-1.5';
 
   return (
     <div className="w-full space-y-6">
-      {/* Cabecera / Buscador */}
       <div className={`${cardBase} p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
           <input
             type="text"
-            placeholder="Buscar categorías por nombre..."
+            placeholder="Buscar categorías por nombre…"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             className={`${inputBase} pl-10`}
           />
           {searchTerm && (
-            <button 
+            <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700"
             >
               <X size={16} />
             </button>
@@ -344,116 +334,115 @@ export const CategoriasManager = () => {
         {isManager && (
           <button
             onClick={() => openCreateModal(null)}
-            className="flex items-center justify-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold px-4 py-2.5 rounded-md shadow-sm active:scale-[0.98] transition-all text-sm cursor-pointer"
+            className="flex items-center justify-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-brand active:scale-[0.98] transition-all text-sm cursor-pointer"
           >
-            <FolderPlus size={18} />
-            <span>Nueva Categoría Raíz</span>
+            <FolderPlus size={16} />
+            <span>Nueva categoría raíz</span>
           </button>
         )}
       </div>
 
-      {/* Cuerpo principal */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="w-12 h-12 border-4 border-brand-red-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-ink-500 font-bold text-sm">Cargando árbol de categorías...</span>
+          <div className="w-14 h-14 border-4 border-brand-red-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-ink-500 font-bold text-sm">Cargando árbol de categorías…</span>
         </div>
       ) : isError ? (
-        <div className="bg-danger-50 border border-danger-100 rounded-md p-6 flex items-start gap-4 max-w-xl mx-auto">
+        <div className="bg-danger-50 border border-danger-200 rounded-2xl p-6 flex items-start gap-4 max-w-xl mx-auto">
           <AlertCircle className="text-danger-600 shrink-0" size={24} />
           <div>
             <h3 className="font-bold text-danger-800">Error al cargar categorías</h3>
-            <p className="text-sm text-danger-700 mt-1">{(error as any)?.message || 'Ha ocurrido un error inesperado al conectar con el servidor.'}</p>
+            <p className="text-sm text-danger-700 mt-1">
+              {(error as any)?.message || 'Ha ocurrido un error inesperado al conectar con el servidor.'}
+            </p>
           </div>
         </div>
       ) : tree.length === 0 ? (
-        <div className={`${cardBase} p-8 text-center max-w-md mx-auto`}>
-          <Folder className="mx-auto text-ink-300" size={56} />
-          <h3 className="mt-4 font-bold text-ink-700">No hay categorías</h3>
-          <p className="text-sm text-ink-500 mt-2 font-medium">Comienza creando tu primera categoría raíz para estructurar el catálogo gastronómico.</p>
+        <div className={`${cardBase} p-8 text-center max-w-md mx-auto space-y-4`}>
+          <Folder className="mx-auto text-ink-300 stroke-1" size={56} />
+          <h3 className="font-display text-xl font-bold text-ink-900">No hay categorías</h3>
+          <p className="text-sm text-ink-500 font-medium">
+            Comenzá creando tu primera categoría raíz para estructurar el catálogo gastronómico.
+          </p>
           {isManager && (
             <button
               onClick={() => openCreateModal(null)}
-              className="mt-6 inline-flex items-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold px-4 py-2 rounded-md transition-all text-sm cursor-pointer"
+              className="inline-flex items-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand transition-all text-sm cursor-pointer"
             >
-              <Plus size={18} />
+              <Plus size={16} />
               <span>Crear Categoría</span>
             </button>
           )}
         </div>
       ) : (
-        <div className={`${cardBase} p-4 space-y-2`}>
-          {tree.map(node => renderCategoryNode(node))}
-        </div>
+        <div className={`${cardBase} p-4 space-y-2`}>{tree.map(node => renderCategoryNode(node))}</div>
       )}
 
-      {/* Modal de Creación/Edición */}
+      {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className={`${cardBase} max-w-md w-full overflow-hidden flex flex-col transform transition-all duration-300 scale-100 p-0`}>
-            {/* Header del Modal */}
-            <div className="flex items-center justify-between p-6 border-b border-paper-200 bg-paper-50">
-              <h3 className="font-black text-ink-900 text-lg flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/55 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-paper-0 rounded-2xl max-w-md w-full overflow-hidden flex flex-col border border-paper-200 shadow-xl animate-scaleUp max-h-[90vh]">
+            <div className="h-1.5 bg-gradient-to-r from-brand-red-500 via-brand-yellow-400 to-brand-red-500" />
+
+            <div className="flex items-center justify-between p-6 border-b border-paper-200 shrink-0">
+              <h3 className="font-display text-xl font-extrabold text-ink-900 flex items-center gap-2">
                 <FolderPlus className="text-brand-yellow-600" size={20} />
-                {editingCategoria ? 'Editar Categoría' : 'Nueva Categoría'}
+                {editingCategoria ? 'Editar categoría' : 'Nueva categoría'}
               </h3>
-              <button 
+              <button
                 onClick={closeModal}
-                className="p-1.5 rounded-md text-ink-400 hover:text-brand-red-500 hover:bg-paper-100 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-xl bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors cursor-pointer"
+                aria-label="Cerrar"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            {/* Formulario */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
               {formError && (
-                <div className="bg-danger-50 border border-danger-100 text-danger-700 p-4 rounded-md flex items-start gap-2 text-sm animate-shake">
+                <div className="bg-danger-50 border border-danger-200 text-danger-700 p-4 rounded-xl flex items-start gap-2 text-sm animate-shake font-medium">
                   <AlertCircle className="text-danger-500 shrink-0 mt-0.5" size={16} />
                   <span>{formError}</span>
                 </div>
               )}
 
-              {/* Nombre */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-ink-600">Nombre de la Categoría *</label>
+              <div>
+                <label className={labelBase}>Nombre de la categoría *</label>
                 <input
                   type="text"
                   required
                   maxLength={100}
                   value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Ej: Hamburguesas, Bebidas con Alcohol"
+                  onChange={e => setNombre(e.target.value)}
+                  placeholder="Ej: Hamburguesas, Bebidas con alcohol"
                   className={inputBase}
                 />
               </div>
 
-              {/* Descripción */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-ink-600">Descripción (Opcional)</label>
+              <div>
+                <label className={labelBase}>Descripción (opcional)</label>
                 <textarea
                   value={descripcion}
-                  onChange={(e) => setDescripcion(e.target.value)}
-                  placeholder="Describe brevemente los productos de esta categoría..."
+                  onChange={e => setDescripcion(e.target.value)}
+                  placeholder="Describe brevemente los productos de esta categoría…"
                   rows={3}
                   className={`${inputBase} resize-none`}
                 />
               </div>
 
-              {/* Categoría Padre */}
-              <div className="space-y-1.5">
+              <div>
                 <div className="flex items-center gap-1.5">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-ink-600">Categoría Padre</label>
+                  <label className={labelBase}>Categoría padre</label>
                   <div className="group relative">
-                    <HelpCircle size={14} className="text-ink-400 cursor-help" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-ink-900 text-white text-[10px] rounded-md shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-center">
-                      Si seleccionas "Ninguna", será una categoría principal en la raíz.
+                    <HelpCircle size={14} className="text-ink-400 cursor-help -mt-1.5" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2 bg-ink-900 text-white text-[10px] rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-center z-10 font-medium">
+                      Si seleccionás "Ninguna", será una categoría principal en la raíz.
                     </div>
                   </div>
                 </div>
                 <select
                   value={parentId === null ? '' : parentId}
-                  onChange={(e) => setParentId(e.target.value ? Number(e.target.value) : null)}
+                  onChange={e => setParentId(e.target.value ? Number(e.target.value) : null)}
                   className={inputBase}
                 >
                   <option value="">Ninguna (Categoría Raíz)</option>
@@ -465,21 +454,20 @@ export const CategoriasManager = () => {
                 </select>
               </div>
 
-              {/* Acciones del Formulario */}
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-paper-200">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 border border-ink-200 text-ink-700 rounded-md hover:bg-paper-50 font-semibold text-sm transition-all cursor-pointer"
+                  className="bg-paper-0 border-2 border-paper-200 hover:border-ink-700 hover:bg-paper-100 text-ink-900 font-semibold px-4 py-2.5 rounded-xl transition-all cursor-pointer text-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="px-5 py-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold rounded-md shadow-sm active:scale-[0.98] disabled:opacity-50 transition-all text-sm cursor-pointer"
+                  className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand active:scale-[0.98] disabled:opacity-50 transition-all text-sm cursor-pointer"
                 >
-                  {createMutation.isPending || updateMutation.isPending ? 'Guardando...' : 'Guardar'}
+                  {createMutation.isPending || updateMutation.isPending ? 'Guardando…' : 'Guardar'}
                 </button>
               </div>
             </form>
