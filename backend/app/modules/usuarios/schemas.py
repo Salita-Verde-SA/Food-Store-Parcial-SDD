@@ -32,5 +32,40 @@ class DireccionEntregaRead(BaseModel):
     ciudad: str
     codigo_postal: str
     es_principal: bool
+    model_config = ConfigDict(from_attributes=True)
+
+
+from datetime import datetime
+from typing import List
+
+
+class RolSummary(BaseModel):
+    codigo: str
+    descripcion: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UsuarioReadAdmin(BaseModel):
+    id: int
+    nombre: str
+    apellido: str
+    email: str
+    activo: bool
+    created_at: datetime
+    roles: List[RolSummary]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PaginatedUsuarios(BaseModel):
+    items: List[UsuarioReadAdmin]
+    total: int
+    page: int
+    limit: int
+
+
+class UsuarioUpdateAdmin(BaseModel):
+    rol_codigo: Optional[str] = Field(default=None, max_length=20, description="Código de nuevo rol")
+    activo: Optional[bool] = Field(default=None, description="Estado de cuenta del usuario")
+

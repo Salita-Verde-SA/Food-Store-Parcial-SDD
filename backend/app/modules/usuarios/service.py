@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlmodel import select
 
@@ -131,3 +131,115 @@ class DireccionService:
         for dir_aux in principales:
             dir_aux.es_principal = False
             uow.direcciones.update(dir_aux)
+
+
+class UsuarioService:
+    def __init__(self):
+        pass
+
+    async def list_usuarios(
+        self,
+        page: int = 1,
+        limit: int = 10,
+        search: Optional[str] = None,
+        rol: Optional[str] = None,
+        active: Optional[bool] = None
+    ) -> tuple[List["Usuario"], int]:
+        """
+        Lista usuarios registrados en el sistema de forma paginada con filtros aplicados.
+        """
+        from sqlmodel import or_
+        from app.modules.auth.model import Usuario, UsuarioRol
+
+        async with UnitOfWork() as uow:
+            query = select(Usuario).where(Usuario.deleted_at == None)
+
+            if search:
+                query = query.where(
+                    or_(
+                        Usuario.nombre.ilike(f"%{search}%"),
+                        Usuario.apellido.ilike(f"%{search}%"),
+                        Usuario.email.ilike(f"%{search}%")
+                    )
+                )
+
+            if rol:
+                query = query.join(UsuarioRol).where(UsuarioRol.rol_codigo == rol)
+
+            if active is not None:
+                query = query.where(Usuario.activo == active)
+
+            # Obtener total de registros que coinciden con los filtros
+            total = len(uow.session.exec(query).all())
+
+            # Paginación
+            query = query.order_by(Usuario.created_at.desc()).offset((page - 1) * limit).limit(limit)
+            items = uow.session.exec(query).all()
+
+            return items, total
+
+    async def get_usuario_by_id(self, usuario_id: int) -> "Usuario":
+        """
+        Obtiene un usuario por ID.
+        """
+        async with UnitOfWork() as uow:
+            usuario = uow.usuarios.get_by_id(usuario_id)
+            if not usuario or usuario.deleted_at is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Usuario no encontrado"
+                )
+            return usuario
+
+    async def update_usuario_rol_y_estado(
+        self,
+        usuario_id: int,
+        rol_codigo: Optional[str] = None,
+        activo: Optional[bool] = None
+    ) -> "Usuario":
+        """
+        Actualiza el rol o el estado (activo/inactivo) de un usuario en el sistema.
+        Al desactivar la cuenta, revoca de forma atómica todas sus sesiones y refresh tokens activos.
+        """
+        from app.modules.auth.model import UsuarioRol
+        from app.modules.auth.repository import AuthRepository
+
+        async with UnitOfWork() as uow:
+            usuario = uow.usuarios.get_by_id(usuario_id)
+            if not usuario or usuario.deleted_at is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Usuario no encontrado"
+                )
+
+            # Alternar estado activo
+            if activo is not None:
+                usuario.activo = activo
+                # Si se desactiva, invalidar tokens
+                if not activo:
+                    auth_repo = AuthRepository(uow.session)
+                    auth_repo.revoke_user_tokens(usuario_id)
+
+            # Reasignación de Rol (RBAC)
+            if rol_codigo is not None:
+                # Validar que el rol exista
+                rol = uow.roles.get_by_id(rol_codigo)
+                if not rol:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"El rol '{rol_codigo}' no existe en el sistema."
+                    )
+
+                # Eliminar asignaciones de rol existentes para este usuario
+                stmt_delete = select(UsuarioRol).where(UsuarioRol.usuario_id == usuario_id)
+                roles_actuales = uow.session.exec(stmt_delete).all()
+                for r_act in roles_actuales:
+                    uow.session.delete(r_act)
+                uow.session.flush()
+
+                # Asignar el nuevo rol solicitado
+                uow.session.add(UsuarioRol(usuario_id=usuario_id, rol_codigo=rol_codigo))
+
+            uow.usuarios.update(usuario)
+            return usuario
+

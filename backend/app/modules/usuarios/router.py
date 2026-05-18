@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, status, Response
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.model import Usuario
@@ -76,3 +76,54 @@ async def delete_direccion(
     """
     await direccion_service.delete_direccion(id, current_user.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+from fastapi import Query
+from app.modules.auth.dependencies import require_role
+from app.modules.usuarios.schemas import UsuarioReadAdmin, PaginatedUsuarios, UsuarioUpdateAdmin
+from app.modules.usuarios.service import UsuarioService
+
+usuarios_admin_router = APIRouter(
+    prefix="/usuarios",
+    tags=["Admin - Usuarios"],
+    dependencies=[require_role(["ADMIN"])]
+)
+
+usuario_service = UsuarioService()
+
+
+@usuarios_admin_router.get("", response_model=PaginatedUsuarios)
+async def list_usuarios(
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+    search: Optional[str] = Query(None),
+    rol: Optional[str] = Query(None),
+    active: Optional[bool] = Query(None)
+):
+    """
+    Retorna la lista de usuarios registrados con paginación, filtros de rol/estado y buscador (Sólo Admin).
+    """
+    items, total = await usuario_service.list_usuarios(
+        page=page, limit=limit, search=search, rol=rol, active=active
+    )
+    return PaginatedUsuarios(items=items, total=total, page=page, limit=limit)
+
+
+@usuarios_admin_router.get("/{id}", response_model=UsuarioReadAdmin)
+async def get_usuario(id: int):
+    """
+    Obtiene el detalle administrativo de un usuario específico (Sólo Admin).
+    """
+    return await usuario_service.get_usuario_by_id(id)
+
+
+@usuarios_admin_router.put("/{id}", response_model=UsuarioReadAdmin)
+async def update_usuario(id: int, data: UsuarioUpdateAdmin):
+    """
+    Actualiza el rol (RBAC) o estado de cuenta de un usuario.
+    Si se desactiva, de-autentica de forma atómica todas sus sesiones y revoca refresh tokens (Sólo Admin).
+    """
+    return await usuario_service.update_usuario_rol_y_estado(
+        usuario_id=id, rol_codigo=data.rol_codigo, activo=data.activo
+    )
+

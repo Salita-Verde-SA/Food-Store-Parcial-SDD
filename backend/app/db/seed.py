@@ -153,6 +153,16 @@ def seed_data():
             cola_prod.categorias.append(bebidas_cat)
             session.add(cola_prod)
 
+        # 8. CONFIGURACIONES GLOBALES
+        from app.modules.configuracion.model import Configuracion
+        configuraciones = [
+            Configuracion(key="costo_envio", value="150.00", description="Costo operativo de envío a domicilio"),
+            Configuracion(key="estado_local", value="abierto", description="Estado operativo del local (abierto/cerrado)")
+        ]
+        for cfg in configuraciones:
+            if not session.get(Configuracion, cfg.key):
+                session.add(cfg)
+
         session.commit()
         print("Seed data completed successfully.")
 

@@ -5,6 +5,9 @@ import { CategoriasPage } from '../pages/admin/CategoriasPage';
 import { ProductosPage } from '../pages/admin/ProductosPage';
 import { IngredientesPage } from '../pages/admin/IngredientesPage';
 import { PedidosPage as AdminPedidosPage } from '../pages/admin/PedidosPage';
+import { DashboardPage } from '../pages/admin/DashboardPage';
+import { UsuariosPage } from '../pages/admin/UsuariosPage';
+import { ConfiguracionPage } from '../pages/admin/ConfiguracionPage';
 import { CatalogPage } from '../pages/CatalogPage';
 import { AddressesPage } from '../pages/AddressesPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
@@ -64,23 +67,32 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute allowedRoles={['ADMIN', 'PEDIDOS']} />,
     children: [
       {
+        path: '/admin',
+        element: <DashboardPage />,
+      },
+      {
         path: '/admin/pedidos',
         element: <AdminPedidosPage />,
       },
     ],
   },
+  // Rutas exclusivas de administración global (ADMIN)
   {
     element: <ProtectedRoute allowedRoles={['ADMIN']} />,
     children: [
       {
-        path: '/admin',
-        element: <Navigate to="/admin/categorias" replace />,
+        path: '/admin/usuarios',
+        element: <UsuariosPage />,
+      },
+      {
+        path: '/admin/configuracion',
+        element: <ConfiguracionPage />,
       },
     ],
   },
   {
     path: '*',
-    element: <Navigate to="/admin/categorias" replace />,
+    element: <Navigate to="/admin" replace />,
   },
 ]);
 
