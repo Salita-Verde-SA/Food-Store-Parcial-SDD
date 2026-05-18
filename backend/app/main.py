@@ -19,8 +19,13 @@ def create_application() -> FastAPI:
         openapi_url=f"{settings.API_V1_STR}/openapi.json"
     )
 
-    # CORS
-    origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    # CORS - Soporte para puertos típicos en desarrollo local (5173 al 5176)
+    origins = [
+      "http://localhost:5173", "http://127.0.0.1:5173",
+      "http://localhost:5174", "http://127.0.0.1:5174",
+      "http://localhost:5175", "http://127.0.0.1:5175",
+      "http://localhost:5176", "http://127.0.0.1:5176"
+    ]
     if settings.BACKEND_CORS_ORIGINS:
         origins.extend([i.strip() for i in settings.BACKEND_CORS_ORIGINS.split(",") if i.strip()])
     

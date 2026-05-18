@@ -86,6 +86,9 @@ Este proyecto usa **OPSX** para gestión de cambios. Los artefactos viven en `op
 - Los cambios activos están en `openspec/changes/<nombre>/`
 - La config del proyecto está en `openspec/config.yaml`
 - Antes de implementar cualquier feature nueva, verificar si existe un change activo con `openspec list --json`
+- Antes de archivar un change siempre consultame y esperar el testeo manual por el desarrollador de los cambios recientes del change
+- Enviar un mensaje simple al desarrollador de lo que se debe testear siempre luego de un apply exitoso y antes de un /opsx:archive.
+
 
 ### Sync de docs/CHANGES.md al archivar
 
