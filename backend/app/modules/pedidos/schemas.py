@@ -53,11 +53,14 @@ class HistorialEstadoPedidoRead(BaseModel):
 
 class PagoRead(BaseModel):
     id: int
-    mp_payment_id: Optional[int] = None
-    mp_status: str
+    pedido_id: int
     external_reference: str
+    payment_id: Optional[str] = None
+    status: str
+    monto: Decimal
     idempotency_key: str
     created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
