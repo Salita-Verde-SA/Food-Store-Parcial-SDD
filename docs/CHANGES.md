@@ -93,3 +93,15 @@ Revisás la propuesta, la discutís, la ajustás si hace falta — y recién ent
 - **El orden importa.** Si el change B necesita código del change A, A tiene que estar archivado antes de proponer B.
 - **Un change = un commit** (o varios commits atómicos). Nunca mezcles dos changes en un mismo commit.
 - **Las specs son código.** Se versionan en git, se revisan en PRs, evolucionan con el proyecto.
+
+---
+
+Última actualización: 2026-05-18
+
+## Ya realizado (archivado en OPSX)
+
+| ID | Change Name | Descripcion | US Relacionadas | Dependencias | Estado | Evidencia |
+|---|---|---|---|---|---|---|
+| 0 | us-000-setup | Infraestructura base (Backend/Frontend) | US-000 a US-000e, US-068 | - | ✅ Hecho (archivado 2026-05-14) | [openspec/changes/archive/2026-05-14-us-000-setup/](file:///c:/Users/eduar/OneDrive/Escritorio/UTN%204/Gestion%20desarrollo%20de%20software/RepositorioBaseFoodStore-SDD/openspec/changes/archive/2026-05-14-us-000-setup/) |
+| 1 | us-001-auth | Autenticación y Autorización (JWT · RBAC) | US-001 a US-006, US-073, US-075, US-076, US-066, US-067 | us-000-setup | ✅ Hecho (archivado 2026-05-18) | [openspec/changes/archive/2026-05-18-us-001-auth/](file:///c:/Users/eduar/OneDrive/Escritorio/UTN%204/Gestion%20desarrollo%20de%20software/RepositorioBaseFoodStore-SDD/openspec/changes/archive/2026-05-18-us-001-auth/) |
+| 2 | us-002-categorias | Catálogo de Categorías Jerárquicas con Soft Delete | US-002 | us-001-auth | ✅ Hecho (archivado 2026-05-18) | [openspec/changes/archive/2026-05-18-us-002-categorias/](file:///c:/Users/eduar/OneDrive/Escritorio/UTN%204/Gestion%20desarrollo%20de%20software/RepositorioBaseFoodStore-SDD/openspec/changes/archive/2026-05-18-us-002-categorias/) |
