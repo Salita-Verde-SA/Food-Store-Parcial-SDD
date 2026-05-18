@@ -1,17 +1,15 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500&display=swap');
 
 @theme {
   /* ─────────────────────────────────────────────────────────
-   * Tipografía
-   * Inter            ── body / UI (legible, geométrica)
-   * Playfair Display ── titulares editoriales (apetitoso, restaurant)
+   * Tipografía · SF Pro en Apple, Inter en otros
    * ───────────────────────────────────────────────────────── */
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Playfair Display", "Georgia", "Cambria", "Times New Roman", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+  --font-display: "Playfair Display", "Georgia", "Cambria", serif;
 
   /* ─────────────────────────────────────────────────────────
-   * Brand · Rojo apetitoso (tomate / chile maduro)
+   * Brand · Rojo apetitoso
    * ───────────────────────────────────────────────────────── */
   --color-brand-red-50:  #FFF5F3;
   --color-brand-red-100: #FFE0DA;
@@ -25,7 +23,7 @@
   --color-brand-red-900: #4A0905;
 
   /* ─────────────────────────────────────────────────────────
-   * Brand · Amarillo dorado (mostaza / queso fundido)
+   * Brand · Amarillo dorado
    * ───────────────────────────────────────────────────────── */
   --color-brand-yellow-50:  #FFFBEB;
   --color-brand-yellow-100: #FFF3C4;
@@ -39,7 +37,7 @@
   --color-brand-yellow-900: #5A3E00;
 
   /* ─────────────────────────────────────────────────────────
-   * Accent · Vino borgoña (titulares editoriales)
+   * Accent · Vino borgoña
    * ───────────────────────────────────────────────────────── */
   --color-wine-50:  #FBF2F0;
   --color-wine-100: #F1D9D4;
@@ -49,7 +47,7 @@
   --color-wine-800: #3A0905;
 
   /* ─────────────────────────────────────────────────────────
-   * Neutros · Tinta (texto / iconos)
+   * Neutros · Tinta
    * ───────────────────────────────────────────────────────── */
   --color-ink-50:  #F7F7F7;
   --color-ink-100: #E8E8E8;
@@ -63,7 +61,7 @@
   --color-ink-900: #141414;
 
   /* ─────────────────────────────────────────────────────────
-   * Neutros · Papel (superficies frías / cards admin)
+   * Neutros · Papel
    * ───────────────────────────────────────────────────────── */
   --color-paper-0:   #FFFFFF;
   --color-paper-50:  #FAFAFA;
@@ -72,8 +70,7 @@
   --color-paper-300: #D4D4D8;
 
   /* ─────────────────────────────────────────────────────────
-   * Crema · Superficies cálidas (catálogo / hero / empty states)
-   * Tono ligeramente avainillado → sensación de "comedor"
+   * Crema · Superficies cálidas
    * ───────────────────────────────────────────────────────── */
   --color-cream-50:  #FFFBF5;
   --color-cream-100: #FDF5EB;
@@ -111,18 +108,18 @@
   --color-info-700: #0B3B78;
 
   /* ─────────────────────────────────────────────────────────
-   * Radios (escala consistente)
+   * Radios (escala consistente — iPhone style)
    * ───────────────────────────────────────────────────────── */
   --radius-xs:  4px;
-  --radius-sm:  6px;
-  --radius-md:  10px;
-  --radius-lg:  14px;
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
   --radius-xl:  20px;
   --radius-2xl: 28px;
   --radius-3xl: 36px;
 
   /* ─────────────────────────────────────────────────────────
-   * Sombras refinadas (con calidez)
+   * Sombras refinadas
    * ───────────────────────────────────────────────────────── */
   --shadow-xs: 0 1px 2px 0 rgba(20, 20, 20, 0.04);
   --shadow-sm: 0 1px 3px 0 rgba(20, 20, 20, 0.05), 0 1px 2px -1px rgba(20, 20, 20, 0.03);
@@ -130,16 +127,21 @@
   --shadow-lg: 0 14px 30px -6px rgba(20, 20, 20, 0.12), 0 6px 12px -4px rgba(20, 20, 20, 0.06);
   --shadow-xl: 0 22px 44px -10px rgba(20, 20, 20, 0.16), 0 10px 20px -6px rgba(20, 20, 20, 0.08);
 
-  --shadow-card:       0 1px 3px 0 rgba(20, 20, 20, 0.04), 0 1px 2px -1px rgba(20, 20, 20, 0.03);
-  --shadow-card-hover: 0 10px 28px -8px rgba(20, 20, 20, 0.12), 0 4px 12px -4px rgba(20, 20, 20, 0.06);
+  --shadow-card:       0 4px 20px rgba(218, 41, 28, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 16px 40px rgba(218, 41, 28, 0.11), 0 4px 12px rgba(0, 0, 0, 0.07);
 
-  --shadow-brand:  0 10px 24px -8px rgba(218, 41, 28, 0.34);
+  --shadow-brand:  0 10px 24px -8px rgba(218, 41, 28, 0.38);
   --shadow-yellow: 0 10px 24px -8px rgba(255, 199, 44, 0.45);
   --shadow-warm:   0 8px 24px -6px rgba(218, 41, 28, 0.10), 0 4px 10px -4px rgba(255, 199, 44, 0.08);
+
+  /* Glass shadows */
+  --shadow-glass:       0 8px 32px rgba(218, 41, 28, 0.07), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-glass-hover: 0 20px 48px rgba(218, 41, 28, 0.12), 0 6px 16px rgba(0, 0, 0, 0.07);
+  --shadow-glass-modal: 0 32px 80px rgba(0, 0, 0, 0.14), 0 8px 24px rgba(218, 41, 28, 0.08);
 }
 
 /* ─────────────────────────────────────────────────────────
- * Base / reset
+ * Body · Rich warm gradient background para glassmorphism
  * ───────────────────────────────────────────────────────── */
 :root {
   font-family: var(--font-sans);
@@ -150,16 +152,28 @@
   text-rendering: optimizeLegibility;
 }
 
+html {
+  /* Blobs fijos — el cristal se ve sobre estos gradientes */
+  background:
+    radial-gradient(ellipse 80% 50% at 12% 0%,   rgba(255, 199, 44, 0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 90% 8%,   rgba(218, 41,  28, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 4%  88%,  rgba(218, 41,  28, 0.09) 0%, transparent 50%),
+    radial-gradient(ellipse 65% 50% at 95% 92%,  rgba(255, 199, 44, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 52% 45%,  rgba(255, 248, 235, 0.70) 0%, transparent 80%),
+    #FDF8F2;
+  background-attachment: fixed;
+}
+
 html, body {
   margin: 0;
-  background-color: var(--color-paper-50);
   color: var(--color-ink-900);
 }
 
 body {
   min-height: 100vh;
   font-family: var(--font-sans);
-  font-feature-settings: "cv11", "ss01", "ss03";
+  font-feature-settings: "cv11", "ss01";
+  background: transparent; /* deja ver los blobs del html */
 }
 
 *::selection {
@@ -168,31 +182,128 @@ body {
 }
 
 /* Scrollbar discreto */
-::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-paper-300);
+  background: rgba(218, 41, 28, 0.18);
   border-radius: 999px;
-  border: 2px solid var(--color-paper-50);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover { background: var(--color-ink-300); }
+::-webkit-scrollbar-thumb:hover { background: rgba(218, 41, 28, 0.32); background-clip: padding-box; }
 
 /* Focus accesible global */
 :focus-visible {
   outline: 2px solid var(--color-brand-red-500);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 /* ─────────────────────────────────────────────────────────
- * Helpers
+ * Helpers de tipografía
  * ───────────────────────────────────────────────────────── */
 .font-display {
   font-family: var(--font-display);
   letter-spacing: -0.012em;
 }
 
-/* Mesh decorativo cálido (radial gradients) para hero / banners */
+/* ─────────────────────────────────────────────────────────
+ * Glassmorphism · Sistema de capas
+ * ───────────────────────────────────────────────────────── */
+
+/* Panel base — product cards, filtros, sidebars */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  box-shadow: var(--shadow-glass);
+  transition: box-shadow 0.28s ease, transform 0.28s ease, background 0.2s ease;
+}
+.glass-panel:where(.hoverable:hover, [data-hover]:hover) {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: var(--shadow-glass-hover);
+}
+
+/* Modal / drawer — overlays con mayor opacidad */
+.glass-modal {
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  box-shadow: var(--shadow-glass-modal);
+}
+
+/* Header sticky */
+.glass-header {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.50);
+  box-shadow: 0 1px 24px rgba(0, 0, 0, 0.05), 0 0 0 0.5px rgba(218, 41, 28, 0.07);
+}
+
+/* Cart / sidepanel drawer */
+.glass-cart {
+  background: rgba(253, 249, 244, 0.94);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-left: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.10);
+}
+
+/* Admin sidebar */
+.glass-sidebar {
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.48);
+  box-shadow: 1px 0 20px rgba(0, 0, 0, 0.04);
+}
+
+/* Input fields */
+.glass-input {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-ink-900);
+  background: rgba(255, 255, 255, 0.58);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.60);
+  border-radius: 0.75rem;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: var(--color-brand-red-400);
+  box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.12);
+  outline: none;
+}
+.glass-input::placeholder {
+  color: var(--color-ink-400);
+}
+.glass-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+textarea.glass-input {
+  resize: none;
+}
+
+/* Badge de cristal (sobre fondos coloridos) */
+.glass-badge {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+/* ─────────────────────────────────────────────────────────
+ * Mesh decorativos
+ * ───────────────────────────────────────────────────────── */
 .bg-warm-mesh {
   background-image:
     radial-gradient(at 18% 12%, rgba(255, 199, 44, 0.18) 0px, transparent 55%),
@@ -200,7 +311,6 @@ body {
     radial-gradient(at 50% 95%, rgba(255, 199, 44, 0.10) 0px, transparent 55%);
 }
 
-/* Hatched paper-cream texture (sutil overlay) */
 .bg-cream-grain {
   background-color: var(--color-cream-50);
   background-image:
@@ -212,28 +322,34 @@ body {
  * Animaciones
  * ───────────────────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-fadeIn { animation: fadeIn 0.25s ease-out; }
+.animate-fadeIn { animation: fadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
 
 @keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
+  from { transform: translateX(100%); opacity: 0.6; }
+  to   { transform: translateX(0);    opacity: 1; }
 }
-.animate-slideInRight { animation: slideInRight 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-slideInRight { animation: slideInRight 0.36s cubic-bezier(0.16, 1, 0.3, 1); }
 
 @keyframes scaleUp {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: scale(0.94) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
 }
-.animate-scaleUp { animation: scaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-scaleUp { animation: scaleUp 0.26s cubic-bezier(0.16, 1, 0.3, 1); }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-6px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-slideDown { animation: slideDown 0.25s ease-out; }
+.animate-slideDown { animation: slideDown 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes glassIn {
+  from { opacity: 0; transform: scale(0.96) translateY(12px); backdrop-filter: blur(4px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    backdrop-filter: blur(32px); }
+}
+.animate-glassIn { animation: glassIn 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -258,7 +374,7 @@ body {
 
 @keyframes shimmer {
   0%   { background-position: -1200px 0; }
-  100% { background-position: 1200px 0; }
+  100% { background-position:  1200px 0; }
 }
 .animate-shimmer {
   background: linear-gradient(90deg, transparent, rgba(255, 199, 44, 0.18), transparent);

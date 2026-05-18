@@ -221,15 +221,12 @@ export const ProductosManager = () => {
       (p.descripcion && p.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const cardBase = 'bg-paper-0 border border-paper-200 rounded-2xl shadow-card';
-  const inputBase =
-    'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/15 transition-colors duration-150';
   const labelBase = 'block text-xs font-bold uppercase tracking-[0.16em] text-ink-600 mb-1.5';
 
   return (
     <div className="w-full space-y-6">
       {/* Buscador / acción */}
-      <div className={`${cardBase} p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
+      <div className="glass-panel rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
           <input
@@ -237,7 +234,7 @@ export const ProductosManager = () => {
             placeholder="Buscar productos en stock…"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className={`${inputBase} pl-10`}
+            className="glass-input pl-10"
           />
           {searchTerm && (
             <button
@@ -252,7 +249,7 @@ export const ProductosManager = () => {
         {isManager && (
           <button
             onClick={openCreateModal}
-            className="flex items-center justify-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-brand active:scale-[0.98] transition-all text-sm cursor-pointer"
+            className="flex items-center justify-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-4 py-2.5 rounded-2xl shadow-brand active:scale-[0.98] transition-all text-sm cursor-pointer"
           >
             <Plus size={16} />
             <span>Nuevo producto</span>
@@ -266,7 +263,7 @@ export const ProductosManager = () => {
           <span className="text-ink-500 font-bold text-sm">Cargando catálogo…</span>
         </div>
       ) : isError ? (
-        <div className="bg-danger-50 border border-danger-200 rounded-2xl p-6 flex items-start gap-4 max-w-xl mx-auto animate-fadeIn">
+        <div className="bg-danger-50/80 border border-danger-200/60 rounded-2xl p-6 flex items-start gap-4 max-w-xl mx-auto animate-fadeIn backdrop-blur-sm">
           <AlertCircle className="text-danger-600 shrink-0" size={24} />
           <div>
             <h3 className="font-bold text-danger-800">Error al cargar productos</h3>
@@ -276,7 +273,7 @@ export const ProductosManager = () => {
           </div>
         </div>
       ) : filteredProductos.length === 0 ? (
-        <div className={`${cardBase} p-8 text-center max-w-md mx-auto space-y-4`}>
+        <div className="glass-panel rounded-2xl p-8 text-center max-w-md mx-auto space-y-4">
           <ShoppingBag className="mx-auto text-ink-300 stroke-1" size={56} />
           <h3 className="font-display text-xl font-bold text-ink-900">No hay productos cargados</h3>
           <p className="text-sm text-ink-500 font-medium">
@@ -285,7 +282,7 @@ export const ProductosManager = () => {
           {isManager && (
             <button
               onClick={openCreateModal}
-              className="inline-flex items-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand transition-all text-sm cursor-pointer"
+              className="inline-flex items-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold px-5 py-2.5 rounded-2xl shadow-brand transition-all text-sm cursor-pointer"
             >
               <Plus size={16} />
               <span>Crear producto</span>
@@ -299,10 +296,10 @@ export const ProductosManager = () => {
             return (
               <article
                 key={prod.id}
-                className={`${cardBase} hover:shadow-card-hover hover:border-brand-yellow-300 transition-all duration-200 group flex flex-col justify-between overflow-hidden relative`}
+                className="glass-panel rounded-2xl hover:shadow-[var(--shadow-glass-hover)] hover:-translate-y-0.5 transition-all duration-200 group flex flex-col justify-between overflow-hidden relative"
               >
                 {/* Imagen */}
-                <div className="h-44 bg-cream-100 relative overflow-hidden flex items-center justify-center border-b border-paper-200 shrink-0">
+                <div className="h-44 bg-white/30 relative overflow-hidden flex items-center justify-center border-b border-white/40 shrink-0">
                   {prod.imagen_url ? (
                     <img
                       src={prod.imagen_url}
@@ -326,7 +323,7 @@ export const ProductosManager = () => {
                     </div>
                   )}
 
-                  <div className="absolute bottom-3 left-3 bg-ink-900/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-xl text-sm font-display font-black shadow-md border border-white/10 tabular-nums">
+                  <div className="absolute bottom-3 left-3 bg-ink-900/85 backdrop-blur-md text-white px-3 py-1.5 rounded-2xl text-sm font-display font-black shadow-md border border-white/10 tabular-nums">
                     ${Number(prod.precio).toFixed(2)}
                   </div>
                 </div>
@@ -341,8 +338,8 @@ export const ProductosManager = () => {
                       <span
                         className={`text-[9px] uppercase font-black px-2 py-0.5 rounded-full shrink-0 border tracking-widest ${
                           prod.disponible
-                            ? 'bg-success-50 text-success-700 border-success-200'
-                            : 'bg-danger-50 text-danger-700 border-danger-200'
+                            ? 'bg-success-50/80 text-success-700 border-success-200/70'
+                            : 'bg-danger-50/80 text-danger-700 border-danger-200/70'
                         }`}
                       >
                         {prod.disponible ? 'Activo' : 'Pausado'}
@@ -358,7 +355,7 @@ export const ProductosManager = () => {
                       {prod.categorias.map(cat => (
                         <span
                           key={cat.id}
-                          className="inline-flex items-center gap-1 text-[10px] bg-brand-yellow-100 text-brand-yellow-800 border border-brand-yellow-200 font-black px-2 py-0.5 rounded-md uppercase tracking-wider"
+                          className="inline-flex items-center gap-1 text-[10px] bg-brand-yellow-100/80 text-brand-yellow-800 border border-brand-yellow-200/60 font-black px-2 py-0.5 rounded-md uppercase tracking-wider"
                         >
                           <Layers size={10} />
                           {cat.nombre}
@@ -377,8 +374,8 @@ export const ProductosManager = () => {
                               key={ing.id}
                               className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border ${
                                 ing.es_alergeno
-                                  ? 'bg-danger-50 text-danger-700 border-danger-200'
-                                  : 'bg-paper-100 text-ink-700 border-paper-200'
+                                  ? 'bg-danger-50/80 text-danger-700 border-danger-200/60'
+                                  : 'bg-white/60 text-ink-700 border-white/50'
                               }`}
                             >
                               {ing.nombre}
@@ -390,7 +387,7 @@ export const ProductosManager = () => {
                   </div>
 
                   {/* Inventario */}
-                  <div className="bg-cream-50 p-3 rounded-xl border border-cream-200 flex items-center justify-between shadow-xs">
+                  <div className="glass-panel rounded-xl p-3 flex items-center justify-between">
                     <div className="space-y-0.5">
                       <span className="text-[10px] text-ink-500 font-black uppercase tracking-wider block">
                         Existencias
@@ -413,7 +410,7 @@ export const ProductosManager = () => {
                         <button
                           onClick={() => handleStockAdjust(prod.id, prod.stock ?? 0, -1)}
                           disabled={patchStockMutation.isPending}
-                          className="w-8 h-8 flex items-center justify-center bg-paper-0 border border-paper-200 text-ink-700 font-bold rounded-lg hover:bg-brand-red-50 hover:text-brand-red-600 transition-colors cursor-pointer active:scale-95 disabled:opacity-50"
+                          className="w-8 h-8 flex items-center justify-center glass-panel text-ink-700 font-bold rounded-xl hover:bg-danger-50/70 hover:text-brand-red-600 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                           title="Restar 1"
                         >
                           −
@@ -421,7 +418,7 @@ export const ProductosManager = () => {
                         <button
                           onClick={() => handleStockAdjust(prod.id, prod.stock ?? 0, 1)}
                           disabled={patchStockMutation.isPending}
-                          className="w-8 h-8 flex items-center justify-center bg-paper-0 border border-paper-200 text-ink-700 font-bold rounded-lg hover:bg-success-50 hover:text-success-600 transition-colors cursor-pointer active:scale-95 disabled:opacity-50"
+                          className="w-8 h-8 flex items-center justify-center glass-panel text-ink-700 font-bold rounded-xl hover:bg-success-50/70 hover:text-success-600 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                           title="Sumar 1"
                         >
                           +
@@ -435,7 +432,7 @@ export const ProductosManager = () => {
                   <div className="flex items-center justify-end gap-2 px-5 pb-5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
                     <button
                       onClick={() => openEditModal(prod)}
-                      className="p-2 bg-info-50 text-info-700 rounded-lg hover:bg-info-100 transition-all cursor-pointer"
+                      className="p-2 bg-info-50/80 text-info-700 rounded-xl hover:bg-info-100/80 transition-all cursor-pointer"
                       title="Editar"
                     >
                       <Edit size={15} />
@@ -443,7 +440,7 @@ export const ProductosManager = () => {
                     {isAdmin && (
                       <button
                         onClick={() => handleDelete(prod.id, prod.nombre)}
-                        className="p-2 bg-danger-50 text-danger-600 rounded-lg hover:bg-danger-100 transition-all cursor-pointer"
+                        className="p-2 bg-danger-50/80 text-danger-600 rounded-xl hover:bg-danger-100/80 transition-all cursor-pointer"
                         title="Baja del producto"
                       >
                         <Trash2 size={15} />
@@ -459,18 +456,18 @@ export const ProductosManager = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/55 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-paper-0 rounded-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-paper-200 shadow-xl animate-scaleUp">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="glass-modal rounded-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-glassIn">
             <div className="h-1.5 bg-gradient-to-r from-brand-red-500 via-brand-yellow-400 to-brand-red-500" />
 
-            <div className="flex items-center justify-between p-6 border-b border-paper-200 shrink-0">
+            <div className="flex items-center justify-between p-6 border-b border-white/40 shrink-0">
               <h3 className="font-display text-xl font-extrabold text-ink-900 flex items-center gap-2">
                 <ShoppingBag className="text-brand-yellow-600" size={20} />
                 {editingProducto ? 'Editar producto' : 'Nuevo producto'}
               </h3>
               <button
                 onClick={closeModal}
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center rounded-2xl glass-panel hover:bg-white/80 text-ink-700 transition-all cursor-pointer"
                 aria-label="Cerrar"
               >
                 <X size={18} />
@@ -479,7 +476,7 @@ export const ProductosManager = () => {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
               {formError && (
-                <div className="bg-danger-50 border border-danger-200 text-danger-700 p-4 rounded-xl flex items-start gap-2 text-sm animate-shake font-medium">
+                <div className="bg-danger-50/80 border border-danger-200/60 text-danger-700 p-4 rounded-2xl flex items-start gap-2 text-sm animate-shake font-medium backdrop-blur-sm">
                   <AlertCircle className="text-danger-500 shrink-0 mt-0.5" size={16} />
                   <span>{formError}</span>
                 </div>
@@ -495,7 +492,7 @@ export const ProductosManager = () => {
                     value={nombre}
                     onChange={e => setNombre(e.target.value)}
                     placeholder="Ej: Pizza Margherita"
-                    className={`${inputBase} font-bold`}
+                    className="glass-input font-bold"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -508,7 +505,7 @@ export const ProductosManager = () => {
                     value={precio}
                     onChange={e => setPrecio(e.target.value)}
                     placeholder="0.00"
-                    className={`${inputBase} font-bold tabular-nums`}
+                    className="glass-input font-bold tabular-nums"
                   />
                 </div>
               </div>
@@ -523,7 +520,7 @@ export const ProductosManager = () => {
                     disabled={!!editingProducto}
                     value={stock}
                     onChange={e => setStock(Number(e.target.value))}
-                    className={`${inputBase} disabled:bg-paper-100 disabled:text-ink-400 font-bold tabular-nums`}
+                    className="glass-input font-bold tabular-nums"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -533,16 +530,16 @@ export const ProductosManager = () => {
                     value={imagenUrl}
                     onChange={e => setImagenUrl(e.target.value)}
                     placeholder="https://…/comida.jpg"
-                    className={inputBase}
+                    className="glass-input"
                   />
                 </div>
                 <div className="space-y-1.5 flex flex-col justify-end">
                   <div
                     onClick={() => setDisponible(!disponible)}
-                    className={`px-4 py-2.5 rounded-xl border-2 flex items-center gap-2 h-[42px] cursor-pointer transition-colors ${
+                    className={`px-4 py-2.5 rounded-2xl border-2 flex items-center gap-2 h-[42px] cursor-pointer transition-all ${
                       disponible
-                        ? 'bg-success-50 border-success-200'
-                        : 'bg-paper-50 border-paper-200 hover:border-brand-yellow-300'
+                        ? 'bg-success-50/80 border-success-200/70'
+                        : 'bg-white/40 border-white/50 hover:border-brand-yellow-300'
                     }`}
                   >
                     <input
@@ -550,7 +547,7 @@ export const ProductosManager = () => {
                       id="disponible"
                       checked={disponible}
                       readOnly
-                      className="w-4 h-4 rounded border-paper-300 accent-brand-red-500 cursor-pointer"
+                      className="w-4 h-4 rounded border-white/40 accent-brand-red-500 cursor-pointer"
                     />
                     <label htmlFor="disponible" className="text-sm font-bold text-ink-900 cursor-pointer select-none">
                       Disponible
@@ -566,13 +563,13 @@ export const ProductosManager = () => {
                   onChange={e => setDescripcion(e.target.value)}
                   placeholder="Escribí los detalles del plato…"
                   rows={2}
-                  className={`${inputBase} resize-none`}
+                  className="glass-input"
                 />
               </div>
 
               <div className="space-y-2">
                 <span className={labelBase}>Categoría * (seleccioná una)</span>
-                <div className="bg-paper-50 border border-paper-200 p-4 rounded-xl flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                <div className="bg-white/40 border border-white/40 p-4 rounded-2xl flex flex-wrap gap-2 max-h-32 overflow-y-auto backdrop-blur-sm">
                   {flatCategorias.map(cat => {
                     const isSelected = selectedCategoriaIds.includes(cat.id);
                     return (
@@ -580,10 +577,10 @@ export const ProductosManager = () => {
                         key={cat.id}
                         type="button"
                         onClick={() => toggleCategory(cat.id)}
-                        className={`text-xs font-bold px-3 py-1.5 rounded-lg border-2 transition-all cursor-pointer ${
+                        className={`text-xs font-bold px-3 py-1.5 rounded-xl border-2 transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-brand-yellow-100 text-brand-yellow-800 border-brand-yellow-300'
-                            : 'bg-paper-0 text-ink-700 border-paper-200 hover:border-brand-yellow-200 hover:bg-brand-yellow-50'
+                            ? 'bg-brand-yellow-100/80 text-brand-yellow-800 border-brand-yellow-300/70'
+                            : 'bg-white/50 text-ink-700 border-white/50 hover:border-brand-yellow-200 hover:bg-brand-yellow-50/60'
                         }`}
                       >
                         {cat.nombre}
@@ -595,7 +592,7 @@ export const ProductosManager = () => {
 
               <div className="space-y-2">
                 <span className={labelBase}>Ingredientes y alérgenos</span>
-                <div className="bg-paper-50 border border-paper-200 p-4 rounded-xl flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                <div className="bg-white/40 border border-white/40 p-4 rounded-2xl flex flex-wrap gap-2 max-h-40 overflow-y-auto backdrop-blur-sm">
                   {ingredientes.map(ing => {
                     const isSelected = selectedIngredienteIds.includes(ing.id);
                     return (
@@ -603,12 +600,12 @@ export const ProductosManager = () => {
                         key={ing.id}
                         type="button"
                         onClick={() => toggleIngrediente(ing.id)}
-                        className={`text-xs font-bold px-3 py-1.5 rounded-lg border-2 transition-all flex items-center gap-1 cursor-pointer ${
+                        className={`text-xs font-bold px-3 py-1.5 rounded-xl border-2 transition-all flex items-center gap-1 cursor-pointer ${
                           isSelected
                             ? ing.es_alergeno
-                              ? 'bg-danger-100 text-danger-800 border-danger-300 shadow-sm'
-                              : 'bg-brand-red-50 text-brand-red-700 border-brand-red-200'
-                            : 'bg-paper-0 text-ink-700 border-paper-200 hover:border-brand-red-200 hover:bg-brand-red-50'
+                              ? 'bg-danger-100/80 text-danger-800 border-danger-300/70 shadow-sm'
+                              : 'bg-brand-red-500/10 text-brand-red-700 border-brand-red-200/60'
+                            : 'bg-white/50 text-ink-700 border-white/50 hover:border-brand-red-200 hover:bg-brand-red-50/50'
                         }`}
                       >
                         {ing.nombre}
@@ -619,18 +616,18 @@ export const ProductosManager = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-paper-200">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/40">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="bg-paper-0 border-2 border-paper-200 hover:border-ink-700 hover:bg-paper-100 text-ink-900 font-semibold px-4 py-2.5 rounded-xl transition-all cursor-pointer text-sm"
+                  className="glass-panel hover:bg-white/80 text-ink-900 font-semibold px-4 py-2.5 rounded-2xl transition-all cursor-pointer text-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand active:scale-[0.98] disabled:opacity-50 transition-all text-sm cursor-pointer"
+                  className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-2xl shadow-brand active:scale-[0.98] disabled:opacity-50 transition-all text-sm cursor-pointer"
                 >
                   {createMutation.isPending || updateMutation.isPending ? 'Guardando…' : 'Guardar'}
                 </button>

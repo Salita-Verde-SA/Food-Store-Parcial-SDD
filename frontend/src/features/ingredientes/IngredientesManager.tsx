@@ -124,15 +124,12 @@ export const IngredientesManager = () => {
     ing.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const cardBase = 'bg-paper-0 border border-paper-200 rounded-2xl shadow-card';
-  const inputBase =
-    'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/15 transition-colors duration-150';
   const labelBase = 'block text-xs font-bold uppercase tracking-[0.16em] text-ink-600 mb-1.5';
 
   return (
     <div className="w-full space-y-6">
       {/* Buscador */}
-      <div className={`${cardBase} p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
+      <div className="glass-panel rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
           <input
@@ -140,7 +137,7 @@ export const IngredientesManager = () => {
             placeholder="Buscar ingredientes por nombre…"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className={`${inputBase} pl-10`}
+            className="glass-input pl-10"
           />
           {searchTerm && (
             <button
@@ -155,7 +152,7 @@ export const IngredientesManager = () => {
         {isManager && (
           <button
             onClick={openCreateModal}
-            className="flex items-center justify-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-brand active:scale-[0.98] transition-all text-sm cursor-pointer"
+            className="flex items-center justify-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-4 py-2.5 rounded-2xl shadow-brand active:scale-[0.98] transition-all text-sm cursor-pointer"
           >
             <Plus size={16} />
             <span>Nuevo ingrediente</span>
@@ -169,7 +166,7 @@ export const IngredientesManager = () => {
           <span className="text-ink-500 font-bold text-sm">Cargando ingredientes…</span>
         </div>
       ) : isError ? (
-        <div className="bg-danger-50 border border-danger-200 rounded-2xl p-6 flex items-start gap-4 max-w-xl mx-auto animate-fadeIn">
+        <div className="bg-danger-50/80 border border-danger-200/60 rounded-2xl p-6 flex items-start gap-4 max-w-xl mx-auto animate-fadeIn backdrop-blur-sm">
           <AlertCircle className="text-danger-600 shrink-0" size={24} />
           <div>
             <h3 className="font-bold text-danger-800">Error al cargar ingredientes</h3>
@@ -179,7 +176,7 @@ export const IngredientesManager = () => {
           </div>
         </div>
       ) : filteredIngredientes.length === 0 ? (
-        <div className={`${cardBase} p-8 text-center max-w-md mx-auto space-y-4`}>
+        <div className="glass-panel rounded-2xl p-8 text-center max-w-md mx-auto space-y-4">
           <Cookie className="mx-auto text-ink-300 stroke-1" size={56} />
           <h3 className="font-display text-xl font-bold text-ink-900">No hay ingredientes</h3>
           <p className="text-sm text-ink-500 font-medium">
@@ -188,7 +185,7 @@ export const IngredientesManager = () => {
           {isManager && (
             <button
               onClick={openCreateModal}
-              className="inline-flex items-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand transition-all text-sm cursor-pointer"
+              className="inline-flex items-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold px-5 py-2.5 rounded-2xl shadow-brand transition-all text-sm cursor-pointer"
             >
               <Plus size={16} />
               <span>Crear ingrediente</span>
@@ -200,7 +197,7 @@ export const IngredientesManager = () => {
           {filteredIngredientes.map(ing => (
             <div
               key={ing.id}
-              className={`${cardBase} p-5 hover:border-brand-yellow-300 hover:shadow-card-hover transition-all group relative overflow-hidden flex flex-col justify-between`}
+              className="glass-panel rounded-2xl p-5 hover:shadow-[var(--shadow-glass-hover)] hover:-translate-y-0.5 transition-all group relative overflow-hidden flex flex-col justify-between"
             >
               {ing.es_alergeno && (
                 <div className="absolute top-0 right-0 bg-brand-red-500 text-white text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-bl-xl flex items-center gap-1 shadow-sm">
@@ -210,7 +207,7 @@ export const IngredientesManager = () => {
               )}
 
               <div className="space-y-3">
-                <div className="p-3 bg-cream-100 text-brand-yellow-800 rounded-xl w-fit border border-cream-200">
+                <div className="p-3 glass-panel text-brand-yellow-800 rounded-xl w-fit">
                   <Cookie size={22} />
                 </div>
                 <div>
@@ -234,17 +231,17 @@ export const IngredientesManager = () => {
               </div>
 
               {isManager && (
-                <div className="flex items-center justify-end gap-2 mt-5 pt-3 border-t border-paper-200 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
+                <div className="flex items-center justify-end gap-2 mt-5 pt-3 border-t border-white/40 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
                   <button
                     onClick={() => openEditModal(ing)}
-                    className="p-2 bg-info-50 text-info-700 rounded-lg hover:bg-info-100 transition-all cursor-pointer"
+                    className="p-2 bg-info-50/80 text-info-700 rounded-xl hover:bg-info-100/80 transition-all cursor-pointer"
                     title="Editar"
                   >
                     <Edit size={15} />
                   </button>
                   <button
                     onClick={() => handleDelete(ing.id, ing.nombre)}
-                    className="p-2 bg-danger-50 text-danger-600 rounded-lg hover:bg-danger-100 transition-all cursor-pointer"
+                    className="p-2 bg-danger-50/80 text-danger-600 rounded-xl hover:bg-danger-100/80 transition-all cursor-pointer"
                     title="Eliminar"
                   >
                     <Trash2 size={15} />
@@ -258,18 +255,18 @@ export const IngredientesManager = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/55 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-paper-0 rounded-2xl max-w-md w-full overflow-hidden flex flex-col border border-paper-200 shadow-xl animate-scaleUp max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="glass-modal rounded-2xl max-w-md w-full overflow-hidden flex flex-col animate-glassIn max-h-[90vh]">
             <div className="h-1.5 bg-gradient-to-r from-brand-red-500 via-brand-yellow-400 to-brand-red-500" />
 
-            <div className="flex items-center justify-between p-6 border-b border-paper-200 shrink-0">
+            <div className="flex items-center justify-between p-6 border-b border-white/40 shrink-0">
               <h3 className="font-display text-xl font-extrabold text-ink-900 flex items-center gap-2">
                 <Cookie className="text-brand-yellow-600" size={20} />
                 {editingIngrediente ? 'Editar ingrediente' : 'Nuevo ingrediente'}
               </h3>
               <button
                 onClick={closeModal}
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center rounded-xl glass-panel hover:bg-white/80 text-ink-700 transition-colors cursor-pointer"
                 aria-label="Cerrar"
               >
                 <X size={18} />
@@ -278,7 +275,7 @@ export const IngredientesManager = () => {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
               {formError && (
-                <div className="bg-danger-50 border border-danger-200 text-danger-700 p-4 rounded-xl flex items-start gap-2 text-sm animate-shake font-medium">
+                <div className="bg-danger-50/80 border border-danger-200/60 text-danger-700 p-4 rounded-xl flex items-start gap-2 text-sm animate-shake font-medium backdrop-blur-sm">
                   <AlertCircle className="text-danger-500 shrink-0 mt-0.5" size={16} />
                   <span>{formError}</span>
                 </div>
@@ -293,7 +290,7 @@ export const IngredientesManager = () => {
                   value={nombre}
                   onChange={e => setNombre(e.target.value)}
                   placeholder="Ej: Harina de Trigo, Mozzarella, Panceta"
-                  className={inputBase}
+                  className="glass-input"
                 />
               </div>
 
@@ -301,8 +298,8 @@ export const IngredientesManager = () => {
                 onClick={() => setEsAlergeno(!esAlergeno)}
                 className={`p-4 rounded-xl border-2 flex items-start gap-3 cursor-pointer select-none transition-colors ${
                   esAlergeno
-                    ? 'bg-danger-50 border-danger-200'
-                    : 'bg-paper-50 border-paper-200 hover:border-brand-yellow-300'
+                    ? 'bg-danger-50/80 border-danger-200/70'
+                    : 'bg-white/40 border-white/50 hover:border-brand-yellow-300'
                 }`}
               >
                 <input
@@ -323,18 +320,18 @@ export const IngredientesManager = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-paper-200">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/40">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="bg-paper-0 border-2 border-paper-200 hover:border-ink-700 hover:bg-paper-100 text-ink-900 font-semibold px-4 py-2.5 rounded-xl transition-all cursor-pointer text-sm"
+                  className="glass-panel hover:bg-white/80 text-ink-900 font-semibold px-4 py-2.5 rounded-2xl transition-all cursor-pointer text-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand active:scale-[0.98] disabled:opacity-50 transition-all text-sm cursor-pointer"
+                  className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-2xl shadow-brand active:scale-[0.98] disabled:opacity-50 transition-all text-sm cursor-pointer"
                 >
                   {createMutation.isPending || updateMutation.isPending ? 'Guardando…' : 'Guardar'}
                 </button>

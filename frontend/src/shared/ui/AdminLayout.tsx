@@ -78,7 +78,7 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
   const navLinkActive =
     'bg-brand-red-500 text-white shadow-brand';
   const navLinkIdle =
-    'text-ink-600 hover:bg-paper-100 hover:text-ink-900';
+    'text-ink-600 hover:bg-white/60 hover:text-ink-900';
 
   const renderNav = (onNavigate?: () => void) => (
     <nav className="space-y-5">
@@ -114,9 +114,9 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
   );
 
   return (
-    <div className="min-h-screen bg-paper-50 flex">
+    <div className="min-h-screen flex">
       {/* ──────────────── SIDEBAR DESKTOP ──────────────── */}
-      <aside className="hidden md:flex flex-col w-[260px] bg-paper-0 border-r border-paper-200 p-5 shrink-0">
+      <aside className="hidden md:flex flex-col w-[260px] glass-sidebar p-5 shrink-0">
         <Link to="/admin" className="flex items-center gap-3 px-2 py-2">
           <Logo size="md" variant="red" />
           <div className="leading-tight">
@@ -129,24 +129,24 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
 
         <div className="mt-7 flex-1 overflow-y-auto pr-1 -mr-1">{renderNav()}</div>
 
-        <div className="border-t border-paper-200 pt-4 mt-4 space-y-1.5">
+        <div className="border-t border-white/40 pt-4 mt-4 space-y-1.5">
           <Link
             to="/"
-            className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-ink-600 hover:bg-cream-100 hover:text-brand-red-600 font-semibold text-sm transition-colors duration-150"
+            className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-ink-600 hover:bg-white/60 hover:text-brand-red-600 font-semibold text-sm transition-colors duration-150"
           >
             <Store size={18} />
             <span>Volver a la Tienda</span>
           </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-ink-600 hover:bg-danger-50 hover:text-danger-700 font-semibold text-sm transition-colors duration-150 cursor-pointer"
+            className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-ink-600 hover:bg-danger-50/70 hover:text-danger-700 font-semibold text-sm transition-colors duration-150 cursor-pointer"
           >
             <LogOut size={18} />
             <span>Cerrar Sesión</span>
           </button>
 
-          <div className="mt-3 px-3.5 py-3 rounded-xl bg-cream-100 border border-brand-yellow-200">
-            <span className="block text-[10px] font-black uppercase tracking-wider text-brand-yellow-800">
+          <div className="mt-3 px-3.5 py-3 rounded-xl glass-panel">
+            <span className="block text-[10px] font-black uppercase tracking-wider text-brand-yellow-700">
               Sesión activa
             </span>
             <span className="block text-xs font-bold text-ink-900 truncate mt-0.5">
@@ -159,11 +159,11 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
       {/* ──────────────── CONTENIDO ──────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-paper-0/95 backdrop-blur-md border-b border-paper-200 px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-xs sticky top-0 z-30">
+        <header className="glass-header px-4 sm:px-6 py-3.5 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors duration-150 cursor-pointer shrink-0"
+              className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl glass-panel hover:bg-white/80 text-ink-700 transition-all duration-150 cursor-pointer shrink-0"
               aria-label="Abrir menú"
             >
               <Menu size={20} />
@@ -182,7 +182,7 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
               <span className="block font-bold text-ink-900 text-sm leading-tight truncate max-w-[160px]">
                 {user?.nombre} {user?.apellido}
               </span>
-              <span className="inline-flex items-center mt-1 text-[10px] bg-brand-yellow-100 text-brand-yellow-800 border border-brand-yellow-300 px-2.5 py-0.5 rounded-full uppercase font-black tracking-widest">
+              <span className="inline-flex items-center mt-1 text-[10px] bg-brand-yellow-100/80 text-brand-yellow-800 border border-brand-yellow-200/60 px-2.5 py-0.5 rounded-full uppercase font-black tracking-widest backdrop-blur-sm">
                 {user?.roles && user.roles[0]}
               </span>
             </div>
@@ -197,10 +197,10 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
           <div className="fixed inset-0 z-50 flex md:hidden animate-fadeIn">
             <div
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 bg-ink-900/55 backdrop-blur-sm"
+              className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm"
             />
 
-            <aside className="relative flex flex-col w-72 bg-paper-0 p-5 shadow-xl z-50 animate-slideInRight">
+            <aside className="relative flex flex-col w-72 glass-modal p-5 z-50 animate-slideInRight">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Logo size="sm" variant="red" />
@@ -213,7 +213,7 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 rounded-xl hover:bg-paper-100 text-ink-500 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl hover:bg-white/60 text-ink-500 transition-colors cursor-pointer"
                   aria-label="Cerrar menú"
                 >
                   <X size={20} />
@@ -224,11 +224,11 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
                 {renderNav(() => setIsMobileMenuOpen(false))}
               </div>
 
-              <div className="border-t border-paper-200 pt-4 mt-4 space-y-1.5">
+              <div className="border-t border-white/40 pt-4 mt-4 space-y-1.5">
                 <Link
                   to="/"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-ink-600 hover:bg-cream-100 hover:text-brand-red-600 font-semibold text-sm transition-colors duration-150"
+                  className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-ink-600 hover:bg-white/60 hover:text-brand-red-600 font-semibold text-sm transition-colors duration-150"
                 >
                   <Store size={18} />
                   <span>Volver a la Tienda</span>
@@ -238,7 +238,7 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
                     setIsMobileMenuOpen(false);
                     handleLogout();
                   }}
-                  className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-ink-600 hover:bg-danger-50 hover:text-danger-700 font-semibold text-sm transition-colors duration-150 cursor-pointer"
+                  className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-ink-600 hover:bg-danger-50/70 hover:text-danger-700 font-semibold text-sm transition-colors duration-150 cursor-pointer"
                 >
                   <LogOut size={18} />
                   <span>Cerrar Sesión</span>

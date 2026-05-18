@@ -125,16 +125,16 @@ export const OrdersPage = () => {
     switch (estado) {
       case 'PENDIENTE':
       case 'EN_PREP':
-        return 'bg-brand-yellow-100 text-brand-yellow-800 border-brand-yellow-300';
+        return 'bg-brand-yellow-100/80 text-brand-yellow-800 border-brand-yellow-300/70';
       case 'CONFIRMADO':
       case 'EN_CAMINO':
-        return 'bg-info-50 text-info-700 border-info-200';
+        return 'bg-info-50/80 text-info-700 border-info-200/70';
       case 'ENTREGADO':
-        return 'bg-success-50 text-success-700 border-success-100';
+        return 'bg-success-50/80 text-success-700 border-success-100/70';
       case 'CANCELADO':
-        return 'bg-danger-50 text-danger-700 border-danger-200';
+        return 'bg-danger-50/80 text-danger-700 border-danger-200/70';
       default:
-        return 'bg-paper-100 text-ink-700 border-paper-200';
+        return 'bg-white/50 text-ink-700 border-white/50';
     }
   };
 
@@ -153,13 +153,9 @@ export const OrdersPage = () => {
   };
 
   const eyebrow = 'text-[11px] font-black uppercase tracking-[0.18em] text-brand-red-600';
-  const cardBase = 'bg-paper-0 border border-paper-200 rounded-2xl shadow-card';
-  const inputBase =
-    'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/15 transition-colors duration-150';
-  const labelBase = 'block text-xs font-bold uppercase tracking-[0.16em] text-ink-600 mb-1.5';
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream-50 font-sans">
+    <div className="min-h-screen flex flex-col">
       <ClientHeader eyebrow="Mis Pedidos" showBackToMenu activeMenu="pedidos" />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
@@ -181,7 +177,7 @@ export const OrdersPage = () => {
                 Seguimiento en tiempo real y archivo de compras anteriores.
               </p>
             </div>
-            <span className="inline-flex items-center gap-2 bg-paper-0 border border-paper-200 text-ink-700 text-xs font-bold px-3 py-1.5 rounded-full">
+            <span className="inline-flex items-center gap-2 glass-panel text-ink-700 text-xs font-bold px-3 py-1.5 rounded-full">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-success-500" />
@@ -197,7 +193,7 @@ export const OrdersPage = () => {
             <span className="text-ink-500 font-bold text-sm">Cargando tus órdenes…</span>
           </div>
         ) : isError ? (
-          <div className="bg-danger-50 border border-danger-200 rounded-2xl p-6 flex items-start gap-4">
+          <div className="bg-danger-50/80 border border-danger-200/60 rounded-2xl p-6 flex items-start gap-4 backdrop-blur-sm">
             <AlertTriangle className="text-danger-600 shrink-0" size={24} />
             <div>
               <h3 className="font-bold text-danger-700">Error de conexión</h3>
@@ -207,8 +203,8 @@ export const OrdersPage = () => {
             </div>
           </div>
         ) : pedidos.length === 0 ? (
-          <div className={`text-center py-16 ${cardBase} p-8 max-w-md mx-auto space-y-4`}>
-            <div className="w-20 h-20 rounded-2xl bg-cream-100 flex items-center justify-center text-brand-yellow-700 mx-auto">
+          <div className="text-center py-16 glass-panel rounded-2xl p-8 max-w-md mx-auto space-y-4">
+            <div className="w-20 h-20 rounded-2xl bg-white/50 flex items-center justify-center text-brand-yellow-700 mx-auto">
               <ShoppingBag size={36} className="stroke-1" />
             </div>
             <div className="space-y-1.5">
@@ -219,7 +215,7 @@ export const OrdersPage = () => {
             </div>
             <Link
               to="/"
-              className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm inline-flex items-center gap-2"
+              className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm inline-flex items-center gap-2"
             >
               <span>Ver la Carta</span>
             </Link>
@@ -233,11 +229,11 @@ export const OrdersPage = () => {
               const isPayable = ped.estado === 'PENDIENTE' && ped.pago?.status === 'PENDIENTE';
 
               return (
-                <article key={ped.id} className={`${cardBase} p-5 sm:p-6 space-y-5`}>
+                <article key={ped.id} className="glass-panel rounded-2xl p-5 sm:p-6 space-y-5">
                   {/* Encabezado */}
-                  <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-paper-200">
+                  <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/40">
                     <div className="flex items-center gap-3">
-                      <span className="font-black text-ink-900 bg-cream-100 border border-cream-200 px-3 py-1.5 rounded-xl text-xs tabular-nums">
+                      <span className="font-black text-ink-900 bg-white/60 border border-white/50 px-3 py-1.5 rounded-xl text-xs tabular-nums">
                         #{ped.id}
                       </span>
                       <div className="text-xs text-ink-500">
@@ -271,7 +267,7 @@ export const OrdersPage = () => {
                   {ped.estado !== 'CANCELADO' ? (
                     <div className="py-2 px-1 select-none">
                       <div className="relative flex items-center justify-between">
-                        <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-1.5 bg-paper-200 rounded-full -z-10" />
+                        <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-1.5 bg-white/40 rounded-full -z-10" />
                         <div
                           className="absolute left-2 top-1/2 -translate-y-1/2 h-1.5 bg-brand-red-500 rounded-full -z-10 transition-all duration-500"
                           style={{ width: `calc((100% - 1rem) * ${fsmIdx / 4})` }}
@@ -288,7 +284,7 @@ export const OrdersPage = () => {
                                     ? 'bg-brand-red-500 text-white border-brand-red-500 ring-4 ring-brand-red-500/15 scale-110'
                                     : isDone
                                     ? 'bg-brand-red-500 text-white border-brand-red-500'
-                                    : 'bg-paper-0 text-ink-400 border-paper-200'
+                                    : 'bg-white/50 text-ink-400 border-white/50'
                                 }`}
                               >
                                 {isDone && !isCurrent ? '✓' : idx + 1}
@@ -306,7 +302,7 @@ export const OrdersPage = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-danger-50 border border-danger-200 rounded-xl p-4 flex gap-3 text-left">
+                    <div className="bg-danger-50/80 border border-danger-200/60 rounded-2xl p-4 flex gap-3 text-left backdrop-blur-sm">
                       <XCircle className="text-danger-500 shrink-0 mt-0.5" size={18} />
                       <div>
                         <span className="text-xs font-black text-danger-700 uppercase tracking-wider">
@@ -325,7 +321,7 @@ export const OrdersPage = () => {
                       {isPayable && (
                         <button
                           onClick={() => handlePayClick(ped.id, ped.total)}
-                          className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-4 py-2 rounded-xl shadow-sm hover:shadow-brand transition-all duration-150 active:scale-[0.96] cursor-pointer text-xs flex items-center gap-1.5"
+                          className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-4 py-2 rounded-2xl shadow-sm hover:shadow-brand transition-all duration-150 active:scale-[0.96] cursor-pointer text-xs flex items-center gap-1.5"
                         >
                           <CreditCard size={14} />
                           <span>Pagar ahora</span>
@@ -334,7 +330,7 @@ export const OrdersPage = () => {
                       {isCancelable && (
                         <button
                           onClick={() => handleCancelClick(ped.id)}
-                          className="bg-paper-0 border border-danger-100 hover:bg-danger-50 hover:border-danger-200 text-danger-600 hover:text-danger-700 font-semibold px-4 py-2 rounded-xl transition-colors duration-150 cursor-pointer text-xs flex items-center gap-1.5"
+                          className="glass-panel border border-danger-200/60 hover:bg-danger-50/70 text-danger-600 hover:text-danger-700 font-semibold px-4 py-2 rounded-2xl transition-all duration-150 cursor-pointer text-xs flex items-center gap-1.5"
                         >
                           <XCircle size={14} />
                           <span>Cancelar pedido</span>
@@ -353,9 +349,9 @@ export const OrdersPage = () => {
 
                   {/* Detalles */}
                   {isExpanded && (
-                    <div className="border-t border-paper-200 pt-5 space-y-5 text-left animate-slideDown">
+                    <div className="border-t border-white/40 pt-5 space-y-5 text-left animate-slideDown">
                       {ped.tipo_entrega === 'DELIVERY' && ped.direccion_snapshot && (
-                        <div className="bg-cream-100 border border-cream-200 rounded-xl p-4 space-y-1">
+                        <div className="glass-panel rounded-2xl p-4 space-y-1">
                           <span className={`${eyebrow} flex items-center gap-1`}>
                             <MapPin size={11} />
                             <span>Dirección de entrega</span>
@@ -368,7 +364,7 @@ export const OrdersPage = () => {
 
                       <div className="space-y-2.5">
                         <span className={eyebrow}>Platos del pedido</span>
-                        <div className="divide-y divide-paper-200 bg-paper-0 border border-paper-200 rounded-xl overflow-hidden">
+                        <div className="divide-y divide-white/30 glass-panel rounded-2xl overflow-hidden">
                           {ped.detalles.map(det => (
                             <div key={det.id} className="p-3.5 flex items-start justify-between gap-3 text-sm leading-normal">
                               <div className="min-w-0 flex-1">
@@ -383,7 +379,7 @@ export const OrdersPage = () => {
                                     {det.personalizacion.split(',').map((exId, idx) => (
                                       <span
                                         key={idx}
-                                        className="inline-flex items-center gap-1 bg-danger-50 text-danger-700 border border-danger-200 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
+                                        className="inline-flex items-center gap-1 bg-danger-50/80 text-danger-700 border border-danger-200/60 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
                                       >
                                         Sin ingrediente #{exId}
                                       </span>
@@ -402,17 +398,17 @@ export const OrdersPage = () => {
                       {ped.historial && ped.historial.length > 0 && (
                         <div className="space-y-2">
                           <span className={eyebrow}>Historial de auditoría</span>
-                          <div className="bg-cream-50 border border-cream-200 rounded-xl p-4 space-y-3">
+                          <div className="bg-white/20 border border-white/30 rounded-2xl p-4 space-y-3 backdrop-blur-sm">
                             {ped.historial.map(hist => (
                               <div key={hist.id} className="text-xs leading-relaxed relative pl-4">
                                 <div className="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-brand-red-500 ring-4 ring-brand-red-500/15" />
                                 <p className="font-bold text-ink-900">
                                   Transición:{' '}
-                                  <span className="text-[10px] bg-paper-0 border border-paper-200 px-1.5 py-0.5 rounded font-black text-ink-700">
+                                  <span className="text-[10px] bg-white/60 border border-white/50 px-1.5 py-0.5 rounded font-black text-ink-700">
                                     {hist.estado_origen}
                                   </span>{' '}
                                   →{' '}
-                                  <span className="text-[10px] bg-paper-0 border border-paper-200 px-1.5 py-0.5 rounded font-black text-ink-700">
+                                  <span className="text-[10px] bg-white/60 border border-white/50 px-1.5 py-0.5 rounded font-black text-ink-700">
                                     {hist.estado_destino}
                                   </span>
                                 </p>
@@ -421,7 +417,7 @@ export const OrdersPage = () => {
                                   {hist.operador_email && ` · Operador: ${hist.operador_email}`}
                                 </p>
                                 {hist.motivo && (
-                                  <p className="text-[11px] text-ink-700 font-semibold bg-paper-0 border border-paper-200 p-2 rounded-lg mt-1.5">
+                                  <p className="text-[11px] text-ink-700 font-semibold bg-white/40 border border-white/40 p-2 rounded-xl mt-1.5">
                                     Motivo: {hist.motivo}
                                   </p>
                                 )}
@@ -443,13 +439,13 @@ export const OrdersPage = () => {
 
       {/* Modal · procesando pago */}
       {isPaying && (
-        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center p-4 bg-ink-900/55 backdrop-blur-sm animate-fadeIn select-none">
-          <div className="bg-paper-0 rounded-2xl max-w-sm w-full shadow-xl p-8 text-center space-y-6 animate-scaleUp border border-paper-200 overflow-hidden">
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center p-4 bg-ink-900/40 backdrop-blur-sm animate-fadeIn select-none">
+          <div className="glass-modal rounded-2xl max-w-sm w-full p-8 text-center space-y-6 animate-glassIn overflow-hidden">
             <div className="h-1.5 -mx-8 -mt-8 mb-4 bg-gradient-to-r from-brand-red-500 via-brand-yellow-400 to-brand-red-500" />
             <div className="relative w-20 h-20 mx-auto">
-              <div className="absolute inset-0 border-4 border-cream-100 rounded-full" />
+              <div className="absolute inset-0 border-4 border-white/40 rounded-full" />
               <div className="absolute inset-0 border-4 border-brand-red-500 border-t-transparent rounded-full animate-spin" />
-              <div className="absolute inset-3 bg-brand-red-50 rounded-full flex items-center justify-center text-brand-red-600">
+              <div className="absolute inset-3 bg-brand-red-500/10 rounded-full flex items-center justify-center text-brand-red-600">
                 <Lock size={20} />
               </div>
             </div>
@@ -458,7 +454,7 @@ export const OrdersPage = () => {
               <h4 className="font-display text-xl font-extrabold text-ink-900">
                 Simulando Sandbox de MercadoPago
               </h4>
-              <p className="text-xs text-ink-700 font-medium px-3 py-2 bg-cream-100 border border-cream-200 rounded-xl leading-relaxed">
+              <p className="text-xs text-ink-700 font-medium px-3 py-2 glass-panel rounded-2xl leading-relaxed">
                 {payStep}
               </p>
             </div>
@@ -471,15 +467,15 @@ export const OrdersPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div
             onClick={() => setCancelPedidoId(null)}
-            className="fixed inset-0 bg-ink-900/55 backdrop-blur-sm"
+            className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm"
           />
           <form
             onSubmit={handleCancelSubmit}
-            className="relative bg-paper-0 rounded-2xl max-w-sm w-full shadow-xl z-10 animate-scaleUp border border-paper-200 overflow-hidden flex flex-col max-h-[90vh]"
+            className="relative glass-modal rounded-2xl max-w-sm w-full z-10 animate-glassIn overflow-hidden flex flex-col max-h-[90vh]"
           >
             <div className="h-1.5 bg-gradient-to-r from-danger-500/0 via-danger-500 to-danger-500/0" />
 
-            <div className="flex items-center justify-between p-6 pb-3 border-b border-paper-200 shrink-0">
+            <div className="flex items-center justify-between p-6 pb-3 border-b border-white/40 shrink-0">
               <div>
                 <span className={eyebrow}>Cancelación</span>
                 <h3 className="font-display text-xl font-extrabold text-ink-900 mt-0.5">
@@ -489,7 +485,7 @@ export const OrdersPage = () => {
               <button
                 type="button"
                 onClick={() => setCancelPedidoId(null)}
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors duration-150 cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center rounded-2xl glass-panel hover:bg-white/80 text-ink-700 transition-all duration-150 cursor-pointer"
                 aria-label="Cerrar"
               >
                 <X size={16} />
@@ -498,7 +494,7 @@ export const OrdersPage = () => {
 
             <div className="p-6 space-y-4 overflow-y-auto">
               {cancelError && (
-                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2 font-medium animate-shake">
+                <div className="bg-danger-50/80 border border-danger-200/60 text-danger-700 px-4 py-3 rounded-2xl text-sm flex items-center gap-2 font-medium animate-shake backdrop-blur-sm">
                   <AlertTriangle size={16} className="shrink-0" />
                   <span>{cancelError}</span>
                 </div>
@@ -511,30 +507,32 @@ export const OrdersPage = () => {
               </p>
 
               <div>
-                <label className={labelBase}>Motivo de Cancelación</label>
+                <label className="block text-xs font-bold uppercase tracking-[0.16em] text-ink-600 mb-1.5">
+                  Motivo de Cancelación
+                </label>
                 <textarea
                   required
                   placeholder="Ej: Me equivoqué de plato / No puedo esperar la demora…"
                   rows={3}
                   value={cancelMotivo}
                   onChange={e => setCancelMotivo(e.target.value)}
-                  className={`${inputBase} resize-none`}
+                  className="glass-input"
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-6 pt-4 border-t border-paper-200 shrink-0 bg-paper-50">
+            <div className="flex items-center gap-3 p-6 pt-4 border-t border-white/40 shrink-0 bg-white/30">
               <button
                 type="button"
                 onClick={() => setCancelPedidoId(null)}
-                className="flex-1 bg-paper-0 border-2 border-paper-200 hover:border-ink-700 hover:bg-paper-100 text-ink-900 font-semibold px-4 py-2.5 rounded-xl transition-all duration-150 cursor-pointer text-sm"
+                className="flex-1 glass-panel hover:bg-white/80 text-ink-900 font-semibold px-4 py-2.5 rounded-2xl transition-all duration-150 cursor-pointer text-sm"
               >
                 Volver atrás
               </button>
               <button
                 type="submit"
                 disabled={cancelMutation.isPending}
-                className="flex-1 bg-danger-500 hover:bg-danger-600 active:bg-danger-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] disabled:opacity-50 cursor-pointer text-sm"
+                className="flex-1 bg-danger-500 hover:bg-danger-600 active:bg-danger-700 text-white font-bold px-5 py-2.5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] disabled:opacity-50 cursor-pointer text-sm"
               >
                 {cancelMutation.isPending ? 'Cancelando…' : 'Confirmar'}
               </button>
@@ -548,15 +546,15 @@ export const OrdersPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div
             onClick={() => setPayPedidoId(null)}
-            className="fixed inset-0 bg-ink-900/55 backdrop-blur-sm"
+            className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm"
           />
           <form
             onSubmit={handlePaySubmit}
-            className="relative bg-paper-0 rounded-2xl max-w-sm w-full shadow-xl z-10 animate-scaleUp border border-paper-200 overflow-hidden flex flex-col max-h-[90vh]"
+            className="relative glass-modal rounded-2xl max-w-sm w-full z-10 animate-glassIn overflow-hidden flex flex-col max-h-[90vh]"
           >
             <div className="h-1.5 bg-gradient-to-r from-brand-red-500 via-brand-yellow-400 to-brand-red-500" />
 
-            <div className="flex items-center justify-between p-6 pb-3 border-b border-paper-200 shrink-0">
+            <div className="flex items-center justify-between p-6 pb-3 border-b border-white/40 shrink-0">
               <div>
                 <span className={eyebrow}>Abonar Pedido</span>
                 <h3 className="font-display text-xl font-extrabold text-ink-900 mt-0.5">
@@ -566,7 +564,7 @@ export const OrdersPage = () => {
               <button
                 type="button"
                 onClick={() => setPayPedidoId(null)}
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors duration-150 cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center rounded-2xl glass-panel hover:bg-white/80 text-ink-700 transition-all duration-150 cursor-pointer"
                 aria-label="Cerrar"
               >
                 <X size={16} />
@@ -575,7 +573,7 @@ export const OrdersPage = () => {
 
             <div className="p-6 space-y-4 overflow-y-auto">
               {payError && (
-                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2 font-medium animate-shake">
+                <div className="bg-danger-50/80 border border-danger-200/60 text-danger-700 px-4 py-3 rounded-2xl text-sm flex items-center gap-2 font-medium animate-shake backdrop-blur-sm">
                   <AlertTriangle size={16} className="shrink-0" />
                   <span>{payError}</span>
                 </div>
@@ -587,7 +585,7 @@ export const OrdersPage = () => {
                 <strong className="text-brand-red-600">${payTotal.toFixed(2)}</strong>.
               </p>
 
-              <div className="bg-cream-100 border border-brand-yellow-200 p-4 rounded-xl flex gap-3 text-left">
+              <div className="glass-panel rounded-2xl p-4 flex gap-3 text-left">
                 <Lock className="text-brand-yellow-700 shrink-0 mt-0.5" size={18} />
                 <div>
                   <span className="text-xs font-black text-ink-900 uppercase tracking-wider">
@@ -601,17 +599,17 @@ export const OrdersPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-6 pt-4 border-t border-paper-200 shrink-0 bg-paper-50">
+            <div className="flex items-center gap-3 p-6 pt-4 border-t border-white/40 shrink-0 bg-white/30">
               <button
                 type="button"
                 onClick={() => setPayPedidoId(null)}
-                className="flex-1 bg-paper-0 border-2 border-paper-200 hover:border-ink-700 hover:bg-paper-100 text-ink-900 font-semibold px-4 py-2.5 rounded-xl transition-all duration-150 cursor-pointer text-sm"
+                className="flex-1 glass-panel hover:bg-white/80 text-ink-900 font-semibold px-4 py-2.5 rounded-2xl transition-all duration-150 cursor-pointer text-sm"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm"
+                className="flex-1 bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm"
               >
                 Confirmar
               </button>

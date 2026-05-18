@@ -50,7 +50,6 @@ export const DashboardPage = () => {
       minimumFractionDigits: 2,
     }).format(val);
 
-  const cardBase = 'bg-paper-0 border border-paper-200 rounded-2xl shadow-card';
   const eyebrow = 'text-[11px] font-black uppercase tracking-[0.18em] text-ink-500';
 
   if (isLoading) {
@@ -67,7 +66,7 @@ export const DashboardPage = () => {
   if (isError || !metrics) {
     return (
       <AdminLayout title="Dashboard Analítico" subtitle="Resumen analítico y rendimiento de ventas">
-        <div className="bg-danger-50 border border-danger-200 rounded-2xl p-8 text-center max-w-xl mx-auto space-y-4">
+        <div className="bg-danger-50/80 border border-danger-200/60 rounded-2xl p-8 text-center max-w-xl mx-auto space-y-4 backdrop-blur-sm">
           <XCircle className="text-danger-600 mx-auto" size={48} />
           <h2 className="font-display text-xl font-extrabold text-danger-700">
             Error al cargar estadísticas
@@ -78,7 +77,7 @@ export const DashboardPage = () => {
           </p>
           <button
             onClick={() => refetch()}
-            className="px-5 py-2.5 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold text-sm rounded-xl transition-all active:scale-[0.98] cursor-pointer shadow-brand"
+            className="px-5 py-2.5 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold text-sm rounded-2xl transition-all active:scale-[0.98] cursor-pointer shadow-brand"
           >
             Reintentar carga
           </button>
@@ -103,7 +102,7 @@ export const DashboardPage = () => {
       subtitle="Monitoreo operativo de ventas, tracción y flujo de estados en tiempo real"
     >
       {/* Barra superior */}
-      <div className={`${cardBase} px-5 py-3 flex items-center justify-between`}>
+      <div className="glass-panel rounded-2xl px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-400 opacity-75" />
@@ -114,7 +113,7 @@ export const DashboardPage = () => {
         <button
           onClick={() => refetch()}
           disabled={isFetching}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-paper-200 text-ink-600 hover:bg-paper-50 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-panel hover:bg-white/60 text-ink-600 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
           <span>{isFetching ? 'Actualizando…' : 'Actualizar ahora'}</span>
@@ -160,8 +159,8 @@ export const DashboardPage = () => {
       {/* GRÁFICOS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Ventas históricas */}
-        <div className={`${cardBase} p-5 lg:col-span-2 space-y-4`}>
-          <div className="flex items-center justify-between border-b border-paper-200 pb-3 gap-3 flex-wrap">
+        <div className="glass-panel rounded-2xl p-5 lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between border-b border-white/40 pb-3 gap-3 flex-wrap">
             <div>
               <h4 className="font-display text-lg font-extrabold text-ink-900">
                 Histórico de Facturación
@@ -170,7 +169,7 @@ export const DashboardPage = () => {
                 Análisis temporal de ingresos por día.
               </p>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] font-black text-ink-700 bg-cream-100 border border-cream-200 px-3 py-1 rounded-full uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 text-[10px] font-black text-ink-700 glass-panel px-3 py-1 rounded-full uppercase tracking-wider">
               <Activity size={12} className="text-brand-red-500" />
               <span>Gráfico Spline</span>
             </div>
@@ -193,7 +192,7 @@ export const DashboardPage = () => {
                       <stop offset="95%" stopColor="#DA291C" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.4)" vertical={false} />
                   <XAxis
                     dataKey="fecha"
                     tickLine={false}
@@ -207,10 +206,11 @@ export const DashboardPage = () => {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'white',
-                      borderRadius: '12px',
-                      border: '1px solid #e5e7eb',
+                      backgroundColor: 'rgba(255,255,255,0.92)',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(255,255,255,0.6)',
                       boxShadow: '0 12px 24px -6px rgba(20,20,20,0.10)',
+                      backdropFilter: 'blur(16px)',
                     }}
                     labelStyle={{ fontSize: '12px', fontWeight: 800, color: '#111827' }}
                     itemStyle={{ fontSize: '12px', color: '#DA291C', fontWeight: 'bold' }}
@@ -231,8 +231,8 @@ export const DashboardPage = () => {
         </div>
 
         {/* Pedidos por Estado */}
-        <div className={`${cardBase} p-5 space-y-4`}>
-          <div className="border-b border-paper-200 pb-3">
+        <div className="glass-panel rounded-2xl p-5 space-y-4">
+          <div className="border-b border-white/40 pb-3">
             <h4 className="font-display text-lg font-extrabold text-ink-900">Pedidos por Estado</h4>
             <p className="text-xs text-ink-500 mt-1 font-medium">
               Distribución FSM operativa.
@@ -265,9 +265,10 @@ export const DashboardPage = () => {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'white',
-                      borderRadius: '12px',
-                      border: '1px solid #e5e7eb',
+                      backgroundColor: 'rgba(255,255,255,0.92)',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(255,255,255,0.6)',
+                      backdropFilter: 'blur(16px)',
                     }}
                     itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
                   />
@@ -276,11 +277,11 @@ export const DashboardPage = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-ink-600 border-t border-paper-200 pt-3">
+          <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-ink-600 border-t border-white/40 pt-3">
             {Object.entries(metrics.pedidos_por_estado || {}).map(([estado, cantidad], idx) => (
               <div key={idx} className="flex items-center gap-1.5">
                 <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0 border border-paper-200/50"
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: ESTADOS_COLORS[estado] || '#7A7A7A' }}
                 />
                 <span className="truncate uppercase tracking-wider">
@@ -293,8 +294,8 @@ export const DashboardPage = () => {
       </div>
 
       {/* Estado operativo */}
-      <div className={`${cardBase} p-5 space-y-4`}>
-        <div className="flex items-center justify-between border-b border-paper-200 pb-3 gap-3 flex-wrap">
+      <div className="glass-panel rounded-2xl p-5 space-y-4">
+        <div className="flex items-center justify-between border-b border-white/40 pb-3 gap-3 flex-wrap">
           <div>
             <h4 className="font-display text-lg font-extrabold text-ink-900">
               Estado Operativo de las Órdenes
@@ -303,7 +304,7 @@ export const DashboardPage = () => {
               Distribución de las órdenes de hoy por canal.
             </p>
           </div>
-          <div className="flex items-center gap-1 text-[10px] font-black bg-brand-yellow-100 text-brand-yellow-800 border border-brand-yellow-300 px-2.5 py-1 rounded-full uppercase tracking-wider">
+          <div className="flex items-center gap-1 text-[10px] font-black bg-brand-yellow-100/80 text-brand-yellow-800 border border-brand-yellow-200/60 px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">
             <Clock size={12} /> Canal Activo
           </div>
         </div>
@@ -313,13 +314,13 @@ export const DashboardPage = () => {
             eyebrow="Entrega por Delivery"
             value={`${totalPedidos} órdenes`}
             badge="FS"
-            badgeBg="bg-brand-red-50 text-brand-red-700 border-brand-red-200"
+            badgeBg="bg-brand-red-500/10 text-brand-red-700 border-brand-red-200/60"
           />
           <OpCard
             eyebrow="Satisfacción Operativa"
             value="98.4%"
             icon={<CheckCircle size={24} />}
-            badgeBg="bg-success-50 text-success-700 border-success-100"
+            badgeBg="bg-success-50/80 text-success-700 border-success-100/70"
           />
         </div>
       </div>
@@ -342,7 +343,7 @@ const MetricCard = ({
   icon: React.ReactNode;
   accent: string;
 }) => (
-  <div className="bg-paper-0 border border-paper-200 rounded-2xl shadow-card p-5 relative overflow-hidden group hover:shadow-card-hover transition-shadow duration-200">
+  <div className="glass-panel rounded-2xl p-5 relative overflow-hidden hover:shadow-[var(--shadow-glass-hover)] hover:-translate-y-0.5 transition-all duration-200">
     <div className="flex items-center justify-between">
       <span className="text-[11px] font-black uppercase tracking-[0.18em] text-ink-500">
         {eyebrow}
@@ -356,7 +357,7 @@ const MetricCard = ({
         {value}
       </h3>
       <div className="flex items-center gap-1.5 mt-3">
-        <span className="text-[10px] font-bold text-success-700 bg-success-50 border border-success-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+        <span className="text-[10px] font-bold text-success-700 bg-success-50/80 border border-success-100/70 px-2 py-0.5 rounded-full flex items-center gap-0.5">
           <ArrowUpRight size={10} /> {delta}
         </span>
         <span className="text-[10px] text-ink-500 font-medium">{sub}</span>
@@ -378,7 +379,7 @@ const OpCard = ({
   badge?: string;
   badgeBg: string;
 }) => (
-  <div className="border border-paper-200 p-4 rounded-2xl flex items-center justify-between bg-cream-50">
+  <div className="glass-panel rounded-2xl p-4 flex items-center justify-between">
     <div>
       <span className="text-[11px] font-black uppercase tracking-[0.18em] text-ink-500 block">
         {eyebrow}

@@ -26,7 +26,6 @@ export const LoginPage = () => {
       try {
         const response = await api.post('/auth/login', value);
         const { user, access_token, refresh_token } = response.data;
-
         setAuth(user, access_token, refresh_token);
         navigate(from, { replace: true });
       } catch (err: any) {
@@ -37,28 +36,24 @@ export const LoginPage = () => {
     },
   });
 
-  const inputClass =
-    'w-full px-4 py-3 bg-paper-0 border border-paper-200 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/15 transition-colors duration-150';
   const labelClass = 'block text-xs font-bold uppercase tracking-[0.16em] text-ink-600 mb-1.5';
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-cream-50">
-      {/* ───────── COLUMNA IZQUIERDA · Brand storytelling (oculta en mobile) ───────── */}
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* ── COLUMNA IZQUIERDA · Brand ── */}
       <aside className="hidden lg:flex relative flex-1 bg-brand-red-500 text-paper-0 p-12 xl:p-16 flex-col justify-between overflow-hidden">
-        {/* Decorativos */}
+        <div className="absolute inset-0 bg-warm-mesh opacity-40 pointer-events-none" />
         <svg
           aria-hidden="true"
           className="absolute -top-24 -left-24 w-[28rem] h-[28rem] opacity-15 pointer-events-none"
-          viewBox="0 0 200 200"
-          fill="none"
+          viewBox="0 0 200 200" fill="none"
         >
           <path d="M20 180 Q20 20 100 20 Q180 20 180 180" stroke="#FFC72C" strokeWidth="40" strokeLinecap="round" />
         </svg>
         <svg
           aria-hidden="true"
           className="absolute -bottom-32 -right-24 w-[32rem] h-[32rem] opacity-15 pointer-events-none"
-          viewBox="0 0 200 200"
-          fill="none"
+          viewBox="0 0 200 200" fill="none"
         >
           <path d="M20 180 Q20 20 100 20 Q180 20 180 180" stroke="#FFC72C" strokeWidth="40" strokeLinecap="round" />
         </svg>
@@ -74,9 +69,9 @@ export const LoginPage = () => {
           </div>
         </div>
 
-        {/* Mid · Headline */}
+        {/* Mid */}
         <div className="relative z-10 space-y-6 max-w-xl">
-          <span className="inline-flex items-center gap-2 bg-brand-yellow-400 text-ink-900 px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest shadow-sm">
+          <span className="inline-flex items-center gap-2 glass-badge bg-brand-yellow-400/90 text-ink-900 px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest shadow-sm">
             <Sparkles size={13} />
             <span>Sabores que enamoran</span>
           </span>
@@ -89,18 +84,18 @@ export const LoginPage = () => {
           </p>
         </div>
 
-        {/* Bottom · Promesas */}
+        {/* Bottom */}
         <div className="relative z-10 grid grid-cols-2 gap-4 max-w-md">
           <Promise icon={<ChefHat size={18} />} title="Chef del año" sub="2025" />
           <Promise icon={<ShieldCheck size={18} />} title="Filtros alérgenos" sub="100% seguros" />
         </div>
       </aside>
 
-      {/* ───────── COLUMNA DERECHA · Form ───────── */}
+      {/* ── COLUMNA DERECHA · Form ── */}
       <section className="flex-1 flex items-center justify-center px-4 sm:px-6 py-10 lg:py-12 relative">
         <Link
           to="/"
-          className="absolute top-5 left-5 sm:top-7 sm:left-7 inline-flex items-center gap-1.5 text-sm font-bold text-ink-600 hover:text-brand-red-600 transition-colors px-3 py-2 rounded-lg hover:bg-paper-100"
+          className="absolute top-5 left-5 sm:top-7 sm:left-7 inline-flex items-center gap-1.5 text-sm font-bold text-ink-600 hover:text-brand-red-600 transition-colors px-3 py-2 rounded-xl glass-panel hover:bg-white/80"
         >
           <ArrowLeft size={16} />
           <span className="hidden sm:inline">Volver a la tienda</span>
@@ -108,7 +103,7 @@ export const LoginPage = () => {
         </Link>
 
         <div className="w-full max-w-md animate-scaleUp">
-          {/* Header del formulario */}
+          {/* Header mobile */}
           <div className="flex flex-col items-center text-center mb-8 lg:hidden">
             <Logo size="lg" variant="red" className="shadow-brand" />
             <h2 className="mt-5 font-display text-3xl font-black text-ink-900 tracking-tight">
@@ -128,8 +123,8 @@ export const LoginPage = () => {
             </p>
           </div>
 
-          {/* Card del formulario */}
-          <div className="bg-paper-0 rounded-2xl shadow-xl border border-paper-200 p-7 lg:p-8 space-y-5">
+          {/* Card de formulario — glass */}
+          <div className="glass-modal rounded-2xl p-7 lg:p-8 space-y-5">
             <form
               className="space-y-5"
               onSubmit={(e) => {
@@ -139,7 +134,7 @@ export const LoginPage = () => {
               }}
             >
               {error && (
-                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2 font-medium animate-shake">
+                <div className="bg-danger-50/80 border border-danger-200/60 text-danger-700 px-4 py-3 rounded-2xl text-sm flex items-start gap-2 font-medium animate-shake backdrop-blur-sm">
                   <AlertCircle size={18} className="shrink-0 mt-0.5" />
                   <span className="leading-relaxed">{error}</span>
                 </div>
@@ -158,7 +153,7 @@ export const LoginPage = () => {
                       type="email"
                       required
                       autoComplete="email"
-                      className={inputClass}
+                      className="glass-input"
                       placeholder="tu@email.com"
                       value={field.state.value}
                       onBlur={field.handleBlur}
@@ -181,7 +176,7 @@ export const LoginPage = () => {
                       type="password"
                       required
                       autoComplete="current-password"
-                      className={inputClass}
+                      className="glass-input"
                       placeholder="••••••••"
                       value={field.state.value}
                       onBlur={field.handleBlur}
@@ -194,7 +189,7 @@ export const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold py-3.5 rounded-xl shadow-brand hover:shadow-lg transition-all duration-200 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer flex items-center justify-center gap-2 text-sm"
+                className="w-full bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold py-3.5 rounded-2xl shadow-brand hover:shadow-lg transition-all duration-200 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer flex items-center justify-center gap-2 text-sm"
               >
                 {isLoading ? (
                   <>
@@ -207,7 +202,7 @@ export const LoginPage = () => {
               </button>
             </form>
 
-            <div className="pt-3 border-t border-paper-200 text-center">
+            <div className="pt-3 border-t border-white/40 text-center">
               <p className="text-[11px] text-ink-400 font-bold uppercase tracking-wider">
                 Acceso restringido · Solo personal autorizado
               </p>
@@ -235,8 +230,8 @@ const Promise = ({
   title: string;
   sub: string;
 }) => (
-  <div className="flex items-center gap-3 bg-paper-0/10 backdrop-blur-sm border border-paper-0/15 rounded-xl px-3 py-2.5">
-    <div className="w-9 h-9 rounded-lg bg-brand-yellow-400 text-ink-900 flex items-center justify-center shrink-0">
+  <div className="flex items-center gap-3 glass-badge rounded-2xl px-3 py-2.5">
+    <div className="w-9 h-9 rounded-xl bg-brand-yellow-400 text-ink-900 flex items-center justify-center shrink-0">
       {icon}
     </div>
     <div className="leading-tight">

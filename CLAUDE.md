@@ -28,7 +28,7 @@ All backend commands assume the venv lives at `backend/venv/` (no leading dot �
 # Dev server (must invoke uvicorn through venv's python, not global)
 ./venv/Scripts/python -m uvicorn app.main:app --reload --port 8000
 
-# Tests
+# Tests (use anyio for async tests)
 ./venv/Scripts/python -m pytest                       # all
 ./venv/Scripts/python -m pytest tests/test_pedidos.py # single file
 ./venv/Scripts/python -m pytest tests/test_pedidos.py::test_name  # single test
@@ -50,6 +50,8 @@ npm run lint     # eslint .
 
 There is no frontend test runner configured.
 
+Backend tests use `@pytest.mark.anyio` for async coroutines. The `test_db` fixture in each test file creates a SQLite in-memory DB, seeds FSM states/roles/formas de pago/admin user, then monkey-patches `app.core.uow.engine`. Replicate this pattern when adding new test suites.
+
 ## Architecture
 
 ### Backend — Feature-First with strict unidirectional flow
@@ -62,13 +64,15 @@ Router → Service → UoW → Repository → Model
 
 - `app/main.py` mounts all module routers under `settings.API_V1_STR` (`/api/v1`), wires CORS, slowapi rate limiting, and RFC 7807 error handlers.
 - `app/core/uow.py` — `UnitOfWork` is an async context manager that opens a single `Session`, instantiates every repository against it, then commits on clean exit or rolls back on exception. **Services must do all DB work inside `async with UnitOfWork() as uow:` — never open sessions directly.**
-- `app/core/repository.py` — generic `BaseRepository[T]` with built-in soft-delete (auto-filters `deleted_at` when the model declares it) and pagination. Module-specific repositories (e.g. `CategoriaRepository`) extend it only when extra queries are needed.
+- `app/core/repository.py` — generic `BaseRepository[T]` with built-in soft-delete (auto-filters `deleted_at` when the model declares it) and pagination. `create()` / `update()` call `session.flush()` then `session.refresh()` — this makes the assigned ID available mid-transaction without committing. Module-specific repositories (e.g. `CategoriaRepository`) extend it only when extra queries are needed.
 - `app/modules/<dominio>/` — each domain has `model.py · schemas.py · repository.py · service.py · router.py`. `admin/` is the exception: dashboard/reporting glue that composes other services, no model of its own.
 - Services raise `HTTPException` directly; routers and repositories must not.
 - Sensitive endpoints (e.g. login) decorated with `slowapi` rate limits.
 - Migrations live in `backend/alembic/versions/`; never alter tables by hand.
 
 Domain modules currently wired in `main.py`: `auth`, `categorias`, `productos`, `ingredientes`, `usuarios` (+ `usuarios_admin_router`), `admin`, `pedidos`, `pagos`, `configuracion`.
+
+The `configuracion` module stores runtime key-value flags in the DB — notably `estado_local` (`abierto`/`cerrado`, checked before every new pedido) and `costo_envio` (decimal string, applied per delivery order). `configuracion_router` is protected (ADMIN); `public_configuracion_router` is unauthenticated and exposes `GET /configuracion/publica` for the storefront.
 
 ### Pedidos FSM
 
@@ -82,7 +86,7 @@ Layer order (imports may only flow downward):
 app → pages → features → entities → shared
 ```
 
-`src/app/router.tsx` is the route map and the canonical place to see role-gating. `ProtectedRoute` accepts `allowedRoles` (`ADMIN`, `STOCK`, `PEDIDOS`); the `/admin/*` tree is partitioned by role. Server state goes through **TanStack Query** only — do not mirror it in Zustand. Client state (cart, session, UI, payment flow) uses typed **Zustand** stores in `src/shared/stores/`. Forms use **TanStack Form** (not react-hook-form). HTTP goes through an Axios instance in `src/shared/api/` with a JWT attach + refresh interceptor. Card data uses `@mercadopago/sdk-react` tokenisation — never send raw PAN to our backend.
+`src/app/router.tsx` is the route map and the canonical place to see role-gating. `ProtectedRoute` accepts `allowedRoles` (`ADMIN`, `STOCK`, `PEDIDOS`); the `/admin/*` tree is partitioned by role. Server state goes through **TanStack Query** only — do not mirror it in Zustand. Client state (cart, session, UI, payment flow) uses typed **Zustand** stores in `src/shared/stores/`. Forms use **TanStack Form** (not react-hook-form). HTTP goes through an Axios instance in `src/shared/api/axios.ts` with a JWT attach + refresh interceptor; on 401 it attempts a token refresh before logging out. The `extractErrorMessage(err)` helper in the same file normalises RFC 7807 error bodies (including Pydantic validation arrays) into a single display string — use it in all catch blocks. Card data uses `@mercadopago/sdk-react` tokenisation — never send raw PAN to our backend.
 
 ## SDD / OPSX workflow
 

@@ -37,41 +37,36 @@ interface VariantStyle {
   iconBg: string;
   iconFg: string;
   ring: string;
-  badge: string;
   icon: React.ReactNode;
   accent: string;
 }
 
 const variantStyles: Record<AlertVariant, VariantStyle> = {
   info: {
-    iconBg: 'bg-info-50',
+    iconBg: 'bg-info-50/80',
     iconFg: 'text-info-600',
-    ring: 'ring-info-100',
-    badge: 'bg-info-100 text-info-700',
+    ring: 'ring-info-100/80',
     icon: <Info size={28} className="stroke-[2.2]" />,
     accent: 'from-info-500/0 via-info-500 to-info-500/0',
   },
   success: {
-    iconBg: 'bg-success-50',
+    iconBg: 'bg-success-50/80',
     iconFg: 'text-success-600',
-    ring: 'ring-success-100',
-    badge: 'bg-success-100 text-success-700',
+    ring: 'ring-success-100/80',
     icon: <CheckCircle size={28} className="stroke-[2.2]" />,
     accent: 'from-success-500/0 via-success-500 to-success-500/0',
   },
   warning: {
-    iconBg: 'bg-brand-yellow-50',
+    iconBg: 'bg-brand-yellow-50/80',
     iconFg: 'text-brand-yellow-700',
-    ring: 'ring-brand-yellow-100',
-    badge: 'bg-brand-yellow-100 text-brand-yellow-800',
+    ring: 'ring-brand-yellow-100/80',
     icon: <AlertTriangle size={28} className="stroke-[2.2]" />,
     accent: 'from-brand-yellow-400/0 via-brand-yellow-400 to-brand-yellow-400/0',
   },
   danger: {
-    iconBg: 'bg-danger-50',
+    iconBg: 'bg-danger-50/80',
     iconFg: 'text-danger-600',
-    ring: 'ring-danger-100',
-    badge: 'bg-danger-100 text-danger-700',
+    ring: 'ring-danger-100/80',
     icon: <XCircle size={28} className="stroke-[2.2]" />,
     accent: 'from-danger-500/0 via-danger-500 to-danger-500/0',
   },
@@ -135,18 +130,18 @@ export const FeedbackProvider = ({ children }: { children: React.ReactNode }) =>
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             onClick={closeAlert}
-            className="fixed inset-0 bg-ink-900/55 backdrop-blur-sm animate-fadeIn"
+            className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm animate-fadeIn"
           />
           <div
             role="alertdialog"
             aria-modal="true"
-            className="relative bg-paper-0 rounded-2xl shadow-xl w-full max-w-md animate-scaleUp border border-paper-200 overflow-hidden"
+            className="relative glass-modal rounded-2xl w-full max-w-md animate-glassIn overflow-hidden"
           >
             <div className={`h-1.5 bg-gradient-to-r ${alertStyle.accent}`} />
 
             <div className="flex items-start gap-4 px-6 py-6">
               <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-4 ${alertStyle.ring} ${alertStyle.iconBg} ${alertStyle.iconFg}`}
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-4 ${alertStyle.ring} ${alertStyle.iconBg} ${alertStyle.iconFg} backdrop-blur-sm`}
               >
                 {alertStyle.icon}
               </div>
@@ -158,17 +153,17 @@ export const FeedbackProvider = ({ children }: { children: React.ReactNode }) =>
               </div>
               <button
                 onClick={closeAlert}
-                className="p-1.5 rounded-lg text-ink-400 hover:bg-paper-100 hover:text-ink-700 transition-colors cursor-pointer shrink-0"
+                className="p-1.5 rounded-xl text-ink-400 hover:bg-white/60 hover:text-ink-700 transition-colors cursor-pointer shrink-0"
                 aria-label="Cerrar"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="px-6 py-4 border-t border-paper-200 bg-paper-50 flex justify-end">
+            <div className="px-6 py-4 border-t border-white/40 bg-white/30 flex justify-end">
               <button
                 onClick={closeAlert}
-                className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer"
+                className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer"
               >
                 {alertState.confirmText || 'Entendido'}
               </button>
@@ -181,18 +176,18 @@ export const FeedbackProvider = ({ children }: { children: React.ReactNode }) =>
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             onClick={() => closeConfirm(false)}
-            className="fixed inset-0 bg-ink-900/55 backdrop-blur-sm animate-fadeIn"
+            className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm animate-fadeIn"
           />
           <div
             role="alertdialog"
             aria-modal="true"
-            className="relative bg-paper-0 rounded-2xl shadow-xl w-full max-w-md animate-scaleUp border border-paper-200 overflow-hidden"
+            className="relative glass-modal rounded-2xl w-full max-w-md animate-glassIn overflow-hidden"
           >
             <div className={`h-1.5 bg-gradient-to-r ${confirmStyle.accent}`} />
 
             <div className="flex items-start gap-4 px-6 py-6">
               <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-4 ${confirmStyle.ring} ${confirmStyle.iconBg} ${confirmStyle.iconFg}`}
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ring-4 ${confirmStyle.ring} ${confirmStyle.iconBg} ${confirmStyle.iconFg} backdrop-blur-sm`}
               >
                 {confirmStyle.icon}
               </div>
@@ -206,23 +201,23 @@ export const FeedbackProvider = ({ children }: { children: React.ReactNode }) =>
               </div>
               <button
                 onClick={() => closeConfirm(false)}
-                className="p-1.5 rounded-lg text-ink-400 hover:bg-paper-100 hover:text-ink-700 transition-colors cursor-pointer shrink-0"
+                className="p-1.5 rounded-xl text-ink-400 hover:bg-white/60 hover:text-ink-700 transition-colors cursor-pointer shrink-0"
                 aria-label="Cerrar"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="px-6 py-4 border-t border-paper-200 bg-paper-50 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-white/40 bg-white/30 flex justify-end gap-3">
               <button
                 onClick={() => closeConfirm(false)}
-                className="bg-paper-0 border-2 border-paper-200 hover:border-ink-700 hover:bg-paper-100 text-ink-900 font-semibold px-4 py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
+                className="glass-panel rounded-2xl hover:bg-white/80 text-ink-900 font-semibold px-4 py-2.5 transition-all duration-150 cursor-pointer"
               >
                 {confirmState.cancelText || 'Cancelar'}
               </button>
               <button
                 onClick={() => closeConfirm(true)}
-                className={`${confirmBtnClass} font-bold px-5 py-2.5 rounded-xl transition-all duration-150 active:scale-[0.98] cursor-pointer`}
+                className={`${confirmBtnClass} font-bold px-5 py-2.5 rounded-2xl transition-all duration-150 active:scale-[0.98] cursor-pointer`}
               >
                 {confirmState.confirmText || 'Confirmar'}
               </button>

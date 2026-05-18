@@ -148,9 +148,6 @@ export const AddressesPage = () => {
   };
 
   const eyebrow = 'text-[11px] font-black uppercase tracking-[0.18em] text-brand-red-600';
-  const cardBase = 'bg-paper-0 border border-paper-200 rounded-2xl shadow-card';
-  const inputBase =
-    'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/15 transition-colors duration-150';
   const labelBase = 'block text-xs font-bold uppercase tracking-[0.16em] text-ink-600 mb-1.5';
 
   const getAliasIcon = (a: string) => {
@@ -161,7 +158,7 @@ export const AddressesPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream-50 font-sans">
+    <div className="min-h-screen flex flex-col">
       <ClientHeader eyebrow="Mis direcciones" showBackToMenu activeMenu="direcciones" />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
@@ -184,7 +181,7 @@ export const AddressesPage = () => {
 
           <button
             onClick={openCreateModal}
-            className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm flex items-center gap-2"
+            className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm flex items-center gap-2"
           >
             <Plus size={16} />
             <span className="hidden sm:inline">Agregar dirección</span>
@@ -198,7 +195,7 @@ export const AddressesPage = () => {
             <span className="text-ink-500 font-bold text-sm">Cargando ubicaciones…</span>
           </div>
         ) : isError ? (
-          <div className="bg-danger-50 border border-danger-200 rounded-2xl p-6 flex items-start gap-4">
+          <div className="bg-danger-50/80 border border-danger-200/60 rounded-2xl p-6 flex items-start gap-4 backdrop-blur-sm">
             <AlertCircle className="text-danger-600 shrink-0" size={24} />
             <div>
               <h3 className="font-bold text-danger-700">Error al cargar</h3>
@@ -206,8 +203,8 @@ export const AddressesPage = () => {
             </div>
           </div>
         ) : direcciones.length === 0 ? (
-          <div className={`text-center py-16 ${cardBase} p-8 max-w-md mx-auto space-y-4`}>
-            <div className="w-20 h-20 rounded-2xl bg-cream-100 flex items-center justify-center text-brand-yellow-700 mx-auto">
+          <div className="text-center py-16 glass-panel rounded-2xl p-8 max-w-md mx-auto space-y-4">
+            <div className="w-20 h-20 rounded-2xl bg-white/50 flex items-center justify-center text-brand-yellow-700 mx-auto">
               <MapPin size={36} className="stroke-1" />
             </div>
             <div className="space-y-1.5">
@@ -220,7 +217,7 @@ export const AddressesPage = () => {
             </div>
             <button
               onClick={openCreateModal}
-              className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm inline-flex items-center gap-2"
+              className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm inline-flex items-center gap-2"
             >
               <Plus size={14} />
               Crear mi primera dirección
@@ -231,10 +228,10 @@ export const AddressesPage = () => {
             {direcciones.map(dir => (
               <div
                 key={dir.id}
-                className={`p-5 rounded-2xl shadow-card relative overflow-hidden transition-all duration-200 ${
+                className={`glass-panel p-5 rounded-2xl relative overflow-hidden transition-all duration-200 ${
                   dir.es_principal
-                    ? 'bg-paper-0 border-2 border-brand-yellow-400'
-                    : 'bg-paper-0 border border-paper-200 hover:border-brand-yellow-300 hover:shadow-card-hover'
+                    ? 'border-2 border-brand-yellow-400/80'
+                    : 'hover:shadow-[var(--shadow-glass-hover)] hover:-translate-y-0.5'
                 }`}
               >
                 {dir.es_principal && (
@@ -245,7 +242,7 @@ export const AddressesPage = () => {
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <span className="w-11 h-11 bg-cream-100 rounded-xl text-brand-red-700 shrink-0 flex items-center justify-center border border-cream-200">
+                    <span className="w-11 h-11 bg-white/50 rounded-xl text-brand-red-700 shrink-0 flex items-center justify-center border border-white/50">
                       {getAliasIcon(dir.alias)}
                     </span>
                     <h4 className="font-display text-xl font-extrabold text-ink-900 uppercase tracking-wide">
@@ -263,7 +260,7 @@ export const AddressesPage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-paper-200 pt-4 mt-4">
+                <div className="flex items-center justify-between border-t border-white/40 pt-4 mt-4">
                   {dir.es_principal ? (
                     <span className="flex items-center gap-1 text-[11px] text-success-700 font-bold uppercase tracking-wider">
                       <Check size={12} className="stroke-[3]" />
@@ -281,13 +278,13 @@ export const AddressesPage = () => {
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => openEditModal(dir)}
-                      className="px-3 py-1.5 text-xs font-bold text-ink-700 hover:bg-paper-100 rounded-lg transition-colors cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-bold text-ink-700 hover:bg-white/60 rounded-xl transition-colors cursor-pointer"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => handleDelete(dir.id)}
-                      className="w-9 h-9 flex items-center justify-center bg-paper-0 border border-danger-100 hover:bg-danger-50 text-danger-600 rounded-lg transition-colors cursor-pointer"
+                      className="w-9 h-9 flex items-center justify-center glass-panel border border-danger-200/60 hover:bg-danger-50/70 text-danger-600 rounded-xl transition-all cursor-pointer"
                       aria-label="Eliminar"
                     >
                       <Trash2 size={14} />
@@ -307,16 +304,16 @@ export const AddressesPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             onClick={closeModal}
-            className="fixed inset-0 bg-ink-900/55 backdrop-blur-sm animate-fadeIn"
+            className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm animate-fadeIn"
           />
 
           <form
             onSubmit={handleSubmit}
-            className="relative bg-paper-0 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col animate-scaleUp border border-paper-200"
+            className="relative glass-modal rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col animate-glassIn"
           >
             <div className="h-1.5 bg-gradient-to-r from-brand-red-500 via-brand-yellow-400 to-brand-red-500" />
 
-            <div className="px-6 py-5 border-b border-paper-200 flex items-center justify-between shrink-0">
+            <div className="px-6 py-5 border-b border-white/40 flex items-center justify-between shrink-0">
               <div>
                 <span className={eyebrow}>
                   {editingAddress ? 'Modificación' : 'Nueva ubicación'}
@@ -328,7 +325,7 @@ export const AddressesPage = () => {
               <button
                 type="button"
                 onClick={closeModal}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors duration-150 cursor-pointer"
+                className="w-10 h-10 flex items-center justify-center rounded-2xl glass-panel hover:bg-white/80 text-ink-700 transition-all duration-150 cursor-pointer"
                 aria-label="Cerrar"
               >
                 <X size={18} />
@@ -337,7 +334,7 @@ export const AddressesPage = () => {
 
             <div className="px-6 py-5 space-y-4 overflow-y-auto">
               {formError && (
-                <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2 font-medium animate-shake">
+                <div className="bg-danger-50/80 border border-danger-200/60 text-danger-700 px-4 py-3 rounded-2xl text-sm flex items-center gap-2 font-medium animate-shake backdrop-blur-sm">
                   <AlertCircle size={16} className="shrink-0" />
                   <span>{formError}</span>
                 </div>
@@ -351,10 +348,10 @@ export const AddressesPage = () => {
                       key={a}
                       type="button"
                       onClick={() => setAlias(a)}
-                      className={`py-2.5 px-3 rounded-xl text-sm font-bold transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 border-2 ${
+                      className={`py-2.5 px-3 rounded-2xl text-sm font-bold transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 border-2 ${
                         alias === a
-                          ? 'bg-brand-red-50 border-brand-red-500 text-brand-red-700'
-                          : 'bg-paper-0 border-paper-200 hover:border-brand-yellow-300 text-ink-700'
+                          ? 'bg-brand-red-500/10 border-brand-red-400/60 text-brand-red-700'
+                          : 'bg-white/40 border-white/50 hover:border-brand-yellow-300 text-ink-700 hover:bg-white/60'
                       }`}
                     >
                       {a === 'Casa' ? <Home size={14} /> : a === 'Trabajo' ? <Briefcase size={14} /> : <MapPin size={14} />}
@@ -373,7 +370,7 @@ export const AddressesPage = () => {
                     placeholder="Ej: Av. Rivadavia"
                     value={calle}
                     onChange={e => setCalle(e.target.value)}
-                    className={inputBase}
+                    className="glass-input"
                   />
                 </div>
                 <div>
@@ -384,7 +381,7 @@ export const AddressesPage = () => {
                     placeholder="1420"
                     value={numero}
                     onChange={e => setNumero(e.target.value)}
-                    className={inputBase}
+                    className="glass-input"
                   />
                 </div>
               </div>
@@ -397,7 +394,7 @@ export const AddressesPage = () => {
                     placeholder="3"
                     value={piso}
                     onChange={e => setPiso(e.target.value)}
-                    className={inputBase}
+                    className="glass-input"
                   />
                 </div>
                 <div>
@@ -407,7 +404,7 @@ export const AddressesPage = () => {
                     placeholder="B"
                     value={depto}
                     onChange={e => setDepto(e.target.value)}
-                    className={inputBase}
+                    className="glass-input"
                   />
                 </div>
               </div>
@@ -419,16 +416,16 @@ export const AddressesPage = () => {
                   rows={2}
                   value={indicaciones}
                   onChange={e => setIndicaciones(e.target.value)}
-                  className={`${inputBase} resize-none`}
+                  className="glass-input"
                 />
               </div>
 
               <div
                 onClick={() => setEsPrincipal(!esPrincipal)}
-                className={`flex items-center gap-2.5 p-3.5 rounded-xl border-2 border-dashed cursor-pointer select-none transition-colors ${
+                className={`flex items-center gap-2.5 p-3.5 rounded-2xl border-2 border-dashed cursor-pointer select-none transition-all ${
                   esPrincipal
-                    ? 'bg-brand-yellow-50 border-brand-yellow-300'
-                    : 'border-paper-300 hover:bg-paper-50'
+                    ? 'bg-brand-yellow-50/70 border-brand-yellow-300/70 backdrop-blur-sm'
+                    : 'border-white/40 hover:bg-white/40'
                 }`}
               >
                 <input
@@ -443,18 +440,18 @@ export const AddressesPage = () => {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-paper-200 bg-paper-50 flex items-center justify-end gap-3 shrink-0">
+            <div className="px-6 py-4 border-t border-white/40 bg-white/30 flex items-center justify-end gap-3 shrink-0">
               <button
                 type="button"
                 onClick={closeModal}
-                className="bg-paper-0 border-2 border-paper-200 hover:border-ink-700 hover:bg-paper-100 text-ink-900 font-semibold px-4 py-2.5 rounded-xl transition-all duration-150 cursor-pointer text-sm"
+                className="glass-panel hover:bg-white/80 text-ink-900 font-semibold px-4 py-2.5 rounded-2xl transition-all duration-150 cursor-pointer text-sm"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer text-sm"
+                className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-2xl shadow-brand hover:shadow-lg transition-all duration-150 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer text-sm"
               >
                 {createMutation.isPending || updateMutation.isPending ? 'Guardando…' : 'Guardar'}
               </button>

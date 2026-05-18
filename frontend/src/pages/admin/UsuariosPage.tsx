@@ -101,17 +101,13 @@ export const UsuariosPage = () => {
       day: 'numeric',
     });
 
-  const cardBase = 'bg-paper-0 border border-paper-200 rounded-2xl shadow-card';
-  const inputBase =
-    'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/15 transition-colors duration-150';
-
   return (
     <AdminLayout
       title="Control de Cuentas"
       subtitle="Gestión del padrón de usuarios, auditoría de roles (RBAC) e inhabilitación inmediata de sesiones"
     >
       {/* FILTROS */}
-      <div className={`${cardBase} p-5 flex flex-col md:flex-row gap-4 items-center justify-between`}>
+      <div className="glass-panel rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:max-w-xs">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
           <input
@@ -122,12 +118,12 @@ export const UsuariosPage = () => {
               setSearchTerm(e.target.value);
               setPage(1);
             }}
-            className={`${inputBase} pl-10`}
+            className="glass-input pl-10"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2 bg-paper-0 border border-paper-200 px-3 py-2 rounded-xl shadow-xs">
+          <div className="flex items-center gap-2 glass-panel px-3 py-2 rounded-xl">
             <Shield size={14} className="text-ink-400" />
             <select
               value={selectedRol}
@@ -146,7 +142,7 @@ export const UsuariosPage = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-2 bg-paper-0 border border-paper-200 px-3 py-2 rounded-xl shadow-xs">
+          <div className="flex items-center gap-2 glass-panel px-3 py-2 rounded-xl">
             <Filter size={14} className="text-ink-400" />
             <select
               value={selectedEstado}
@@ -165,7 +161,7 @@ export const UsuariosPage = () => {
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="p-2.5 rounded-xl border border-paper-200 bg-paper-0 text-ink-500 hover:bg-paper-50 transition-colors disabled:opacity-50 cursor-pointer"
+            className="p-2.5 rounded-xl glass-panel hover:bg-white/80 text-ink-500 transition-colors disabled:opacity-50 cursor-pointer"
             title="Recargar usuarios"
           >
             <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} />
@@ -180,7 +176,7 @@ export const UsuariosPage = () => {
           <span className="text-sm font-bold text-ink-500">Buscando usuarios registrados…</span>
         </div>
       ) : isError ? (
-        <div className="bg-danger-50 border border-danger-200 rounded-2xl p-6 text-center space-y-3">
+        <div className="bg-danger-50/80 border border-danger-200/60 rounded-2xl p-6 text-center space-y-3 backdrop-blur-sm">
           <AlertTriangle className="text-danger-600 mx-auto" size={32} />
           <h3 className="text-sm font-bold text-danger-800">Error al consultar usuarios</h3>
           <p className="text-xs text-danger-700">
@@ -188,16 +184,16 @@ export const UsuariosPage = () => {
           </p>
         </div>
       ) : !data || data.items.length === 0 ? (
-        <div className={`${cardBase} p-12 text-center text-ink-400 text-sm font-bold`}>
+        <div className="glass-panel rounded-2xl p-12 text-center text-ink-400 text-sm font-bold">
           No se encontraron usuarios registrados con los criterios solicitados.
         </div>
       ) : (
         <div className="space-y-6">
-          <div className={`${cardBase} overflow-hidden`}>
+          <div className="glass-panel rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-cream-100 border-b border-paper-200">
+                  <tr className="bg-white/50 backdrop-blur-sm border-b border-white/40">
                     <th className="p-4 text-[11px] text-brand-red-700 font-black uppercase tracking-[0.18em]">Usuario</th>
                     <th className="p-4 text-[11px] text-brand-red-700 font-black uppercase tracking-[0.18em]">Email</th>
                     <th className="p-4 text-[11px] text-brand-red-700 font-black uppercase tracking-[0.18em]">Registro</th>
@@ -206,20 +202,20 @@ export const UsuariosPage = () => {
                     <th className="p-4 text-[11px] text-brand-red-700 font-black uppercase tracking-[0.18em] text-center">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-paper-200">
+                <tbody className="divide-y divide-white/30">
                   {data.items.map((usuario: UsuarioAdmin) => {
                     const isSelf = usuario.id === currentUser?.id;
                     const isCurrentUserAdmin = currentUser?.roles?.includes('ADMIN') || false;
                     const isTargetAdmin = usuario.roles.includes('ADMIN');
                     return (
-                      <tr key={usuario.id} className="hover:bg-cream-50 transition-colors">
+                      <tr key={usuario.id} className="hover:bg-white/30 transition-colors">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div
                               className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
                                 usuario.activo
                                   ? 'bg-brand-yellow-400 text-ink-900'
-                                  : 'bg-paper-200 text-ink-400'
+                                  : 'bg-white/40 text-ink-400'
                               }`}
                             >
                               {usuario.nombre.charAt(0)}{usuario.apellido.charAt(0)}
@@ -228,7 +224,7 @@ export const UsuariosPage = () => {
                               <span className="block font-bold text-ink-900 text-sm">
                                 {usuario.nombre} {usuario.apellido}
                                 {isSelf && (
-                                  <span className="text-[10px] bg-cream-100 border border-cream-200 text-ink-700 px-1.5 py-0.5 rounded-full font-bold ml-1">
+                                  <span className="text-[10px] bg-white/60 border border-white/50 text-ink-700 px-1.5 py-0.5 rounded-full font-bold ml-1">
                                     Yo
                                   </span>
                                 )}
@@ -256,7 +252,7 @@ export const UsuariosPage = () => {
                             value={usuario.roles[0] || 'CLIENTE'}
                             disabled={isSelf || updateMutation.isPending || (isTargetAdmin && !isCurrentUserAdmin)}
                             onChange={(e) => handleRoleChange(usuario, e.target.value)}
-                            className="px-3 py-1.5 bg-paper-0 border border-paper-200 rounded-lg text-xs font-bold text-ink-700 focus:outline-none focus:border-brand-red-500 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="px-3 py-1.5 glass-panel rounded-xl text-xs font-bold text-ink-700 focus:outline-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed bg-transparent border-0"
                           >
                             {ROLES_LIST.map(r => (
                               <option key={r.codigo} value={r.codigo}>
@@ -269,8 +265,8 @@ export const UsuariosPage = () => {
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest border uppercase ${
                               usuario.activo
-                                ? 'bg-success-50 text-success-700 border-success-200'
-                                : 'bg-danger-50 text-danger-700 border-danger-200'
+                                ? 'bg-success-50/80 text-success-700 border-success-200/70'
+                                : 'bg-danger-50/80 text-danger-700 border-danger-200/70'
                             }`}
                           >
                             {usuario.activo ? 'Activo' : 'Inactivo'}
@@ -280,7 +276,7 @@ export const UsuariosPage = () => {
                           <button
                             onClick={() => handleToggleEstado(usuario)}
                             disabled={isSelf || updateMutation.isPending || (isTargetAdmin && !isCurrentUserAdmin)}
-                            className="p-2 rounded-lg text-ink-500 hover:text-brand-red-600 hover:bg-brand-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                            className="p-2 rounded-xl text-ink-500 hover:text-brand-red-600 hover:bg-brand-red-50/70 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                             title={usuario.activo ? 'Desactivar cuenta' : 'Activar cuenta'}
                           >
                             {usuario.activo ? <UserX size={18} /> : <UserCheck size={18} />}
@@ -295,7 +291,7 @@ export const UsuariosPage = () => {
           </div>
 
           {data.total > limit && (
-            <div className="flex items-center justify-between bg-paper-0 px-5 py-4 rounded-2xl border border-paper-200 shadow-card">
+            <div className="flex items-center justify-between glass-panel px-5 py-4 rounded-2xl">
               <span className="text-xs font-bold text-ink-500">
                 Mostrando <span className="text-ink-900">{(page - 1) * limit + 1}</span> –{' '}
                 <span className="text-ink-900">{Math.min(page * limit, data.total)}</span> de{' '}
@@ -305,7 +301,7 @@ export const UsuariosPage = () => {
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="p-2 border border-paper-200 rounded-lg text-ink-500 hover:bg-paper-50 disabled:opacity-40 cursor-pointer"
+                  className="p-2 glass-panel rounded-xl text-ink-500 hover:bg-white/80 disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -313,7 +309,7 @@ export const UsuariosPage = () => {
                 <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={page * limit >= data.total}
-                  className="p-2 border border-paper-200 rounded-lg text-ink-500 hover:bg-paper-50 disabled:opacity-40 cursor-pointer"
+                  className="p-2 glass-panel rounded-xl text-ink-500 hover:bg-white/80 disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronRight size={16} />
                 </button>

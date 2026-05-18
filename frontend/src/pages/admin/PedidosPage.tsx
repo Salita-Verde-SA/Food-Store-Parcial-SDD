@@ -91,16 +91,16 @@ export const PedidosPage = () => {
     switch (estado) {
       case 'PENDIENTE':
       case 'EN_PREP':
-        return 'bg-brand-yellow-100 text-brand-yellow-800 border-brand-yellow-300';
+        return 'bg-brand-yellow-100/80 text-brand-yellow-800 border-brand-yellow-300/70';
       case 'CONFIRMADO':
       case 'EN_CAMINO':
-        return 'bg-info-50 text-info-700 border-info-200';
+        return 'bg-info-50/80 text-info-700 border-info-200/70';
       case 'ENTREGADO':
-        return 'bg-success-50 text-success-700 border-success-100';
+        return 'bg-success-50/80 text-success-700 border-success-100/70';
       case 'CANCELADO':
-        return 'bg-danger-50 text-danger-700 border-danger-200';
+        return 'bg-danger-50/80 text-danger-700 border-danger-200/70';
       default:
-        return 'bg-paper-100 text-ink-700 border-paper-200';
+        return 'bg-white/50 text-ink-700 border-white/50';
     }
   };
 
@@ -113,10 +113,7 @@ export const PedidosPage = () => {
     return matchesSearch && matchesEstado && matchesTipo;
   });
 
-  const cardBase = 'bg-paper-0 border border-paper-200 rounded-2xl shadow-card';
   const eyebrow = 'text-[11px] font-black uppercase tracking-[0.18em] text-ink-500';
-  const inputBase =
-    'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/15 transition-colors duration-150';
 
   return (
     <AdminLayout
@@ -124,7 +121,7 @@ export const PedidosPage = () => {
       subtitle="Control de órdenes, bitácoras de auditoría y stock interactivo"
     >
       {/* FILTROS */}
-      <div className={`${cardBase} p-5 flex flex-col md:flex-row gap-4 items-center justify-between`}>
+      <div className="glass-panel rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:max-w-xs">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
           <input
@@ -132,7 +129,7 @@ export const PedidosPage = () => {
             placeholder="Pedido ID o Usuario ID…"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className={`${inputBase} pl-10`}
+            className="glass-input pl-10"
           />
         </div>
 
@@ -173,7 +170,7 @@ export const PedidosPage = () => {
           <span className="text-ink-500 font-bold text-sm">Cargando tablero operativo…</span>
         </div>
       ) : isError ? (
-        <div className="bg-danger-50 border border-danger-200 rounded-2xl p-6 flex items-start gap-4">
+        <div className="bg-danger-50/80 border border-danger-200/60 rounded-2xl p-6 flex items-start gap-4 backdrop-blur-sm">
           <AlertCircle className="text-danger-600 shrink-0" size={24} />
           <div>
             <h3 className="font-bold text-danger-800 text-sm">Tablero caído</h3>
@@ -183,7 +180,7 @@ export const PedidosPage = () => {
           </div>
         </div>
       ) : filteredPedidos.length === 0 ? (
-        <div className={`${cardBase} p-12 text-center max-w-sm mx-auto space-y-3`}>
+        <div className="glass-panel rounded-2xl p-12 text-center max-w-sm mx-auto space-y-3">
           <AlertCircle size={44} className="mx-auto text-ink-300 stroke-1" />
           <h3 className="font-display text-lg font-bold text-ink-700">Sin coincidencias</h3>
           <p className="text-xs text-ink-500">
@@ -191,9 +188,9 @@ export const PedidosPage = () => {
           </p>
         </div>
       ) : (
-        <div className={`${cardBase} overflow-hidden`}>
+        <div className="glass-panel rounded-2xl overflow-hidden">
           {/* Header de tabla */}
-          <div className="hidden sm:grid grid-cols-12 gap-4 bg-cream-100 text-brand-red-700 text-[11px] font-black uppercase tracking-[0.18em] px-6 py-3.5 border-b border-paper-200">
+          <div className="hidden sm:grid grid-cols-12 gap-4 bg-white/50 backdrop-blur-sm text-brand-red-700 text-[11px] font-black uppercase tracking-[0.18em] px-6 py-3.5 border-b border-white/40">
             <div className="col-span-2">ID</div>
             <div className="col-span-3">Usuario · Fecha</div>
             <div className="col-span-2">Estado</div>
@@ -202,17 +199,17 @@ export const PedidosPage = () => {
             <div className="col-span-2 text-right">Acciones</div>
           </div>
 
-          <div className="divide-y divide-paper-200">
+          <div className="divide-y divide-white/30">
             {filteredPedidos.map(ped => {
               const isExpanded = expandedOrders[ped.id] ?? false;
               const nextState = getNextLogicalState(ped.estado);
               const isCancelable = ped.estado !== 'CANCELADO' && ped.estado !== 'ENTREGADO';
 
               return (
-                <div key={ped.id} className="hover:bg-cream-50 transition-colors">
+                <div key={ped.id} className="hover:bg-white/30 transition-colors">
                   <div className="p-4 sm:px-6 sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center flex flex-col gap-3">
                     <div className="sm:col-span-2 flex items-center justify-between sm:block">
-                      <span className="font-black text-ink-900 bg-cream-100 border border-cream-200 px-2.5 py-1 rounded-lg text-xs tabular-nums">
+                      <span className="font-black text-ink-900 bg-white/60 border border-white/50 px-2.5 py-1 rounded-lg text-xs tabular-nums">
                         #{ped.id}
                       </span>
                       <span className="sm:hidden font-display text-base font-black text-brand-red-600 tabular-nums">
@@ -256,7 +253,7 @@ export const PedidosPage = () => {
                     <div className="sm:col-span-2 flex items-center justify-end gap-1.5">
                       <button
                         onClick={() => toggleExpand(ped.id)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-500 hover:text-ink-900 hover:bg-paper-100 transition-colors"
+                        className="w-8 h-8 flex items-center justify-center rounded-xl text-ink-500 hover:text-ink-900 hover:bg-white/60 transition-colors"
                         title="Ver detalles"
                       >
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -269,7 +266,7 @@ export const PedidosPage = () => {
                             setAdvanceMotivo('');
                             setAdvanceError(null);
                           }}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-brand-yellow-700 hover:text-brand-yellow-800 hover:bg-brand-yellow-50 transition-colors"
+                          className="w-8 h-8 flex items-center justify-center rounded-xl text-brand-yellow-700 hover:text-brand-yellow-800 hover:bg-brand-yellow-50/70 transition-colors"
                           title={`Avanzar a ${nextState.replace('_', ' ')}`}
                         >
                           <ArrowRight size={16} />
@@ -283,7 +280,7 @@ export const PedidosPage = () => {
                             setCancelMotivo('');
                             setCancelError(null);
                           }}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-danger-500 hover:text-danger-600 hover:bg-danger-50 transition-colors"
+                          className="w-8 h-8 flex items-center justify-center rounded-xl text-danger-500 hover:text-danger-600 hover:bg-danger-50/70 transition-colors"
                           title="Cancelar pedido"
                         >
                           <XCircle size={16} />
@@ -294,11 +291,11 @@ export const PedidosPage = () => {
 
                   {/* Expandible */}
                   {isExpanded && (
-                    <div className="px-6 py-5 bg-cream-50 border-t border-paper-200 text-sm animate-slideDown">
+                    <div className="px-6 py-5 bg-white/20 border-t border-white/30 text-sm animate-slideDown backdrop-blur-sm">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">
                           <span className={eyebrow}>Ítems del pedido</span>
-                          <div className="divide-y divide-paper-200 bg-paper-0 border border-paper-200 rounded-xl overflow-hidden">
+                          <div className="divide-y divide-white/30 glass-panel rounded-2xl overflow-hidden">
                             {ped.detalles.map(det => (
                               <div
                                 key={det.id}
@@ -316,7 +313,7 @@ export const PedidosPage = () => {
                                       {det.personalizacion.split(',').map((exId, idx) => (
                                         <span
                                           key={idx}
-                                          className="inline-flex items-center gap-1 bg-danger-50 text-danger-700 border border-danger-200 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
+                                          className="inline-flex items-center gap-1 bg-danger-50/80 text-danger-700 border border-danger-200/60 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
                                         >
                                           Sin ingrediente #{exId}
                                         </span>
@@ -332,7 +329,7 @@ export const PedidosPage = () => {
                           </div>
 
                           {ped.tipo_entrega === 'DELIVERY' && ped.direccion_snapshot && (
-                            <div className="bg-paper-0 border border-paper-200 rounded-xl p-3">
+                            <div className="glass-panel rounded-xl p-3">
                               <span className="text-[10px] text-ink-500 font-bold uppercase tracking-wider flex items-center gap-1 mb-1">
                                 <MapPin size={10} />
                                 <span>Dirección de entrega</span>
@@ -347,7 +344,7 @@ export const PedidosPage = () => {
                         <div className="space-y-3">
                           <span className={eyebrow}>Historial de auditoría</span>
                           {ped.historial && ped.historial.length > 0 ? (
-                            <div className="bg-paper-0 border border-paper-200 rounded-xl p-4 space-y-3">
+                            <div className="glass-panel rounded-2xl p-4 space-y-3">
                               {ped.historial.map(hist => (
                                 <div
                                   key={hist.id}
@@ -356,11 +353,11 @@ export const PedidosPage = () => {
                                   <div className="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-brand-red-500 ring-4 ring-brand-red-500/15" />
                                   <p className="font-bold text-ink-900">
                                     Transición:{' '}
-                                    <span className="text-[9px] bg-paper-100 border border-paper-200 px-1.5 py-0.5 rounded font-black text-ink-700">
+                                    <span className="text-[9px] bg-white/60 border border-white/50 px-1.5 py-0.5 rounded font-black text-ink-700">
                                       {hist.estado_origen}
                                     </span>{' '}
                                     →{' '}
-                                    <span className="text-[9px] bg-paper-100 border border-paper-200 px-1.5 py-0.5 rounded font-black text-ink-700">
+                                    <span className="text-[9px] bg-white/60 border border-white/50 px-1.5 py-0.5 rounded font-black text-ink-700">
                                       {hist.estado_destino}
                                     </span>
                                   </p>
@@ -369,7 +366,7 @@ export const PedidosPage = () => {
                                     {hist.operador_email && ` · Op: ${hist.operador_email}`}
                                   </p>
                                   {hist.motivo && (
-                                    <p className="text-[10px] text-ink-700 font-medium bg-paper-50 border border-paper-200 p-2 rounded-lg mt-1.5">
+                                    <p className="text-[10px] text-ink-700 font-medium bg-white/40 border border-white/40 p-2 rounded-xl mt-1.5">
                                       Motivo: {hist.motivo}
                                     </p>
                                   )}
@@ -395,7 +392,7 @@ export const PedidosPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div
             onClick={() => setAdvancePedido(null)}
-            className="fixed inset-0 bg-ink-900/55 backdrop-blur-sm"
+            className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm"
           />
           <form
             onSubmit={(e) => {
@@ -405,11 +402,11 @@ export const PedidosPage = () => {
                 advanceMutation.mutate({ id: advancePedido.id, nuevo_estado: next, motivo: advanceMotivo });
               }
             }}
-            className="relative bg-paper-0 rounded-2xl max-w-sm w-full shadow-xl z-10 animate-scaleUp border border-paper-200 overflow-hidden flex flex-col max-h-[90vh]"
+            className="relative glass-modal rounded-2xl max-w-sm w-full z-10 animate-glassIn overflow-hidden flex flex-col max-h-[90vh]"
           >
             <div className="h-1.5 bg-gradient-to-r from-brand-red-500 via-brand-yellow-400 to-brand-red-500" />
 
-            <div className="flex items-center justify-between p-6 pb-3 border-b border-paper-200 shrink-0">
+            <div className="flex items-center justify-between p-6 pb-3 border-b border-white/40 shrink-0">
               <div>
                 <span className={eyebrow}>Avanzar FSM</span>
                 <h3 className="font-display text-xl font-extrabold text-ink-900 mt-0.5">
@@ -419,7 +416,7 @@ export const PedidosPage = () => {
               <button
                 type="button"
                 onClick={() => setAdvancePedido(null)}
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center rounded-2xl glass-panel hover:bg-white/80 text-ink-700 transition-all cursor-pointer"
                 aria-label="Cerrar"
               >
                 <X size={16} />
@@ -428,7 +425,7 @@ export const PedidosPage = () => {
 
             <div className="p-6 space-y-4 overflow-y-auto">
               {advanceError && (
-                <div className="bg-danger-50 border border-danger-200 text-danger-700 text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 font-medium animate-shake">
+                <div className="bg-danger-50/80 border border-danger-200/60 text-danger-700 text-xs px-3.5 py-2.5 rounded-2xl flex items-center gap-1.5 font-medium animate-shake backdrop-blur-sm">
                   <AlertCircle size={14} className="shrink-0" />
                   <span>{advanceError}</span>
                 </div>
@@ -436,11 +433,11 @@ export const PedidosPage = () => {
 
               <p className="text-sm text-ink-700 leading-relaxed">
                 Vas a avanzar el pedido <strong>#{advancePedido.id}</strong> desde el estado{' '}
-                <span className="font-bold text-ink-700 bg-paper-100 px-1.5 py-0.5 rounded border border-paper-200 text-xs">
+                <span className="font-bold text-ink-700 bg-white/60 px-1.5 py-0.5 rounded border border-white/50 text-xs">
                   {advancePedido.estado}
                 </span>{' '}
                 a{' '}
-                <span className="font-bold text-brand-red-700 bg-brand-red-50 px-1.5 py-0.5 rounded border border-brand-red-200 text-xs">
+                <span className="font-bold text-brand-red-700 bg-brand-red-500/10 px-1.5 py-0.5 rounded border border-brand-red-200/60 text-xs">
                   {getNextLogicalState(advancePedido.estado)}
                 </span>.
               </p>
@@ -454,23 +451,23 @@ export const PedidosPage = () => {
                   rows={2}
                   value={advanceMotivo}
                   onChange={e => setAdvanceMotivo(e.target.value)}
-                  className={`${inputBase} resize-none`}
+                  className="glass-input"
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-6 pt-4 border-t border-paper-200 shrink-0 bg-paper-50">
+            <div className="flex items-center gap-3 p-6 pt-4 border-t border-white/40 shrink-0 bg-white/30">
               <button
                 type="button"
                 onClick={() => setAdvancePedido(null)}
-                className="flex-1 py-2.5 bg-paper-0 border-2 border-paper-200 hover:border-ink-700 hover:bg-paper-100 text-ink-900 font-semibold rounded-xl text-sm transition-colors cursor-pointer"
+                className="flex-1 py-2.5 glass-panel hover:bg-white/80 text-ink-900 font-semibold rounded-2xl text-sm transition-all cursor-pointer"
               >
                 Volver atrás
               </button>
               <button
                 type="submit"
                 disabled={advanceMutation.isPending}
-                className="flex-1 py-2.5 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold rounded-xl text-sm shadow-brand active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40"
+                className="flex-1 py-2.5 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold rounded-2xl text-sm shadow-brand active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40"
               >
                 {advanceMutation.isPending ? 'Guardando…' : 'Avanzar'}
               </button>
@@ -484,7 +481,7 @@ export const PedidosPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div
             onClick={() => setCancelPedidoId(null)}
-            className="fixed inset-0 bg-ink-900/55 backdrop-blur-sm"
+            className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm"
           />
           <form
             onSubmit={(e) => {
@@ -492,11 +489,11 @@ export const PedidosPage = () => {
               if (!cancelMotivo.trim()) return setCancelError('El motivo de cancelación es obligatorio.');
               cancelMutation.mutate({ id: cancelPedidoId, motivo: cancelMotivo.trim() });
             }}
-            className="relative bg-paper-0 rounded-2xl max-w-sm w-full shadow-xl z-10 animate-scaleUp border border-paper-200 overflow-hidden flex flex-col max-h-[90vh]"
+            className="relative glass-modal rounded-2xl max-w-sm w-full z-10 animate-glassIn overflow-hidden flex flex-col max-h-[90vh]"
           >
             <div className="h-1.5 bg-gradient-to-r from-danger-500/0 via-danger-500 to-danger-500/0" />
 
-            <div className="flex items-center justify-between p-6 pb-3 border-b border-paper-200 shrink-0">
+            <div className="flex items-center justify-between p-6 pb-3 border-b border-white/40 shrink-0">
               <div>
                 <span className={eyebrow}>Tablero de control</span>
                 <h3 className="font-display text-xl font-extrabold text-ink-900 mt-0.5">
@@ -506,7 +503,7 @@ export const PedidosPage = () => {
               <button
                 type="button"
                 onClick={() => setCancelPedidoId(null)}
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center rounded-2xl glass-panel hover:bg-white/80 text-ink-700 transition-all cursor-pointer"
                 aria-label="Cerrar"
               >
                 <X size={16} />
@@ -515,7 +512,7 @@ export const PedidosPage = () => {
 
             <div className="p-6 space-y-4 overflow-y-auto">
               {cancelError && (
-                <div className="bg-danger-50 border border-danger-200 text-danger-700 text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 font-medium animate-shake">
+                <div className="bg-danger-50/80 border border-danger-200/60 text-danger-700 text-xs px-3.5 py-2.5 rounded-2xl flex items-center gap-1.5 font-medium animate-shake backdrop-blur-sm">
                   <AlertCircle size={14} className="shrink-0" />
                   <span>{cancelError}</span>
                 </div>
@@ -536,23 +533,23 @@ export const PedidosPage = () => {
                   rows={3}
                   value={cancelMotivo}
                   onChange={e => setCancelMotivo(e.target.value)}
-                  className={`${inputBase} resize-none`}
+                  className="glass-input"
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-6 pt-4 border-t border-paper-200 shrink-0 bg-paper-50">
+            <div className="flex items-center gap-3 p-6 pt-4 border-t border-white/40 shrink-0 bg-white/30">
               <button
                 type="button"
                 onClick={() => setCancelPedidoId(null)}
-                className="flex-1 py-2.5 bg-paper-0 border-2 border-paper-200 hover:border-ink-700 hover:bg-paper-100 text-ink-900 font-semibold rounded-xl text-sm transition-colors cursor-pointer"
+                className="flex-1 py-2.5 glass-panel hover:bg-white/80 text-ink-900 font-semibold rounded-2xl text-sm transition-all cursor-pointer"
               >
                 Volver atrás
               </button>
               <button
                 type="submit"
                 disabled={cancelMutation.isPending}
-                className="flex-1 py-2.5 bg-danger-500 hover:bg-danger-600 text-white font-bold rounded-xl text-sm shadow-sm active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40"
+                className="flex-1 py-2.5 bg-danger-500 hover:bg-danger-600 text-white font-bold rounded-2xl text-sm shadow-sm active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40"
               >
                 {cancelMutation.isPending ? 'Cancelando…' : 'Confirmar'}
               </button>
@@ -573,7 +570,7 @@ const FilterChip = ({
   label: string;
   children: React.ReactNode;
 }) => (
-  <div className="flex items-center gap-2 bg-paper-0 border border-paper-200 px-3 py-2 rounded-xl shadow-xs">
+  <div className="flex items-center gap-2 glass-panel px-3 py-2 rounded-xl">
     <span className="text-ink-400">{icon}</span>
     <span className="text-[10px] text-ink-500 font-black uppercase tracking-wider">{label}:</span>
     {children}
