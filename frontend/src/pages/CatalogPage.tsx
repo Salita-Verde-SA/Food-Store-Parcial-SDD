@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  ShoppingBag, 
-  Search, 
-  Layers, 
-  ShieldAlert, 
-  Cookie, 
-  ShoppingCart, 
-  Trash2, 
+import {
+  Search,
+  Layers,
+  ShieldAlert,
+  ShoppingCart,
+  Trash2,
   X,
   Sparkles,
   UtensilsCrossed,
@@ -26,23 +24,51 @@ import { categoriasApi } from '../shared/api/categorias';
 import { ingredientesApi } from '../shared/api/ingredientes';
 import { useCartStore } from '../shared/stores/cartStore';
 import { useAuthStore } from '../shared/stores/authStore';
+import { useConfigStore } from '../shared/stores/configStore';
+import { configuracionApi } from '../shared/api/configuracion';
 import type { Producto, CategoriaTree, Ingrediente } from '../shared/types';
+import { useFeedback } from '../shared/ui/FeedbackProvider';
+import { Logo } from '../shared/ui/Logo';
 
 
 export const CatalogPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuthStore();
+  const { showAlert, showConfirm } = useFeedback();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  const { 
-    items: cartItems, 
-    addItem, 
-    updateQuantity, 
-    removeItem, 
+  const { setConfigs, estadoLocal } = useConfigStore();
+
+  // Query - Obtener configuraciones del backend
+  const { data: publicConfigs } = useQuery({
+    queryKey: ['public-configuraciones'],
+    queryFn: configuracionApi.getPublicConfiguraciones,
+  });
+
+  // Hydrate configurations reactively
+  React.useEffect(() => {
+    if (publicConfigs) {
+      const costoEnvioItem = publicConfigs.find(c => c.key === 'costo_envio');
+      const estadoLocalItem = publicConfigs.find(c => c.key === 'estado_local');
+
+      const costoVal = costoEnvioItem ? parseFloat(costoEnvioItem.value) : 150.00;
+      const estadoVal = estadoLocalItem && (estadoLocalItem.value === 'abierto' || estadoLocalItem.value === 'cerrado')
+        ? estadoLocalItem.value
+        : 'abierto';
+
+      setConfigs(costoVal, estadoVal);
+    }
+  }, [publicConfigs, setConfigs]);
+
+  const {
+    items: cartItems,
+    addItem,
+    updateQuantity,
+    removeItem,
     clearCart,
     getSubtotal,
     getTotalItems,
-    getTotalPrice 
+    getTotalPrice
   } = useCartStore();
 
   // Filtros reactivos locales
@@ -55,11 +81,9 @@ export const CatalogPage = () => {
   const [page, setPage] = useState(0);
   const limit = 12;
 
-  // NUEVO: Estados para personalización interactiva
+  // Personalización
   const [customizingProduct, setCustomizingProduct] = useState<Producto | null>(null);
   const [exclusions, setExclusions] = useState<number[]>([]);
-
-
 
   // Query - Obtener categorías
   const { data: categoriasTree = [] } = useQuery<CategoriaTree[]>({
@@ -73,12 +97,11 @@ export const CatalogPage = () => {
     queryFn: () => ingredientesApi.getAll({ es_alergeno: true }),
   });
 
-  // Convertir array de IDs excluidos a string separado por comas
-  const excluirAlergenosStr = excludedAllergenIds.length > 0 
-    ? excludedAllergenIds.join(',') 
+  const excluirAlergenosStr = excludedAllergenIds.length > 0
+    ? excludedAllergenIds.join(',')
     : undefined;
 
-  // Query - Obtener catálogo público (hace fetch atómico con filtros a FastAPI)
+  // Query - Obtener catálogo público
   const { data: catalogData, isLoading, isError } = useQuery({
     queryKey: ['catalog', page, selectedCategoryId, searchTerm, excluirAlergenosStr],
     queryFn: () => productosApi.getCatalog({
@@ -88,10 +111,9 @@ export const CatalogPage = () => {
       search: searchTerm,
       excluirAlergenos: excluirAlergenosStr,
     }),
-    placeholderData: (previousData) => previousData, // Suaviza la transición de carga
+    placeholderData: (previousData) => previousData,
   });
 
-  // Helpers de aplanado de categorías
   const getFlattenedCategories = (nodesList: CategoriaTree[]): { id: number; nombre: string }[] => {
     let flat: { id: number; nombre: string }[] = [];
     nodesList.forEach(node => {
@@ -104,58 +126,65 @@ export const CatalogPage = () => {
   };
   const flatCategories = getFlattenedCategories(categoriasTree);
 
-  // Manejador del filtro de alérgenos
   const handleToggleAllergenFilter = (id: number) => {
     setExcludedAllergenIds(prev => {
       const next = prev.includes(id) ? prev.filter(aId => aId !== id) : [...prev, id];
-      setPage(0); // Reiniciar paginación al cambiar filtros
+      setPage(0);
       return next;
     });
   };
 
   const handleSelectCategory = (id: number | null) => {
     setSelectedCategoryId(id);
-    setPage(0); // Reiniciar paginación
+    setPage(0);
   };
 
-  // Manejo de la acción de agregar al pedido
   const handleAddToCart = (prod: Producto) => {
+    if (estadoLocal === 'cerrado') {
+      showAlert({
+        title: 'Local cerrado',
+        message: 'El restaurante se encuentra cerrado temporalmente y no acepta nuevos pedidos en este momento.',
+        variant: 'warning',
+      });
+      return;
+    }
     if (prod.ingredientes.length === 0) {
-      // Regla de Negocio: Si el plato no tiene ingredientes, agregarlo directamente
       addItem(prod, 1, [], []);
-      setIsCartOpen(true); // Abrir carrito para brindar feedback visual instantáneo
+      setIsCartOpen(true);
     } else {
-      // Si el plato tiene ingredientes, abrir el modal de personalización
       setCustomizingProduct(prod);
-      setExclusions([]); // Resetear exclusiones temporales
+      setExclusions([]);
     }
   };
 
+  const eyebrow = 'text-[11px] font-black uppercase tracking-[0.15em] text-brand-red-500';
+  const cardBase = 'bg-paper-0 border border-paper-200 rounded-lg shadow-sm';
+  const inputBase = 'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-md text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/20 transition-colors duration-150';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-amber-50/30 flex flex-col font-sans">
-      
+    <div className="min-h-screen bg-paper-50 flex flex-col font-sans">
+
       {/* HEADER DE CLIENTE */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between shadow-xs">
+      <header className="sticky top-0 z-40 bg-paper-0 border-b-2 border-brand-yellow-400 px-6 py-4 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
-          <Link to="/" className="w-10 h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center text-white font-extrabold text-xl shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-all">
-            FS
+          <Link to="/" className="cursor-pointer hover:scale-105 active:scale-95 transition-transform">
+            <Logo size="md" variant="red" />
           </Link>
           <div>
-            <span className="font-extrabold text-gray-800 text-lg">Food Store</span>
-            <span className="block text-[10px] text-orange-600 tracking-widest uppercase font-black">Nuestro Menú</span>
+            <span className="font-black text-ink-900 text-lg leading-tight block">Food Store</span>
+            <span className={`block ${eyebrow}`}>Nuestro Menú</span>
           </div>
         </div>
 
-        {/* Floating Cart Button & User Dropdown */}
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={() => setIsCartOpen(!isCartOpen)}
-            className="relative p-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl shadow-md active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+            className="relative bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-4 py-2.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-2"
           >
-            <ShoppingCart size={18} />
-            <span className="font-bold text-xs">Carrito</span>
+            <ShoppingCart size={16} />
+            <span className="text-xs hidden sm:inline">Carrito</span>
             {getTotalItems() > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-gray-900 border border-white text-white font-black text-[9px] w-5 h-5 rounded-full flex items-center justify-center animate-bounce">
+              <span className="absolute -top-1.5 -right-1.5 bg-brand-yellow-400 text-ink-900 border-2 border-paper-0 font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
                 {getTotalItems()}
               </span>
             )}
@@ -165,26 +194,26 @@ export const CatalogPage = () => {
             <div className="relative">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="w-10 h-10 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center text-orange-600 font-bold shadow-sm cursor-pointer hover:bg-orange-200 active:scale-95 transition-all"
+                className="w-10 h-10 rounded-md bg-brand-yellow-100 border border-brand-yellow-300 flex items-center justify-center text-ink-900 font-bold cursor-pointer hover:bg-brand-yellow-200 active:scale-95 transition-all duration-150"
               >
                 {user ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}` : 'US'}
               </button>
 
               {isUserMenuOpen && (
                 <>
-                  <div 
+                  <div
                     onClick={() => setIsUserMenuOpen(false)}
                     className="fixed inset-0 z-45"
                   ></div>
-                  <div className="absolute right-0 mt-2.5 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-50 animate-scaleUp text-left">
-                    <div className="px-3 py-2 border-b border-gray-50 mb-1">
-                      <span className="block font-bold text-gray-800 text-xs">{user?.nombre} {user?.apellido}</span>
-                      <span className="block text-[9px] text-gray-400 font-medium truncate">{user?.email}</span>
+                  <div className="absolute right-0 mt-2 w-56 bg-paper-0 rounded-lg shadow-md border border-paper-200 p-2 z-50 animate-fadeIn text-left">
+                    <div className="px-3 py-2 border-b border-paper-200 mb-1">
+                      <span className="block font-bold text-ink-900 text-sm">{user?.nombre} {user?.apellido}</span>
+                      <span className="block text-[11px] text-ink-400 font-medium truncate">{user?.email}</span>
                     </div>
                     <Link
                       to="/direcciones"
                       onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-gray-650 hover:bg-gray-50 hover:text-gray-800 font-bold text-xs transition-all"
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-ink-700 hover:bg-paper-100 hover:text-ink-900 font-semibold text-sm transition-colors duration-150"
                     >
                       <MapPin size={14} />
                       <span>Mis Direcciones</span>
@@ -192,7 +221,7 @@ export const CatalogPage = () => {
                     <Link
                       to="/pedidos"
                       onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-gray-650 hover:bg-gray-50 hover:text-gray-800 font-bold text-xs transition-all"
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-ink-700 hover:bg-paper-100 hover:text-ink-900 font-semibold text-sm transition-colors duration-150"
                     >
                       <Navigation size={14} />
                       <span>Mis Pedidos</span>
@@ -201,15 +230,24 @@ export const CatalogPage = () => {
                       <Link
                         to="/admin/categorias"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-gray-655 hover:bg-gray-50 hover:text-gray-800 font-bold text-xs transition-all"
+                        className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-ink-700 hover:bg-paper-100 hover:text-ink-900 font-semibold text-sm transition-colors duration-150"
                       >
                         <Briefcase size={14} />
                         <span>Panel Admin</span>
                       </Link>
                     )}
                     <button
-                      onClick={() => { setIsUserMenuOpen(false); if (window.confirm('¿Deseas cerrar sesión?')) { logout(); navigate('/login'); } }}
-                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-red-650 hover:bg-red-50 font-bold text-xs transition-all cursor-pointer border-t border-gray-50 mt-1"
+                      onClick={async () => {
+                        setIsUserMenuOpen(false);
+                        const ok = await showConfirm({
+                          title: 'Cerrar sesión',
+                          message: '¿Deseas cerrar sesión?',
+                          variant: 'warning',
+                          confirmText: 'Cerrar sesión',
+                        });
+                        if (ok) { logout(); navigate('/login'); }
+                      }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-danger-600 hover:bg-danger-50 hover:text-danger-700 font-semibold text-sm transition-colors duration-150 cursor-pointer border-t border-paper-200 mt-1"
                     >
                       <X size={14} />
                       <span>Cerrar Sesión</span>
@@ -221,7 +259,7 @@ export const CatalogPage = () => {
           ) : (
             <button
               onClick={() => navigate('/login')}
-              className="py-2 px-4 bg-orange-100 hover:bg-orange-200 text-orange-700 font-extrabold rounded-xl text-xs transition-all cursor-pointer"
+              className="bg-brand-yellow-400 hover:bg-brand-yellow-500 active:bg-brand-yellow-600 text-ink-900 font-bold px-4 py-2.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] text-xs cursor-pointer"
             >
               Iniciar Sesión
             </button>
@@ -230,103 +268,129 @@ export const CatalogPage = () => {
       </header>
 
       {/* HERO BANNER */}
-      <section className="bg-gradient-to-r from-gray-900 via-orange-950 to-gray-900 py-12 px-6 text-center relative overflow-hidden shrink-0">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:16px_16px]"></div>
-        <div className="max-w-2xl mx-auto space-y-4 relative z-10">
-          <div className="inline-flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/30 text-orange-400 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase">
+      <section className="bg-brand-red-500 py-16 md:py-20 px-6 text-center relative overflow-hidden shrink-0">
+        <svg
+          aria-hidden="true"
+          className="absolute -top-10 -left-10 w-72 h-72 opacity-10 pointer-events-none"
+          viewBox="0 0 200 200"
+          fill="none"
+        >
+          <path d="M20 180 Q20 20 100 20 Q180 20 180 180" stroke="#FFC72C" strokeWidth="40" strokeLinecap="round"/>
+        </svg>
+        <svg
+          aria-hidden="true"
+          className="absolute -bottom-10 -right-10 w-72 h-72 opacity-10 pointer-events-none"
+          viewBox="0 0 200 200"
+          fill="none"
+        >
+          <path d="M20 180 Q20 20 100 20 Q180 20 180 180" stroke="#FFC72C" strokeWidth="40" strokeLinecap="round"/>
+        </svg>
+
+        <div className="max-w-2xl mx-auto space-y-5 relative z-10">
+          <div className="inline-flex items-center gap-1.5 bg-brand-yellow-400 text-ink-900 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest">
             <Sparkles size={12} />
-            <span>Ingredientes Premium & Seguridad Garantizada</span>
+            <span>Ingredientes premium · Seguridad garantizada</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Descubrí Sabores Que Enamoran
+          <h2 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05]">
+            Sabores que enamoran
           </h2>
-          <p className="text-xs sm:text-sm text-gray-400 max-w-lg mx-auto">
-            Platos preparados al instante con los ingredientes más frescos. Filtra por tus preferencias y alérgenos de forma 100% segura.
+          <p className="text-brand-yellow-100 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+            Platos preparados al instante con los ingredientes más frescos. Filtrá por tus preferencias y alérgenos de forma 100% segura.
           </p>
         </div>
       </section>
 
+      {/* BANNER DE LOCAL CERRADO */}
+      {estadoLocal === 'cerrado' && (
+        <div className="bg-danger-50 border-b border-danger-100 text-danger-700 px-6 py-4 flex items-center justify-center gap-3 animate-fadeIn shrink-0 select-none">
+          <AlertTriangle size={18} className="text-danger-500 shrink-0" />
+          <div className="text-xs font-bold tracking-wide uppercase leading-normal">
+            ¡Atención! El restaurante se encuentra cerrado temporalmente. El menú está disponible solo en modo consulta.
+          </div>
+        </div>
+      )}
+
       {/* CUERPO PRINCIPAL DEL CATALOGO */}
       <div className="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col md:flex-row gap-6 items-start">
-        
-        {/* FILTROS LATERALES - SIDEBAR */}
+
+        {/* FILTROS LATERALES */}
         <aside className="w-full md:w-64 space-y-6 shrink-0 md:sticky md:top-24">
-          
+
           {/* BUSCADOR */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-2">
-            <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Buscador:</label>
+          <div className={`${cardBase} p-5 space-y-3`}>
+            <span className={eyebrow}>Búsqueda</span>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
               <input
                 type="text"
                 placeholder="Ej: Pizza, Hamburguesa..."
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
-                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400"
+                className={`${inputBase} pl-9`}
               />
             </div>
           </div>
 
           {/* CATEGORIAS */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-3">
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Categorías:</span>
+          <div className={`${cardBase} p-5 space-y-3`}>
+            <span className={eyebrow}>Categorías</span>
             <div className="space-y-1">
               <button
                 onClick={() => handleSelectCategory(null)}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                  selectedCategoryId === null 
-                    ? 'bg-orange-50 text-orange-600 border-l-2 border-orange-500' 
-                    : 'text-gray-600 hover:bg-gray-50'
+                className={`w-full text-left px-3 py-2.5 rounded-md text-sm font-semibold transition-colors duration-150 flex items-center justify-between cursor-pointer ${
+                  selectedCategoryId === null
+                    ? 'bg-brand-red-50 text-brand-red-700 border-l-4 border-brand-red-500 pl-2'
+                    : 'text-ink-700 hover:bg-paper-100'
                 }`}
               >
                 <span>Todas</span>
-                <Utensils size={12} />
+                <Utensils size={14} />
               </button>
               {flatCategories.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => handleSelectCategory(cat.id)}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                    selectedCategoryId === cat.id 
-                      ? 'bg-orange-50 text-orange-600 border-l-2 border-orange-500' 
-                      : 'text-gray-600 hover:bg-gray-50'
+                  className={`w-full text-left px-3 py-2.5 rounded-md text-sm font-semibold transition-colors duration-150 flex items-center justify-between cursor-pointer ${
+                    selectedCategoryId === cat.id
+                      ? 'bg-brand-red-50 text-brand-red-700 border-l-4 border-brand-red-500 pl-2'
+                      : 'text-ink-700 hover:bg-paper-100'
                   }`}
                 >
                   <span>{cat.nombre}</span>
-                  <Layers size={12} />
+                  <Layers size={14} />
                 </button>
               ))}
             </div>
           </div>
 
-          {/* FILTRO EXCLUSION ALERGENOS (RN-CA04) */}
+          {/* FILTRO EXCLUSION ALERGENOS */}
           {alergenos.length > 0 && (
-            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+            <div className={`${cardBase} p-5 space-y-3`}>
               <div className="space-y-0.5">
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">🚫 Excluir Alérgenos:</span>
-                <p className="text-[10px] text-gray-500">Oculta atómicamente platos que contengan:</p>
+                <span className={eyebrow}>Excluir alérgenos</span>
+                <p className="text-xs text-ink-500">Oculta platos que los contengan</p>
               </div>
 
-              <div className="space-y-2 pt-1">
+              <div className="space-y-1.5 pt-1">
                 {alergenos.map(ing => {
                   const isChecked = excludedAllergenIds.includes(ing.id);
                   return (
-                    <div 
-                      key={ing.id} 
+                    <div
+                      key={ing.id}
                       onClick={() => handleToggleAllergenFilter(ing.id)}
-                      className={`flex items-center gap-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all ${
-                        isChecked 
-                          ? 'bg-red-50/50 border-red-200 text-red-700' 
-                          : 'border-transparent text-gray-600 hover:bg-gray-50'
+                      className={`flex items-center gap-2.5 px-2.5 py-2 rounded-md cursor-pointer select-none transition-colors duration-150 ${
+                        isChecked
+                          ? 'bg-danger-50 text-danger-700'
+                          : 'text-ink-700 hover:bg-paper-100'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isChecked}
                         readOnly
-                        className="w-4 h-4 rounded border-gray-300 text-red-500 focus:ring-red-500/20 accent-red-500 cursor-pointer"
+                        className="w-4 h-4 rounded border-2 border-ink-300 checked:bg-brand-red-500 checked:border-brand-red-500 accent-brand-red-500 cursor-pointer"
                       />
-                      <span className="text-xs font-bold">{ing.nombre}</span>
+                      <span className="text-sm font-semibold">{ing.nombre}</span>
                     </div>
                   );
                 })}
@@ -339,23 +403,23 @@ export const CatalogPage = () => {
         <main className="flex-1 space-y-6 w-full">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-gray-500 font-medium text-xs">Cargando delicias...</span>
+              <div className="w-12 h-12 border-4 border-brand-red-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-ink-500 font-medium text-sm">Cargando delicias...</span>
             </div>
           ) : isError || !catalogData ? (
-            <div className="bg-red-50/50 backdrop-blur-md border border-red-200 rounded-2xl p-6 flex items-start gap-4">
-              <ShieldAlert className="text-red-600 shrink-0" size={24} />
+            <div className="bg-danger-50 border border-danger-100 rounded-lg p-6 flex items-start gap-4">
+              <ShieldAlert className="text-danger-600 shrink-0" size={24} />
               <div>
-                <h3 className="font-bold text-red-800">Error de Conexión</h3>
-                <p className="text-xs text-red-700 mt-1">No se pudo recuperar el menú en este momento. Intente más tarde.</p>
+                <h3 className="font-bold text-danger-700">Error de conexión</h3>
+                <p className="text-sm text-danger-600 mt-1">No se pudo recuperar el menú en este momento. Intentá más tarde.</p>
               </div>
             </div>
           ) : catalogData.items.length === 0 ? (
-            <div className="text-center py-20 bg-white border border-gray-100 rounded-3xl p-8 max-w-md mx-auto shadow-sm space-y-4">
-              <UtensilsCrossed className="mx-auto text-gray-300" size={56} />
-              <h3 className="font-bold text-gray-700">Sin coincidencias</h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                No encontramos platos libres de tus alérgenos seleccionados o que coincidan con la búsqueda. ¡Intenta ajustar los filtros!
+            <div className={`text-center py-16 ${cardBase} p-8 max-w-md mx-auto space-y-4`}>
+              <UtensilsCrossed className="mx-auto text-ink-300" size={56} />
+              <h3 className="text-lg font-bold text-ink-900">Sin coincidencias</h3>
+              <p className="text-sm text-ink-500 leading-relaxed">
+                No encontramos platos que cumplan tus filtros. Probá ajustar la búsqueda.
               </p>
             </div>
           ) : (
@@ -364,63 +428,80 @@ export const CatalogPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {catalogData.items.map((prod: Producto) => {
                   const containsAllergen = prod.ingredientes.some(i => i.es_alergeno);
+                  const isClosed = estadoLocal === 'cerrado';
                   return (
-                    <div 
-                      key={prod.id} 
-                      className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-xxs hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                    <div
+                      key={prod.id}
+                      className={`${cardBase} hover:shadow-md hover:border-paper-300 transition-all duration-200 flex flex-col overflow-hidden relative`}
                     >
                       {/* Imagen */}
-                      <div className="h-44 bg-gray-50 relative flex items-center justify-center shrink-0 border-b border-gray-50">
+                      <div className="aspect-square bg-paper-100 relative flex items-center justify-center overflow-hidden">
                         {prod.imagen_url ? (
-                          <img 
-                            src={prod.imagen_url} 
-                            alt={prod.nombre} 
+                          <img
+                            src={prod.imagen_url}
+                            alt={prod.nombre}
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="flex flex-col items-center gap-1.5 text-gray-300">
-                            <Utensils size={36} className="stroke-1" />
-                            <span className="text-[9px] font-bold uppercase tracking-widest">Delicia FS</span>
+                          <div className="flex flex-col items-center gap-2 text-ink-300">
+                            <Utensils size={48} className="stroke-1" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Sin imagen</span>
                           </div>
                         )}
 
-                        {/* Badge Precio */}
-                        <div className="absolute bottom-3 left-3 bg-gray-900/90 backdrop-blur-xs text-white px-3 py-1 rounded-xl text-xs font-bold shadow border border-white/10">
-                          ${Number(prod.precio).toFixed(2)}
-                        </div>
+                        {containsAllergen && (
+                          <div className="absolute top-2 right-2 inline-flex items-center gap-1 bg-danger-50 text-danger-700 border border-danger-100 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            <ShieldAlert size={10} />
+                            <span>Alérgeno</span>
+                          </div>
+                        )}
+
+                        {isClosed && (
+                          <div className="absolute inset-0 bg-ink-900/40 flex items-center justify-center backdrop-blur-[1px]">
+                            <span className="text-white font-black uppercase tracking-widest text-sm">Local Cerrado</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Info & Agregar */}
-                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                      <div className="p-4 flex-1 flex flex-col justify-between gap-4">
                         <div className="space-y-2">
-                          <h4 className="font-extrabold text-gray-800 text-base sm:text-lg line-clamp-1">{prod.nombre}</h4>
+                          <h4 className="text-lg font-bold text-ink-900 line-clamp-1">{prod.nombre}</h4>
                           {prod.descripcion && (
-                            <p className="text-xxs text-gray-500 line-clamp-2 leading-relaxed">{prod.descripcion}</p>
+                            <p className="text-sm text-ink-500 line-clamp-2 leading-relaxed">{prod.descripcion}</p>
                           )}
 
-                          {/* Chips Alérgenos (RN-CA04) */}
-                          {containsAllergen && (
+                          {prod.ingredientes.length > 0 && (
                             <div className="flex flex-wrap gap-1 pt-1">
-                              {prod.ingredientes.filter(i => i.es_alergeno).map(ing => (
-                                <span 
-                                  key={ing.id} 
-                                  className="inline-flex items-center gap-1 text-[8px] font-black uppercase bg-rose-50 text-rose-700 border border-rose-100 px-2 py-0.5 rounded-md"
+                              {prod.ingredientes.slice(0, 4).map(ing => (
+                                <span
+                                  key={ing.id}
+                                  className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                                    ing.es_alergeno
+                                      ? 'bg-danger-50 text-danger-700'
+                                      : 'bg-paper-100 text-ink-600'
+                                  }`}
                                 >
-                                  ⚠️ Contiene: {ing.nombre}
+                                  {ing.nombre}
                                 </span>
                               ))}
                             </div>
                           )}
                         </div>
 
-                        {/* Agregar al carrito */}
-                        <button
-                          onClick={() => handleAddToCart(prod)}
-                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-2 px-4 rounded-xl shadow-sm hover:shadow active:scale-98 transition-all text-xs cursor-pointer"
-                        >
-                          <ShoppingCart size={14} />
-                          <span>Agregar al Pedido</span>
-                        </button>
+                        <div className="flex items-center justify-between gap-3 pt-2 border-t border-paper-200">
+                          <span className="text-2xl font-black text-brand-red-500 tabular-nums">
+                            ${Number(prod.precio).toFixed(2)}
+                          </span>
+                          <button
+                            onClick={() => handleAddToCart(prod)}
+                            disabled={isClosed}
+                            className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-4 py-2 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer text-sm flex items-center gap-1.5"
+                          >
+                            <Plus size={14} />
+                            <span>Agregar</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -429,21 +510,21 @@ export const CatalogPage = () => {
 
               {/* Paginación */}
               {catalogData.total > limit && (
-                <div className="flex items-center justify-center gap-2 pt-6 border-t border-gray-100">
+                <div className="flex items-center justify-center gap-3 pt-6 border-t border-paper-200">
                   <button
                     disabled={page === 0}
                     onClick={() => setPage(p => p - 1)}
-                    className="px-3.5 py-1.5 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="bg-paper-0 border-2 border-paper-200 hover:border-ink-900 hover:bg-paper-50 text-ink-900 font-semibold px-4 py-2 rounded-md transition-all duration-150 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-sm"
                   >
                     Anterior
                   </button>
-                  <span className="text-xs text-gray-500 font-bold">
-                    Página {page + 1} de {Math.ceil(catalogData.total / limit)}
+                  <span className="inline-flex items-center justify-center bg-brand-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                    {page + 1} / {Math.ceil(catalogData.total / limit)}
                   </span>
                   <button
                     disabled={(page + 1) * limit >= catalogData.total}
                     onClick={() => setPage(p => p + 1)}
-                    className="px-3.5 py-1.5 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="bg-paper-0 border-2 border-paper-200 hover:border-ink-900 hover:bg-paper-50 text-ink-900 font-semibold px-4 py-2 rounded-md transition-all duration-150 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-sm"
                   >
                     Siguiente
                   </button>
@@ -454,76 +535,73 @@ export const CatalogPage = () => {
         </main>
       </div>
 
-      {/* MODAL DE PERSONALIZACIÓN DE INGREDIENTES */}
+      {/* MODAL DE PERSONALIZACIÓN */}
       {customizingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
-          {/* Backdrop */}
-          <div 
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
             onClick={() => setCustomizingProduct(null)}
-            className="fixed inset-0 bg-gray-950/60 backdrop-blur-xs"
+            className="fixed inset-0 bg-ink-900/50 backdrop-blur-sm animate-fadeIn"
           ></div>
-          
-          {/* Modal Container */}
-          <div className="relative bg-white rounded-3xl max-w-md w-full shadow-2xl p-6 z-10 space-y-6 animate-scaleUp border border-gray-100">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+
+          <div className="relative bg-paper-0 rounded-xl shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto animate-scaleUp border border-paper-200">
+            <div className="px-6 py-5 border-b border-paper-200 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-orange-600 tracking-widest uppercase font-black block">Personalización</span>
-                <h3 className="font-extrabold text-gray-800 text-lg leading-tight mt-0.5">
+                <span className={eyebrow}>Personalización</span>
+                <h3 className="text-lg font-bold text-ink-900 leading-tight mt-1">
                   {customizingProduct.nombre}
                 </h3>
               </div>
-              <button 
+              <button
                 onClick={() => setCustomizingProduct(null)}
-                className="p-1.5 rounded-lg hover:bg-gray-50 text-gray-500 transition-colors cursor-pointer"
+                className="w-10 h-10 flex items-center justify-center rounded-md bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors duration-150 cursor-pointer"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="bg-orange-50/50 border border-orange-100/50 p-4 rounded-2xl flex gap-3">
-                <Sparkles className="text-orange-600 shrink-0 mt-0.5" size={18} />
-                <p className="text-[11px] text-orange-950 leading-relaxed font-medium">
-                  Desmarcá los ingredientes que **NO** querés que incluyamos en tu plato. Ideal para alérgenos y preferencias.
+            <div className="px-6 py-5 space-y-4">
+              <div className="bg-brand-yellow-50 border border-brand-yellow-200 p-4 rounded-md flex gap-3">
+                <Sparkles className="text-brand-yellow-700 shrink-0 mt-0.5" size={18} />
+                <p className="text-xs text-ink-700 leading-relaxed font-medium">
+                  Tocá los ingredientes que <strong>NO</strong> querés en tu plato. Ideal para alérgenos y preferencias.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Ingredientes del plato:</span>
-                <div className="grid grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1">
+                <span className={eyebrow}>Ingredientes del plato</span>
+                <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-1">
                   {customizingProduct.ingredientes.map(ing => {
-                    // Si está en el array de exclusiones, es que NO lo queremos (está desmarcado)
                     const isExcluded = exclusions.includes(ing.id);
                     return (
-                      <div 
+                      <div
                         key={ing.id}
                         onClick={() => {
-                          setExclusions(prev => 
-                            prev.includes(ing.id) 
-                              ? prev.filter(id => id !== ing.id) 
+                          setExclusions(prev =>
+                            prev.includes(ing.id)
+                              ? prev.filter(id => id !== ing.id)
                               : [...prev, ing.id]
                           );
                         }}
-                        className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer select-none transition-all duration-200 ${
-                          isExcluded 
-                            ? 'bg-gray-50/50 border-gray-200/50 text-gray-400 line-through' 
-                            : 'bg-white border-orange-100 hover:border-orange-200 text-gray-800 hover:bg-orange-50/10'
+                        className={`flex items-center justify-between p-3 rounded-md border cursor-pointer select-none transition-colors duration-150 ${
+                          isExcluded
+                            ? 'bg-danger-50 border-danger-100 text-danger-700 line-through'
+                            : 'bg-paper-0 border-paper-200 hover:border-paper-300 hover:bg-paper-50 text-ink-900'
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded-lg flex items-center justify-center border transition-all ${
-                            isExcluded 
-                              ? 'border-gray-300 bg-gray-100' 
-                              : 'border-orange-500 bg-orange-500 text-white shadow-xs'
+                          <div className={`w-5 h-5 rounded-sm flex items-center justify-center border-2 transition-colors ${
+                            isExcluded
+                              ? 'border-ink-200 bg-paper-100'
+                              : 'border-brand-red-500 bg-brand-red-500 text-white'
                           }`}>
-                            {!isExcluded && <span className="font-bold text-[10px]">✓</span>}
+                            {!isExcluded && <span className="font-bold text-[11px]">✓</span>}
                           </div>
-                          <span className="text-xs font-bold">{ing.nombre}</span>
+                          <span className="text-sm font-semibold">{ing.nombre}</span>
                         </div>
 
                         {ing.es_alergeno && (
-                          <span className="text-[8px] font-black uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
-                            ⚠️ Alérgeno
+                          <span className="inline-flex items-center gap-1 bg-danger-50 text-danger-700 border border-danger-100 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                            Alérgeno
                           </span>
                         )}
                       </div>
@@ -533,10 +611,10 @@ export const CatalogPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+            <div className="px-6 py-4 border-t border-paper-200 bg-paper-50 rounded-b-xl flex items-center justify-end gap-3">
               <button
                 onClick={() => setCustomizingProduct(null)}
-                className="flex-1 py-3 border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold rounded-2xl text-xs transition-colors cursor-pointer"
+                className="bg-paper-0 border-2 border-paper-200 hover:border-ink-900 hover:bg-paper-50 text-ink-900 font-semibold px-4 py-2 rounded-md transition-all duration-150 cursor-pointer text-sm"
               >
                 Cancelar
               </button>
@@ -548,84 +626,84 @@ export const CatalogPage = () => {
 
                   addItem(customizingProduct, 1, exclusions, excludedNames);
                   setCustomizingProduct(null);
-                  setIsCartOpen(true); // Desplegar el Drawer del pedido para feedback visual
+                  setIsCartOpen(true);
                 }}
-                className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold rounded-2xl text-xs shadow-md shadow-orange-500/10 active:scale-98 transition-all cursor-pointer"
+                className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm"
               >
-                Confirmar y Agregar
+                Confirmar y agregar
               </button>
             </div>
           </div>
         </div>
       )}
 
-
-
-      {/* DRAWER DEL CARRITO FLOTANTE (CartDrawer lateral premium) */}
+      {/* DRAWER DEL CARRITO */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end animate-fadeIn">
-          {/* Backdrop */}
-          <div 
+        <>
+          <div
             onClick={() => setIsCartOpen(false)}
-            className="fixed inset-0 bg-gray-950/60 backdrop-blur-xs"
+            className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm z-40 animate-fadeIn"
           ></div>
-          
-          {/* Drawer */}
-          <aside className="relative flex flex-col w-96 max-w-full bg-white h-full shadow-2xl z-10 p-6 animate-slideLeft">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100 shrink-0">
-              <h3 className="font-extrabold text-gray-800 text-lg flex items-center gap-2">
-                <ShoppingCart className="text-orange-500" size={20} />
-                Mi Pedido
+
+          <aside className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-paper-0 shadow-lg z-50 flex flex-col animate-slideInRight">
+            <div className="bg-brand-red-500 text-white px-6 py-5 flex items-center justify-between shrink-0">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <ShoppingCart size={20} />
+                Mi pedido
               </h3>
-              <button 
+              <button
                 onClick={() => setIsCartOpen(false)}
-                className="p-1 rounded-lg hover:bg-gray-50 text-gray-500 transition-colors cursor-pointer"
+                className="w-10 h-10 flex items-center justify-center rounded-md bg-white/10 hover:bg-white/20 text-white transition-colors duration-150 cursor-pointer"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            {/* Listado de items con clave compuesta */}
-            <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
+            <div className="flex-1 overflow-y-auto p-6 space-y-3">
               {cartItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center text-gray-400 gap-3">
-                  <ShoppingCart size={48} className="stroke-1" />
-                  <p className="text-xs font-bold">El carrito está vacío.</p>
-                  <p className="text-[10px] text-gray-400">¡Explora nuestro menú y arma tu pedido ideal!</p>
+                <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+                  <ShoppingCart size={64} className="text-ink-300 stroke-1" />
+                  <p className="text-sm font-semibold text-ink-500">El carrito está vacío</p>
+                  <p className="text-xs text-ink-400 max-w-[240px]">Explorá nuestro menú y armá tu pedido ideal</p>
+                  <button
+                    onClick={() => setIsCartOpen(false)}
+                    className="bg-brand-yellow-400 hover:bg-brand-yellow-500 active:bg-brand-yellow-600 text-ink-900 font-bold px-4 py-2 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm mt-2"
+                  >
+                    Ver el menú
+                  </button>
                 </div>
               ) : (
                 cartItems.map(item => (
-                  <div 
-                    key={item.cart_item_key} 
-                    className="bg-gray-50 border border-gray-100 p-4 rounded-2xl flex flex-col gap-2.5 shadow-xxs"
+                  <div
+                    key={item.cart_item_key}
+                    className={`${cardBase} p-4 space-y-3`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <h5 className="font-extrabold text-gray-800 text-xs break-words leading-tight">{item.nombre}</h5>
-                        <span className="text-[10px] text-gray-500 font-bold block mt-0.5">${Number(item.precio).toFixed(2)} c/u</span>
+                        <h5 className="font-bold text-ink-900 text-sm break-words leading-tight">{item.nombre}</h5>
+                        <span className="text-xs text-ink-500 font-medium block mt-1 tabular-nums">${Number(item.precio).toFixed(2)} c/u</span>
                       </div>
 
-                      {/* Controles de cantidad interactivos +/- */}
-                      <div className="flex items-center gap-1.5 shrink-0 select-none">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           disabled={item.cantidad <= 1}
                           onClick={() => updateQuantity(item.cart_item_key, item.cantidad - 1)}
-                          className="w-7 h-7 bg-white border border-gray-200 hover:border-orange-200 rounded-lg flex items-center justify-center text-gray-500 hover:text-orange-500 font-bold text-sm cursor-pointer shadow-xs active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-gray-500 disabled:hover:border-gray-200"
+                          className="w-8 h-8 flex items-center justify-center rounded-md bg-paper-0 border border-paper-200 hover:bg-paper-100 hover:border-paper-300 text-ink-700 cursor-pointer transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                          <Minus size={10} />
+                          <Minus size={12} />
                         </button>
-                        <span className="text-xs font-black text-gray-800 w-6 text-center">
+                        <span className="text-sm font-bold text-ink-900 w-6 text-center tabular-nums">
                           {item.cantidad}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.cart_item_key, item.cantidad + 1)}
-                          className="w-7 h-7 bg-white border border-gray-200 hover:border-orange-200 rounded-lg flex items-center justify-center text-gray-500 hover:text-orange-500 font-bold text-sm cursor-pointer shadow-xs active:scale-95 transition-all"
+                          className="w-8 h-8 flex items-center justify-center rounded-md bg-paper-0 border border-paper-200 hover:bg-paper-100 hover:border-paper-300 text-ink-700 cursor-pointer transition-colors duration-150"
                         >
-                          <Plus size={10} />
+                          <Plus size={12} />
                         </button>
                         <button
                           onClick={() => removeItem(item.cart_item_key)}
-                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors cursor-pointer ml-1"
+                          className="w-8 h-8 flex items-center justify-center rounded-md bg-paper-0 border border-danger-100 hover:bg-danger-50 text-danger-600 cursor-pointer transition-colors duration-150 ml-1"
                           title="Quitar plato"
                         >
                           <Trash2 size={12} />
@@ -633,60 +711,66 @@ export const CatalogPage = () => {
                       </div>
                     </div>
 
-                    {/* Exclusiones de alérgenos / ingredientes del item */}
                     {item.exclusiones_nombres && item.exclusiones_nombres.length > 0 && (
-                      <div className="flex flex-wrap gap-1 bg-white p-2 border border-gray-150 rounded-xl">
+                      <div className="flex flex-wrap gap-1">
                         {item.exclusiones_nombres.map((name, i) => (
-                          <span 
+                          <span
                             key={i}
-                            className="inline-flex items-center gap-0.5 text-[8px] font-extrabold text-gray-500 bg-gray-50 border border-gray-150 px-1.5 py-0.5 rounded-md"
+                            className="inline-flex items-center gap-1 text-[10px] font-bold text-ink-600 bg-paper-100 px-2 py-0.5 rounded-full"
                           >
-                            🚫 Sin {name}
+                            Sin {name}
                           </span>
                         ))}
                       </div>
                     )}
 
-                    {/* Subtotal del item */}
-                    <div className="flex items-center justify-between border-t border-gray-200/50 pt-2 text-[10px]">
-                      <span className="text-gray-400 font-bold">Subtotal:</span>
-                      <span className="font-black text-gray-700">${getSubtotal(item).toFixed(2)}</span>
+                    <div className="flex items-center justify-between pt-2 border-t border-paper-200 text-xs">
+                      <span className="text-ink-500 font-semibold">Subtotal</span>
+                      <span className="font-black text-ink-900 tabular-nums">${getSubtotal(item).toFixed(2)}</span>
                     </div>
                   </div>
                 ))
               )}
             </div>
 
-            {/* Footer / Resumen */}
             {cartItems.length > 0 && (
-              <div className="border-t border-gray-100 pt-4 mt-auto space-y-4 shrink-0">
-                <div className="flex items-center justify-between text-base font-black text-gray-800">
-                  <span>Total:</span>
-                  <span className="text-orange-600 font-black">${getTotalPrice().toFixed(2)}</span>
+              <div className="border-t-2 border-brand-yellow-400 bg-paper-50 p-6 space-y-4 shrink-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-bold text-ink-900">Total</span>
+                  <span className="text-2xl font-black text-brand-red-500 tabular-nums">${getTotalPrice().toFixed(2)}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={clearCart}
-                    className="flex items-center justify-center gap-1.5 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-gray-600 font-bold py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
+                    className="bg-paper-0 border border-danger-100 hover:bg-danger-50 hover:border-danger-200 text-danger-600 hover:text-danger-700 font-semibold px-4 py-2 rounded-md transition-colors duration-150 cursor-pointer text-sm flex items-center justify-center gap-1.5"
                   >
                     <Trash2 size={14} />
                     <span>Vaciar</span>
                   </button>
                   <button
                     onClick={() => {
+                      if (estadoLocal === 'cerrado') {
+                        showAlert({
+                          title: 'Local cerrado',
+                          message: 'El restaurante se encuentra cerrado temporalmente y no acepta nuevos pedidos.',
+                          variant: 'warning',
+                        });
+                        return;
+                      }
                       setIsCartOpen(false);
                       navigate('/checkout');
                     }}
-                    className="flex items-center justify-center bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition-all cursor-pointer"
+                    disabled={estadoLocal === 'cerrado'}
+                    className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold py-3.5 rounded-md shadow-brand hover:shadow-md transition-all duration-150 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer text-sm"
                   >
-                    Confirmar
+                    Confirmar pedido
                   </button>
                 </div>
               </div>
             )}
           </aside>
-        </div>
+        </>
       )}
     </div>
   );

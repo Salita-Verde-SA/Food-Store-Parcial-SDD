@@ -1,40 +1,36 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  MapPin, 
-  Plus, 
-  Trash2, 
-  Check, 
-  ChevronLeft, 
-  Home, 
-  Briefcase, 
+import {
+  MapPin,
+  Plus,
+  Trash2,
+  Check,
+  ChevronLeft,
+  Home,
+  Briefcase,
   Navigation,
   X,
-  AlertCircle,
-  Sparkles,
-  Menu,
-  ShoppingCart
+  AlertCircle
 } from 'lucide-react';
 
 import { direccionesApi } from '../shared/api/direcciones';
 import { useAuthStore } from '../shared/stores/authStore';
-import { useCartStore } from '../shared/stores/cartStore';
 import { extractErrorMessage } from '../shared/api/axios';
 import type { DireccionEntrega, DireccionEntregaCreate } from '../shared/types';
+import { useFeedback } from '../shared/ui/FeedbackProvider';
+import { Logo } from '../shared/ui/Logo';
 
 export const AddressesPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, logout } = useAuthStore();
-  const getTotalItems = useCartStore((s) => s.getTotalItems);
+  const { showAlert, showConfirm } = useFeedback();
 
-  // Estados locales
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<DireccionEntrega | null>(null);
 
-  // Campos de formulario
   const [alias, setAlias] = useState('Casa');
   const [calle, setCalle] = useState('');
   const [numero, setNumero] = useState('');
@@ -44,13 +40,11 @@ export const AddressesPage = () => {
   const [esPrincipal, setEsPrincipal] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Query - Obtener direcciones
   const { data: direcciones = [], isLoading, isError } = useQuery<DireccionEntrega[]>({
     queryKey: ['direcciones'],
     queryFn: direccionesApi.getDirecciones,
   });
 
-  // Mutación - Crear
   const createMutation = useMutation({
     mutationFn: direccionesApi.crearDireccion,
     onSuccess: () => {
@@ -62,9 +56,8 @@ export const AddressesPage = () => {
     }
   });
 
-  // Mutación - Editar
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<DireccionEntregaCreate> }) => 
+    mutationFn: ({ id, data }: { id: number; data: Partial<DireccionEntregaCreate> }) =>
       direccionesApi.actualizarDireccion(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['direcciones'] });
@@ -75,25 +68,23 @@ export const AddressesPage = () => {
     }
   });
 
-  // Mutación - Eliminar
   const deleteMutation = useMutation({
     mutationFn: direccionesApi.eliminarDireccion,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['direcciones'] });
     },
     onError: (err: any) => {
-      alert(err.detail || 'Error al eliminar la dirección');
+      showAlert({ title: 'No se pudo eliminar', message: err.detail || 'Error al eliminar la dirección', variant: 'danger' });
     }
   });
 
-  // Mutación - Marcar principal
   const setPrincipalMutation = useMutation({
     mutationFn: direccionesApi.establecerPrincipal,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['direcciones'] });
     },
     onError: (err: any) => {
-      alert(err.detail || 'Error al establecer dirección principal');
+      showAlert({ title: 'Error', message: err.detail || 'Error al establecer dirección principal', variant: 'danger' });
     }
   });
 
@@ -152,62 +143,78 @@ export const AddressesPage = () => {
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm('¿Deseas cerrar sesión en Food Store?')) {
+  const handleLogout = async () => {
+    const ok = await showConfirm({
+      title: 'Cerrar sesión',
+      message: '¿Deseas cerrar sesión en Food Store?',
+      variant: 'warning',
+      confirmText: 'Cerrar sesión',
+    });
+    if (ok) {
       logout();
       navigate('/login');
     }
   };
 
+  const handleDelete = async (id: number) => {
+    const ok = await showConfirm({
+      title: 'Eliminar dirección',
+      message: '¿Estás seguro de eliminar esta dirección?',
+      variant: 'danger',
+      confirmText: 'Eliminar',
+    });
+    if (ok) deleteMutation.mutate(id);
+  };
+
+  const eyebrow = 'text-[11px] font-black uppercase tracking-[0.15em] text-brand-red-500';
+  const cardBase = 'bg-paper-0 border border-paper-200 rounded-lg shadow-sm';
+  const inputBase = 'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-md text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/20 transition-colors duration-150';
+  const labelBase = 'block text-xs font-bold uppercase tracking-wider text-ink-600 mb-1.5';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-amber-50/30 flex flex-col font-sans">
-      
+    <div className="min-h-screen bg-paper-50 flex flex-col font-sans">
+
       {/* HEADER DE CLIENTE */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between shadow-xs">
+      <header className="sticky top-0 z-40 bg-paper-0 border-b-2 border-brand-yellow-400 px-6 py-4 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
-          <Link to="/" className="w-10 h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center text-white font-extrabold text-xl shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-all">
-            FS
+          <Link to="/" className="cursor-pointer hover:scale-105 active:scale-95 transition-transform">
+            <Logo size="md" variant="red" />
           </Link>
           <div>
-            <span className="font-extrabold text-gray-800 text-lg">Food Store</span>
-            <span className="block text-[10px] text-orange-600 tracking-widest uppercase font-black">Mis Direcciones</span>
+            <span className="font-black text-ink-900 text-lg leading-tight block">Food Store</span>
+            <span className={`block ${eyebrow}`}>Mis direcciones</span>
           </div>
         </div>
 
-        {/* Controles de usuario & carrito */}
         <div className="flex items-center gap-4">
           <Link
             to="/"
-            className="hidden sm:flex items-center gap-1.5 text-xs text-gray-600 hover:text-orange-500 font-bold transition-colors"
+            className="hidden sm:flex items-center gap-1.5 text-sm text-ink-700 hover:text-brand-red-500 font-semibold transition-colors"
           >
             <ChevronLeft size={16} />
-            <span>Volver al Menú</span>
+            <span>Volver al menú</span>
           </Link>
 
-          {/* Menú de Usuario Dropdown */}
           <div className="relative">
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="w-10 h-10 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center text-orange-600 font-bold shadow-sm cursor-pointer hover:bg-orange-200 active:scale-95 transition-all"
+              className="w-10 h-10 rounded-md bg-brand-yellow-100 border border-brand-yellow-300 flex items-center justify-center text-ink-900 font-bold cursor-pointer hover:bg-brand-yellow-200 active:scale-95 transition-all duration-150"
             >
               {user ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}` : 'US'}
             </button>
 
             {isUserMenuOpen && (
               <>
-                <div 
-                  onClick={() => setIsUserMenuOpen(false)}
-                  className="fixed inset-0 z-45"
-                ></div>
-                <div className="absolute right-0 mt-2.5 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-50 animate-scaleUp">
-                  <div className="px-3 py-2 border-b border-gray-50 mb-1">
-                    <span className="block font-bold text-gray-800 text-xs">{user?.nombre} {user?.apellido}</span>
-                    <span className="block text-[9px] text-gray-400 font-medium truncate">{user?.email}</span>
+                <div onClick={() => setIsUserMenuOpen(false)} className="fixed inset-0 z-45"></div>
+                <div className="absolute right-0 mt-2 w-56 bg-paper-0 rounded-lg shadow-md border border-paper-200 p-2 z-50 animate-fadeIn">
+                  <div className="px-3 py-2 border-b border-paper-200 mb-1">
+                    <span className="block font-bold text-ink-900 text-sm">{user?.nombre} {user?.apellido}</span>
+                    <span className="block text-[11px] text-ink-400 font-medium truncate">{user?.email}</span>
                   </div>
                   <Link
                     to="/direcciones"
                     onClick={() => setIsUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-gray-700 bg-orange-50/50 text-orange-700 font-bold text-xs transition-all"
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md bg-brand-red-50 text-brand-red-700 font-semibold text-sm"
                   >
                     <MapPin size={14} />
                     <span>Mis Direcciones</span>
@@ -215,7 +222,7 @@ export const AddressesPage = () => {
                   <Link
                     to="/pedidos"
                     onClick={() => setIsUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-800 font-bold text-xs transition-all"
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-ink-700 hover:bg-paper-100 hover:text-ink-900 font-semibold text-sm transition-colors duration-150"
                   >
                     <Navigation size={14} />
                     <span>Mis Pedidos</span>
@@ -224,7 +231,7 @@ export const AddressesPage = () => {
                     <Link
                       to="/admin/categorias"
                       onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-800 font-bold text-xs transition-all"
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-ink-700 hover:bg-paper-100 hover:text-ink-900 font-semibold text-sm transition-colors duration-150"
                     >
                       <Briefcase size={14} />
                       <span>Panel Admin</span>
@@ -232,7 +239,7 @@ export const AddressesPage = () => {
                   )}
                   <button
                     onClick={() => { setIsUserMenuOpen(false); handleLogout(); }}
-                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 font-bold text-xs transition-all cursor-pointer border-t border-gray-50 mt-1"
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-danger-600 hover:bg-danger-50 hover:text-danger-700 font-semibold text-sm transition-colors duration-150 cursor-pointer border-t border-paper-200 mt-1"
                   >
                     <X size={14} />
                     <span>Cerrar Sesión</span>
@@ -244,126 +251,119 @@ export const AddressesPage = () => {
         </div>
       </header>
 
-      {/* CUERPO DE LA PAGINA */}
+      {/* CUERPO */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
-        
-        {/* Breadcrumb / Título móvil */}
-        <div className="flex items-center justify-between">
+
+        <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <Link to="/" className="sm:hidden flex items-center gap-1 text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">
+            <Link to="/" className="sm:hidden flex items-center gap-1 text-[11px] text-ink-500 font-bold uppercase tracking-wider mb-1">
               <ChevronLeft size={12} />
               <span>Menú</span>
             </Link>
-            <h2 className="text-2xl font-black text-gray-800 tracking-tight">Mis Direcciones de Entrega</h2>
-            <p className="text-xs text-gray-500">Administrá los lugares donde recibís tu comida favorita</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-ink-900 tracking-tight">Mis Direcciones</h2>
+            <p className="text-sm text-ink-500 mt-1">Administrá los lugares donde recibís tu comida</p>
           </div>
 
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold px-4 py-2.5 rounded-2xl shadow-md shadow-orange-500/10 active:scale-95 transition-all text-xs cursor-pointer"
+            className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm flex items-center gap-2"
           >
             <Plus size={16} />
-            <span className="hidden sm:inline">Agregar Dirección</span>
+            <span className="hidden sm:inline">Agregar dirección</span>
             <span className="sm:hidden">Agregar</span>
           </button>
         </div>
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-gray-500 font-bold text-xs">Cargando ubicaciones...</span>
+            <div className="w-12 h-12 border-4 border-brand-red-500 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-ink-500 font-medium text-sm">Cargando ubicaciones...</span>
           </div>
         ) : isError ? (
-          <div className="bg-red-50/50 backdrop-blur-md border border-red-200 rounded-3xl p-6 flex items-start gap-4">
-            <AlertCircle className="text-red-600 shrink-0" size={24} />
+          <div className="bg-danger-50 border border-danger-100 rounded-lg p-6 flex items-start gap-4">
+            <AlertCircle className="text-danger-600 shrink-0" size={24} />
             <div>
-              <h3 className="font-bold text-red-800">Error al cargar</h3>
-              <p className="text-xs text-red-700 mt-1">No pudimos conectar con el servidor para traer tus direcciones.</p>
+              <h3 className="font-bold text-danger-700">Error al cargar</h3>
+              <p className="text-sm text-danger-600 mt-1">No pudimos conectar con el servidor.</p>
             </div>
           </div>
         ) : direcciones.length === 0 ? (
-          <div className="text-center py-16 bg-white border border-gray-100 rounded-3xl p-8 max-w-md mx-auto shadow-sm space-y-4">
-            <div className="w-16 h-16 bg-orange-50 border border-orange-100 rounded-2xl flex items-center justify-center text-orange-500 mx-auto">
+          <div className={`text-center py-16 ${cardBase} p-8 max-w-md mx-auto space-y-4`}>
+            <div className="w-16 h-16 bg-brand-yellow-100 rounded-lg flex items-center justify-center text-brand-yellow-700 mx-auto">
               <MapPin size={32} />
             </div>
             <div className="space-y-1">
-              <h3 className="font-bold text-gray-700 text-sm">Sin direcciones guardadas</h3>
-              <p className="text-xs text-gray-400 leading-relaxed">Aún no agregaste ninguna dirección. Registrá tu casa, oficina o dirección principal para hacer pedidos más rápido.</p>
+              <h3 className="text-lg font-bold text-ink-900">Sin direcciones guardadas</h3>
+              <p className="text-sm text-ink-500 leading-relaxed">Registrá tu casa, oficina o cualquier dirección para hacer pedidos más rápido.</p>
             </div>
             <button
               onClick={openCreateModal}
-              className="inline-flex items-center gap-1.5 text-xs text-orange-600 hover:text-orange-700 font-extrabold cursor-pointer hover:underline"
+              className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer text-sm inline-flex items-center gap-2"
             >
-              <span>Crear mi primera dirección</span>
               <Plus size={14} />
+              Crear mi primera dirección
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {direcciones.map(dir => (
-              <div 
+              <div
                 key={dir.id}
-                className={`bg-white border p-5 rounded-3xl flex flex-col justify-between gap-4 shadow-xxs transition-all relative overflow-hidden group ${
-                  dir.es_principal 
-                    ? 'border-orange-500/60 ring-2 ring-orange-500/5' 
-                    : 'border-gray-100 hover:border-gray-200'
+                className={`p-5 rounded-lg shadow-sm relative overflow-hidden ${
+                  dir.es_principal
+                    ? 'bg-paper-0 border-2 border-brand-yellow-400'
+                    : 'bg-paper-0 border border-paper-200 hover:border-paper-300 transition-colors duration-150'
                 }`}
               >
                 {dir.es_principal && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-bl from-orange-500 to-amber-500 text-white text-[8px] font-black uppercase px-3.5 py-1 rounded-bl-xl tracking-wider">
-                    Principal
-                  </div>
+                  <span className="absolute top-3 right-3 inline-flex items-center gap-1 bg-brand-yellow-100 text-brand-yellow-800 border border-brand-yellow-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    Predeterminada
+                  </span>
                 )}
 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 bg-orange-50 border border-orange-100/50 rounded-lg text-orange-600 text-xs shrink-0">
-                      {dir.alias.toLowerCase() === 'casa' ? <Home size={14} /> : 
-                       dir.alias.toLowerCase() === 'trabajo' || dir.alias.toLowerCase() === 'oficina' ? <Briefcase size={14} /> : 
-                       <MapPin size={14} />}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="p-2 bg-brand-red-50 rounded-md text-brand-red-700 shrink-0">
+                      {dir.alias.toLowerCase() === 'casa' ? <Home size={16} /> :
+                       dir.alias.toLowerCase() === 'trabajo' || dir.alias.toLowerCase() === 'oficina' ? <Briefcase size={16} /> :
+                       <MapPin size={16} />}
                     </span>
-                    <h4 className="font-black text-gray-800 text-sm uppercase tracking-wider">{dir.alias}</h4>
+                    <h4 className="font-black text-ink-900 text-base uppercase tracking-wider">{dir.alias}</h4>
                   </div>
 
-                  <div className="text-xs text-gray-600 font-medium leading-relaxed">
-                    <p className="font-bold text-gray-800">{dir.calle} {dir.numero}</p>
+                  <div className="text-sm text-ink-700">
+                    <p className="font-bold text-ink-900">{dir.calle} {dir.numero}</p>
                     {dir.piso_depto && (
-                      <p className="text-[11px] text-gray-400">
-                        {dir.piso_depto}
-                      </p>
+                      <p className="text-xs text-ink-500 mt-0.5">{dir.piso_depto}</p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-gray-50 pt-3.5 mt-1 select-none">
+                <div className="flex items-center justify-between border-t border-paper-200 pt-4 mt-4">
                   {dir.es_principal ? (
-                    <span className="flex items-center gap-1 text-[10px] text-green-600 font-extrabold">
+                    <span className="flex items-center gap-1 text-[11px] text-success-600 font-bold">
                       <Check size={12} className="stroke-[3]" />
                       <span>Activa para envíos</span>
                     </span>
                   ) : (
                     <button
                       onClick={() => setPrincipalMutation.mutate(dir.id)}
-                      className="text-[10px] text-gray-400 hover:text-orange-600 font-extrabold cursor-pointer transition-colors"
+                      className="text-[11px] text-ink-500 hover:text-brand-red-600 font-bold cursor-pointer transition-colors"
                     >
-                      Establecer principal
+                      Establecer predeterminada
                     </button>
                   )}
 
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => openEditModal(dir)}
-                      className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50 transition-all cursor-pointer text-[10px] font-bold"
+                      className="px-2.5 py-1.5 text-xs font-semibold text-ink-700 hover:bg-paper-100 rounded-md transition-colors cursor-pointer"
                     >
                       Editar
                     </button>
                     <button
-                      onClick={() => {
-                        if (window.confirm('¿Estás seguro de eliminar esta dirección?')) {
-                          deleteMutation.mutate(dir.id);
-                        }
-                      }}
-                      className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50/50 transition-all cursor-pointer"
+                      onClick={() => handleDelete(dir.id)}
+                      className="w-8 h-8 flex items-center justify-center bg-paper-0 border border-danger-100 hover:bg-danger-50 text-danger-600 rounded-md transition-colors cursor-pointer"
                       title="Eliminar"
                     >
                       <Trash2 size={13} />
@@ -378,155 +378,148 @@ export const AddressesPage = () => {
 
       {/* MODAL DE CREACIÓN / EDICIÓN */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
-          {/* Backdrop */}
-          <div 
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
             onClick={closeModal}
-            className="fixed inset-0 bg-gray-950/60 backdrop-blur-xs"
+            className="fixed inset-0 bg-ink-900/50 backdrop-blur-sm animate-fadeIn"
           ></div>
 
-          {/* Container */}
-          <form 
+          <form
             onSubmit={handleSubmit}
-            className="relative bg-white rounded-3xl max-w-md w-full shadow-2xl p-6 z-10 space-y-5 animate-scaleUp border border-gray-100"
+            className="relative bg-paper-0 rounded-xl shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto animate-scaleUp border border-paper-200"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="px-6 py-5 border-b border-paper-200 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-orange-600 tracking-widest uppercase font-black block">
-                  {editingAddress ? 'Modificación' : 'Nueva Ubicación'}
+                <span className={eyebrow}>
+                  {editingAddress ? 'Modificación' : 'Nueva ubicación'}
                 </span>
-                <h3 className="font-extrabold text-gray-800 text-lg leading-tight mt-0.5">
-                  {editingAddress ? 'Editar Dirección' : 'Registrar Dirección'}
+                <h3 className="text-lg font-bold text-ink-900 leading-tight mt-1">
+                  {editingAddress ? 'Editar dirección' : 'Registrar dirección'}
                 </h3>
               </div>
-              <button 
+              <button
                 type="button"
                 onClick={closeModal}
-                className="p-1.5 rounded-lg hover:bg-gray-50 text-gray-500 transition-colors cursor-pointer"
+                className="w-10 h-10 flex items-center justify-center rounded-md bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors duration-150 cursor-pointer"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            {formError && (
-              <div className="bg-red-50 border border-red-100 text-red-700 text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-2 font-medium">
-                <AlertCircle size={16} className="shrink-0" />
-                <span>{formError}</span>
-              </div>
-            )}
+            <div className="px-6 py-5 space-y-4">
+              {formError && (
+                <div className="bg-danger-50 border border-danger-100 text-danger-700 px-4 py-3 rounded-md text-sm flex items-center gap-2 font-medium animate-shake">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{formError}</span>
+                </div>
+              )}
 
-            <div className="space-y-4">
-              {/* Alias / Icon selector */}
               <div>
-                <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1.5">Alias:</label>
+                <label className={labelBase}>Alias</label>
                 <div className="grid grid-cols-3 gap-2">
                   {['Casa', 'Trabajo', 'Otro'].map(a => (
                     <button
                       key={a}
                       type="button"
                       onClick={() => setAlias(a)}
-                      className={`py-2 px-3 border rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                        alias === a 
-                          ? 'bg-orange-50 border-orange-500 text-orange-600 shadow-xs' 
-                          : 'bg-white border-gray-150 hover:bg-gray-50 text-gray-600'
+                      className={`py-2 px-3 rounded-md text-sm font-bold transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 ${
+                        alias === a
+                          ? 'bg-brand-red-50 border-2 border-brand-red-500 text-brand-red-700'
+                          : 'bg-paper-0 border-2 border-paper-200 hover:border-paper-300 text-ink-700'
                       }`}
                     >
-                      {a === 'Casa' ? <Home size={12} /> : a === 'Trabajo' ? <Briefcase size={12} /> : <MapPin size={12} />}
+                      {a === 'Casa' ? <Home size={14} /> : a === 'Trabajo' ? <Briefcase size={14} /> : <MapPin size={14} />}
                       <span>{a}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Calle y número */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
-                  <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Calle:</label>
+                  <label className={labelBase}>Calle</label>
                   <input
                     type="text"
                     required
                     placeholder="Ej: Av. Rivadavia"
                     value={calle}
                     onChange={e => setCalle(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium"
+                    className={inputBase}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Número:</label>
+                  <label className={labelBase}>Número</label>
                   <input
                     type="text"
                     required
-                    placeholder="Ej: 1420"
+                    placeholder="1420"
                     value={numero}
                     onChange={e => setNumero(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium"
+                    className={inputBase}
                   />
                 </div>
               </div>
 
-              {/* Piso y Depto */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Piso (Opcional):</label>
+                  <label className={labelBase}>Piso (opc.)</label>
                   <input
                     type="text"
-                    placeholder="Ej: 3"
+                    placeholder="3"
                     value={piso}
                     onChange={e => setPiso(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium"
+                    className={inputBase}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Depto (Opcional):</label>
+                  <label className={labelBase}>Depto (opc.)</label>
                   <input
                     type="text"
-                    placeholder="Ej: B"
+                    placeholder="B"
                     value={depto}
                     onChange={e => setDepto(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium"
+                    className={inputBase}
                   />
                 </div>
               </div>
 
-              {/* Indicaciones */}
               <div>
-                <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Indicaciones de Envío (Opcional):</label>
+                <label className={labelBase}>Indicaciones (opc.)</label>
                 <textarea
-                  placeholder="Ej: Timbre roto, golpear la puerta de reja negra..."
+                  placeholder="Ej: Timbre roto, golpear puerta..."
                   rows={2}
                   value={indicaciones}
                   onChange={e => setIndicaciones(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 leading-normal font-medium resize-none"
+                  className={`${inputBase} resize-none`}
                 />
               </div>
 
-              {/* Marcar principal */}
-              <div 
+              <div
                 onClick={() => setEsPrincipal(!esPrincipal)}
-                className="flex items-center gap-2.5 p-2 rounded-xl border border-dashed border-gray-200 cursor-pointer select-none hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2.5 p-3 rounded-md border border-dashed border-paper-300 cursor-pointer select-none hover:bg-paper-50 transition-colors"
               >
                 <input
                   type="checkbox"
                   checked={esPrincipal}
                   readOnly
-                  className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500/20 accent-orange-500 cursor-pointer"
+                  className="w-4 h-4 rounded border-2 border-ink-300 checked:bg-brand-red-500 checked:border-brand-red-500 accent-brand-red-500 cursor-pointer"
                 />
-                <span className="text-xs font-bold text-gray-600">Establecer como dirección principal</span>
+                <span className="text-sm font-semibold text-ink-700">Establecer como dirección predeterminada</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-3 border-t border-gray-100 shrink-0">
+            <div className="px-6 py-4 border-t border-paper-200 bg-paper-50 rounded-b-xl flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={closeModal}
-                className="flex-1 py-3 border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold rounded-2xl text-xs transition-colors cursor-pointer"
+                className="bg-paper-0 border-2 border-paper-200 hover:border-ink-900 hover:bg-paper-50 text-ink-900 font-semibold px-4 py-2 rounded-md transition-all duration-150 cursor-pointer text-sm"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold rounded-2xl text-xs shadow-md shadow-orange-500/10 active:scale-98 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer text-sm"
               >
                 {createMutation.isPending || updateMutation.isPending ? 'Guardando...' : 'Guardar'}
               </button>

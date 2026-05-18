@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
+import { FeedbackProvider } from '../shared/ui/FeedbackProvider';
 
 export const Providers = ({ children }: { children: ReactNode }) => {
   const [queryClient] = useState(
@@ -17,7 +18,9 @@ export const Providers = ({ children }: { children: ReactNode }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <FeedbackProvider>
+        {children}
+      </FeedbackProvider>
     </QueryClientProvider>
   );
 };

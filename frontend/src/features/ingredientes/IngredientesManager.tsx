@@ -14,12 +14,14 @@ import {
 import { ingredientesApi } from '../../shared/api/ingredientes';
 import type { Ingrediente } from '../../shared/types';
 import { useAuthStore } from '../../shared/stores/authStore';
+import { useFeedback } from '../../shared/ui/FeedbackProvider';
 
 export const IngredientesManager = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const isManager = user?.roles.some((r: string) => ['ADMIN', 'STOCK'].includes(r)) ?? false;
   const isAdmin = user?.roles.some((r: string) => r === 'ADMIN') ?? false;
+  const { showAlert, showConfirm } = useFeedback();
 
   // Estados locales
   const [searchTerm, setSearchTerm] = useState('');
@@ -72,7 +74,7 @@ export const IngredientesManager = () => {
     },
     onError: (err: any) => {
       const detail = err.response?.data?.detail || 'No se puede eliminar el ingrediente porque está asociado a un producto activo.';
-      alert(`⚠️ ERROR DE INTEGRIDAD:\n${detail}`);
+      showAlert({ title: 'Error de Integridad', message: detail, variant: 'danger' });
     }
   });
 
@@ -121,8 +123,14 @@ export const IngredientesManager = () => {
     }
   };
 
-  const handleDelete = (id: number, nombre: string) => {
-    if (window.confirm(`¿Estás seguro de que deseas eliminar el ingrediente "${nombre}"?\nSe aplicará una baja lógica. No debe estar en uso por ningún producto.`)) {
+  const handleDelete = async (id: number, nombre: string) => {
+    const ok = await showConfirm({
+      title: 'Eliminar Ingrediente',
+      message: `¿Estás seguro de que deseas eliminar el ingrediente "${nombre}"?\nSe aplicará una baja lógica. No debe estar en uso por ningún producto.`,
+      variant: 'danger',
+      confirmText: 'Eliminar'
+    });
+    if (ok) {
       deleteMutation.mutate(id);
     }
   };
@@ -132,23 +140,26 @@ export const IngredientesManager = () => {
     ing.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const cardBase = "bg-paper-0 border border-paper-200 rounded-lg shadow-sm";
+  const inputBase = "w-full px-4 py-2 bg-paper-0 border border-paper-200 rounded-md text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/20 transition-colors duration-150";
+
   return (
     <div className="w-full space-y-6">
       {/* Cabecera / Buscador */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 shadow-sm">
+      <div className={`${cardBase} p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" size={16} />
           <input
             type="text"
             placeholder="Buscar ingredientes por nombre..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm text-gray-900 placeholder-gray-400"
+            className={`${inputBase} pl-10`}
           />
           {searchTerm && (
             <button 
               onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-600"
             >
               <X size={16} />
             </button>
@@ -158,7 +169,7 @@ export const IngredientesManager = () => {
         {isManager && (
           <button
             onClick={openCreateModal}
-            className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all text-sm cursor-pointer"
+            className="flex items-center justify-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold px-4 py-2.5 rounded-md shadow-sm active:scale-[0.98] transition-all text-sm cursor-pointer"
           >
             <Plus size={18} />
             <span>Nuevo Ingrediente</span>
@@ -169,26 +180,26 @@ export const IngredientesManager = () => {
       {/* Listado Principal */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-gray-500 font-medium text-sm">Cargando ingredientes...</span>
+          <div className="w-12 h-12 border-4 border-brand-red-500 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-ink-500 font-bold text-sm">Cargando ingredientes...</span>
         </div>
       ) : isError ? (
-        <div className="bg-red-50/50 backdrop-blur-md border border-red-200 rounded-2xl p-6 flex items-start gap-4 max-w-xl mx-auto animate-fadeIn">
-          <AlertCircle className="text-red-600 shrink-0" size={24} />
+        <div className="bg-danger-50 border border-danger-100 rounded-md p-6 flex items-start gap-4 max-w-xl mx-auto animate-fadeIn">
+          <AlertCircle className="text-danger-600 shrink-0" size={24} />
           <div>
-            <h3 className="font-bold text-red-800">Error al cargar ingredientes</h3>
-            <p className="text-sm text-red-700 mt-1">{(error as any)?.message || 'Ha ocurrido un error inesperado al conectar con el servidor.'}</p>
+            <h3 className="font-bold text-danger-800">Error al cargar ingredientes</h3>
+            <p className="text-sm text-danger-700 mt-1">{(error as any)?.message || 'Ha ocurrido un error inesperado al conectar con el servidor.'}</p>
           </div>
         </div>
       ) : filteredIngredientes.length === 0 ? (
-        <div className="text-center py-16 bg-white/50 border border-gray-100 rounded-2xl p-8 max-w-md mx-auto shadow-sm">
-          <Cookie className="mx-auto text-gray-300" size={56} />
-          <h3 className="mt-4 font-bold text-gray-700">No hay ingredientes</h3>
-          <p className="text-sm text-gray-500 mt-2">Introduce ingredientes para enriquecer las recetas de tus pizzas, hamburguesas y bebidas.</p>
+        <div className={`${cardBase} p-8 text-center max-w-md mx-auto`}>
+          <Cookie className="mx-auto text-ink-300" size={56} />
+          <h3 className="mt-4 font-bold text-ink-700">No hay ingredientes</h3>
+          <p className="text-sm text-ink-500 mt-2">Introduce ingredientes para enriquecer las recetas de tus pizzas, hamburguesas y bebidas.</p>
           {isManager && (
             <button
               onClick={openCreateModal}
-              className="mt-6 inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-xl transition-all text-sm cursor-pointer"
+              className="mt-6 inline-flex items-center gap-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold px-4 py-2 rounded-md transition-all text-sm cursor-pointer"
             >
               <Plus size={18} />
               <span>Crear Ingrediente</span>
@@ -200,23 +211,23 @@ export const IngredientesManager = () => {
           {filteredIngredientes.map(ing => (
             <div 
               key={ing.id} 
-              className="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-orange-200 transition-all group duration-200 relative overflow-hidden flex flex-col justify-between"
+              className={`${cardBase} p-5 hover:border-brand-yellow-400 transition-all group relative overflow-hidden flex flex-col justify-between`}
             >
               {/* Badge Alérgeno */}
               {ing.es_alergeno && (
-                <div className="absolute top-0 right-0 bg-red-50 text-red-600 border-l border-b border-red-100 text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-bl-xl flex items-center gap-1">
+                <div className="absolute top-0 right-0 bg-brand-red-500 text-white border-b border-l border-brand-red-600 text-[9px] font-black tracking-wider uppercase px-2 py-1 rounded-bl-lg flex items-center gap-1 shadow-sm">
                   <ShieldAlert size={12} />
                   <span>Alérgeno</span>
                 </div>
               )}
 
               <div className="space-y-3">
-                <div className="p-3 bg-orange-50 text-orange-500 rounded-xl w-fit">
+                <div className="p-3 bg-brand-yellow-100 text-brand-yellow-800 rounded-md w-fit">
                   <Cookie size={24} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-800 text-base sm:text-lg break-words pr-12">{ing.nombre}</h4>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <h4 className="font-black text-ink-900 text-base sm:text-lg break-words pr-12">{ing.nombre}</h4>
+                  <p className="text-xs text-ink-500 mt-1 font-medium">
                     {ing.es_alergeno 
                       ? '⚠️ Requiere advertencia obligatoria de alérgenos en el menú.' 
                       : '✅ Ingrediente seguro libre de alérgenos estándar.'}
@@ -226,17 +237,17 @@ export const IngredientesManager = () => {
 
               {/* Acciones */}
               {isManager && (
-                <div className="flex items-center justify-end gap-2 mt-5 pt-3 border-t border-gray-50 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
+                <div className="flex items-center justify-end gap-2 mt-5 pt-3 border-t border-paper-200 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
                   <button
                     onClick={() => openEditModal(ing)}
-                    className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all cursor-pointer"
+                    className="p-1.5 bg-info-50 text-info-600 rounded-md hover:bg-info-100 transition-all cursor-pointer"
                     title="Editar ingrediente"
                   >
                     <Edit size={16} />
                   </button>
                   <button
                     onClick={() => handleDelete(ing.id, ing.nombre)}
-                    className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all cursor-pointer"
+                    className="p-1.5 bg-danger-50 text-danger-600 rounded-md hover:bg-danger-100 transition-all cursor-pointer"
                     title="Eliminar ingrediente"
                   >
                     <Trash2 size={16} />
@@ -250,17 +261,17 @@ export const IngredientesManager = () => {
 
       {/* Modal de Creación/Edición */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full overflow-hidden flex flex-col transform transition-all duration-300 scale-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className={`${cardBase} max-w-md w-full overflow-hidden flex flex-col transform transition-all duration-300 scale-100 p-0`}>
             {/* Header del Modal */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                <Cookie className="text-orange-500" size={20} />
+            <div className="flex items-center justify-between p-6 border-b border-paper-200 bg-paper-50">
+              <h3 className="font-black text-ink-900 text-lg flex items-center gap-2">
+                <Cookie className="text-brand-yellow-600" size={20} />
                 {editingIngrediente ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}
               </h3>
               <button 
                 onClick={closeModal}
-                className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="p-1.5 rounded-md text-ink-400 hover:text-brand-red-500 hover:bg-paper-100 transition-colors"
               >
                 <X size={20} />
               </button>
@@ -269,15 +280,15 @@ export const IngredientesManager = () => {
             {/* Formulario */}
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               {formError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-start gap-2 text-sm animate-shake">
-                  <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={16} />
+                <div className="bg-danger-50 border border-danger-100 text-danger-700 p-4 rounded-md flex items-start gap-2 text-sm animate-shake">
+                  <AlertCircle className="text-danger-500 shrink-0 mt-0.5" size={16} />
                   <span>{formError}</span>
                 </div>
               )}
 
               {/* Nombre */}
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-700">Nombre del Ingrediente *</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-ink-600">Nombre del Ingrediente *</label>
                 <input
                   type="text"
                   required
@@ -285,43 +296,42 @@ export const IngredientesManager = () => {
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   placeholder="Ej: Harina de Trigo, Mozzarella, Panceta"
-                  className="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 focus:bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-sm text-gray-900 transition-all font-semibold"
-                  style={{ color: '#1f2937' }} // Garantiza alta visibilidad del texto ingresado
+                  className={inputBase}
                 />
               </div>
 
               {/* Checkbox de Alérgenos */}
-              <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 flex items-start gap-3">
+              <div className="bg-paper-50 p-4 rounded-md border border-paper-200 flex items-start gap-3">
                 <input
                   type="checkbox"
                   id="es_alergeno"
                   checked={esAlergeno}
                   onChange={(e) => setEsAlergeno(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-orange-500 focus:ring-orange-500/20 cursor-pointer mt-0.5 accent-orange-500"
+                  className="w-5 h-5 rounded border-paper-300 text-brand-red-500 focus:ring-brand-red-500/20 cursor-pointer mt-0.5 accent-brand-red-500"
                 />
                 <div className="space-y-0.5">
-                  <label htmlFor="es_alergeno" className="block text-sm font-bold text-gray-800 cursor-pointer select-none">
+                  <label htmlFor="es_alergeno" className="block text-sm font-bold text-ink-900 cursor-pointer select-none">
                     ¿Es un alérgeno crítico?
                   </label>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-ink-500 font-medium">
                     Marca esta opción si contiene trigo/gluten, lácteos, frutos secos u otros alérgenos de advertencia legal obligatoria.
                   </p>
                 </div>
               </div>
 
               {/* Acciones del Formulario */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-paper-200">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-medium text-sm transition-all cursor-pointer"
+                  className="px-4 py-2 border border-ink-200 text-ink-700 rounded-md hover:bg-paper-50 font-semibold text-sm transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 transition-all text-sm cursor-pointer"
+                  className="px-5 py-2 bg-brand-red-500 hover:bg-brand-red-600 text-white font-bold rounded-md shadow-sm active:scale-[0.98] disabled:opacity-50 transition-all text-sm cursor-pointer"
                 >
                   {createMutation.isPending || updateMutation.isPending ? 'Guardando...' : 'Guardar'}
                 </button>

@@ -6,11 +6,9 @@ import {
   CreditCard, 
   ChevronLeft, 
   ShoppingBag, 
-  Home, 
   CheckCircle,
   Truck,
   Store,
-  User,
   Plus,
   AlertCircle,
   Sparkles,
@@ -26,7 +24,10 @@ import { pedidosApi } from '../shared/api/pedidos';
 import type { CrearPedidoRequest } from '../shared/api/pedidos';
 import { pagosApi } from '../shared/api/pagos';
 import { extractErrorMessage } from '../shared/api/axios';
-import type { DireccionEntrega, DireccionEntregaCreate, CartItem } from '../shared/types';
+import type { DireccionEntrega } from '../shared/types';
+import { useConfigStore } from '../shared/stores/configStore';
+import { configuracionApi } from '../shared/api/configuracion';
+import { Logo } from '../shared/ui/Logo';
 
 export const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -34,33 +35,49 @@ export const CheckoutPage = () => {
   const { user } = useAuthStore();
   const { items: cartItems, getTotalPrice, clearCart } = useCartStore();
 
-  // Redirigir si no hay ítems en el carrito
+  const { setConfigs, costoEnvio: costoEnvioStore, estadoLocal } = useConfigStore();
+
+  const { data: publicConfigs } = useQuery({
+    queryKey: ['public-configuraciones'],
+    queryFn: configuracionApi.getPublicConfiguraciones,
+  });
+
+  React.useEffect(() => {
+    if (publicConfigs) {
+      const costoEnvioItem = publicConfigs.find(c => c.key === 'costo_envio');
+      const estadoLocalItem = publicConfigs.find(c => c.key === 'estado_local');
+
+      const costoVal = costoEnvioItem ? parseFloat(costoEnvioItem.value) : 150.00;
+      const estadoVal = estadoLocalItem && (estadoLocalItem.value === 'abierto' || estadoLocalItem.value === 'cerrado')
+        ? estadoLocalItem.value
+        : 'abierto';
+
+      setConfigs(costoVal, estadoVal);
+    }
+  }, [publicConfigs, setConfigs]);
+
   React.useEffect(() => {
     if (cartItems.length === 0 && !checkoutSuccess) {
       navigate('/');
     }
   }, [cartItems]);
 
-  // Estados locales de Checkout
   const [tipoEntrega, setTipoEntrega] = useState<'DELIVERY' | 'TAKE_AWAY'>('DELIVERY');
   const [selectedDireccionId, setSelectedDireccionId] = useState<number | null>(null);
   const [metodoPago, setMetodoPago] = useState<'MERCADOPAGO' | 'EFECTIVO' | 'TRANSFERENCIA'>('MERCADOPAGO');
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [createdPedidoId, setCreatedPedidoId] = useState<number | null>(null);
   
-  // Estado de procesamiento
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState('');
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  // Estados del Brick de Tarjeta Simulada (MercadoPago)
   const [cardNumber, setCardNumber] = useState('');
   const [cardName, setCardName] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [cardBrand, setCardBrand] = useState<'VISA' | 'MASTERCARD' | 'UNKNOWN'>('UNKNOWN');
 
-  // Estados para modal rápido de agregar dirección inline
   const [isAddrModalOpen, setIsAddrModalOpen] = useState(false);
   const [newCalle, setNewCalle] = useState('');
   const [newNumero, setNewNumero] = useState('');
@@ -69,7 +86,6 @@ export const CheckoutPage = () => {
   const [newIndicaciones, setNewIndicaciones] = useState('');
   const [addrError, setAddrError] = useState<string | null>(null);
 
-  // Query - Obtener direcciones del cliente
   const { data: direcciones = [], isLoading: isLoadingDirs } = useQuery<DireccionEntrega[]>({
     queryKey: ['direcciones'],
     queryFn: direccionesApi.getDirecciones,
@@ -85,7 +101,6 @@ export const CheckoutPage = () => {
     }
   });
 
-  // Auto-seleccionar dirección al cargar o si la seleccionada es inválida/borrada
   React.useEffect(() => {
     if (direcciones.length > 0) {
       const exists = direcciones.some(d => d.id === selectedDireccionId);
@@ -98,7 +113,6 @@ export const CheckoutPage = () => {
     }
   }, [direcciones, selectedDireccionId]);
 
-  // Mutación - Crear Dirección Inline
   const createAddressMutation = useMutation({
     mutationFn: direccionesApi.crearDireccion,
     onSuccess: (newDir) => {
@@ -116,22 +130,18 @@ export const CheckoutPage = () => {
     }
   });
 
-  // Costo de envío dinámico
-  const costoEnvio = tipoEntrega === 'DELIVERY' ? 50.00 : 0.00;
+  const costoEnvio = tipoEntrega === 'DELIVERY' ? costoEnvioStore : 0.00;
   const subtotal = getTotalPrice();
   const total = subtotal + costoEnvio;
 
-  // Lógica del formato del número de tarjeta para MercadoPago Brick
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 16) value = value.slice(0, 16);
     
-    // Detectar marca
     if (value.startsWith('4')) setCardBrand('VISA');
     else if (value.startsWith('5')) setCardBrand('MASTERCARD');
     else setCardBrand('UNKNOWN');
 
-    // Formatear en bloques de 4
     const formatted = value.replace(/(\d{4})(?=\d)/g, '$1 ');
     setCardNumber(formatted);
   };
@@ -164,19 +174,21 @@ export const CheckoutPage = () => {
       piso_depto: [newPiso.trim(), newDepto.trim()].filter(Boolean).join(' ') || null,
       ciudad: 'CABA',
       codigo_postal: '1000',
-      es_principal: direcciones.length === 0, // Si es la primera, marcar principal
+      es_principal: direcciones.length === 0,
     });
   };
 
   const handleConfirmPurchase = async () => {
     setGlobalError(null);
 
-    // Validar dirección si es Delivery
+    if (estadoLocal === 'cerrado') {
+      return setGlobalError('El restaurante se encuentra cerrado temporalmente y no acepta nuevos pedidos en este momento.');
+    }
+
     if (tipoEntrega === 'DELIVERY' && !selectedDireccionId) {
       return setGlobalError('Debes ingresar o seleccionar una dirección de envío');
     }
 
-    // Validar tarjeta si es MercadoPago
     if (metodoPago === 'MERCADOPAGO') {
       const cleanCard = cardNumber.replace(/\s/g, '');
       if (cleanCard.length < 16) return setGlobalError('El número de tarjeta debe tener 16 dígitos');
@@ -189,7 +201,6 @@ export const CheckoutPage = () => {
     setProcessingStep('1. Creando pedido en backend...');
 
     try {
-      // 1. Crear el Pedido en estado PENDIENTE
       const forma_pago_codigo = metodoPago === 'MERCADOPAGO' ? 'MP' : 'EFECTIVO';
       const pedidoPayload: CrearPedidoRequest = {
         items: cartItems.map(item => ({
@@ -205,17 +216,14 @@ export const CheckoutPage = () => {
       const pedido = await pedidosApi.crearPedido(pedidoPayload);
       setCreatedPedidoId(pedido.id);
 
-      // 2. Procesar según método de pago
       if (metodoPago === 'EFECTIVO' || metodoPago === 'TRANSFERENCIA') {
         setProcessingStep('2. Finalizando transacción...');
-        await new Promise(resolve => setTimeout(resolve, 1200)); // Simular retraso elegante
+        await new Promise(resolve => setTimeout(resolve, 1200));
         
-        // Limpiar store del carrito
         clearCart();
         setCheckoutSuccess(true);
         setIsProcessing(false);
       } else {
-        // MercadoPago
         setProcessingStep('2. Creando preferencia en MercadoPago...');
         const pagoResponse = await pagosApi.crearPago(pedido.id);
         
@@ -223,14 +231,12 @@ export const CheckoutPage = () => {
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         setProcessingStep('4. Aprobando transacción bancaria segura...');
-        // Simular el Webhook de aprobación asíncrona directamente al backend (CE-09 end-to-end)
         const mockPaymentId = `test_checkout_${Math.floor(Math.random() * 100000000)}`;
         await pagosApi.simularWebhook(mockPaymentId, 'approved', pagoResponse.external_reference);
 
         setProcessingStep('5. Verificando inventarios y descontando stock...');
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Limpiar store del carrito
         clearCart();
         setCheckoutSuccess(true);
         setIsProcessing(false);
@@ -241,51 +247,57 @@ export const CheckoutPage = () => {
     }
   };
 
+  const eyebrow = 'text-[11px] font-black uppercase tracking-[0.15em] text-brand-red-500';
+  const cardBase = 'bg-paper-0 border border-paper-200 rounded-lg shadow-sm';
+  const inputBase = 'w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-md text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/20 transition-colors duration-150';
+  const labelBase = 'block text-xs font-bold uppercase tracking-wider text-ink-600 mb-1.5';
+
   if (checkoutSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-amber-50/30 flex flex-col font-sans items-center justify-center p-6 select-none">
-        <div className="max-w-md w-full bg-white rounded-3xl border border-gray-100 shadow-2xl p-8 text-center space-y-6 animate-scaleUp">
-          <div className="w-20 h-20 bg-green-50 border border-green-200/50 rounded-2xl flex items-center justify-center text-green-500 mx-auto animate-bounce">
-            <CheckCircle size={44} className="stroke-[2.5]" />
+      <div className="min-h-screen bg-paper-50 flex flex-col font-sans items-center justify-center p-6 select-none relative overflow-hidden">
+        <svg aria-hidden="true" className="absolute -top-10 -left-10 w-72 h-72 opacity-10 pointer-events-none" viewBox="0 0 200 200" fill="none">
+          <path d="M20 180 Q20 20 100 20 Q180 20 180 180" stroke="#FFC72C" strokeWidth="40" strokeLinecap="round"/>
+        </svg>
+        
+        <div className="max-w-md w-full bg-paper-0 rounded-2xl border border-paper-200 shadow-lg p-8 text-center space-y-6 animate-scaleUp z-10">
+          <div className="w-24 h-24 bg-brand-yellow-400 rounded-full flex items-center justify-center text-ink-900 mx-auto shadow-md">
+            <CheckCircle size={48} className="stroke-[2.5]" />
           </div>
 
           <div className="space-y-2">
-            <span className="text-[10px] text-green-600 tracking-widest uppercase font-black bg-green-50 px-3 py-1 rounded-full border border-green-200/20">
-              Compra Exitosa
-            </span>
-            <h2 className="text-2xl font-black text-gray-800 tracking-tight pt-1">¡Gracias por tu compra!</h2>
-            <p className="text-xs text-gray-500 leading-relaxed px-4">
+            <h1 className="text-3xl font-black text-ink-900 tracking-tight">¡Pedido Confirmado!</h1>
+            <p className="text-sm text-ink-700 leading-relaxed px-4">
               {metodoPago === 'MERCADOPAGO' 
-                ? 'Tu pago de MercadoPago ha sido aprobado. El restaurante ya está cocinando tu orden y descontando el stock correspondiente.'
+                ? 'Tu pago ha sido aprobado. El restaurante ya está preparando tu orden.'
                 : 'Tu pedido ha sido registrado con éxito. Prepará el pago correspondiente al retirar o recibir tu envío.'}
             </p>
           </div>
 
-          <div className="bg-orange-50/50 border border-orange-100/50 p-4 rounded-2xl text-left space-y-1.5">
-            <div className="flex justify-between text-xs text-gray-500 font-bold">
+          <div className="bg-paper-50 border border-paper-200 p-4 rounded-md text-left space-y-2">
+            <div className="flex justify-between text-sm text-ink-700 font-semibold">
               <span>Pedido ID:</span>
-              <span className="text-gray-800 font-black">#{createdPedidoId}</span>
+              <span className="text-ink-900 font-bold">#{createdPedidoId}</span>
             </div>
-            <div className="flex justify-between text-xs text-gray-500 font-bold">
+            <div className="flex justify-between text-sm text-ink-700 font-semibold">
               <span>Método Pago:</span>
-              <span className="text-gray-800 font-black">{metodoPago}</span>
+              <span className="text-ink-900 font-bold">{metodoPago}</span>
             </div>
-            <div className="flex justify-between text-xs text-gray-500 font-bold border-t border-orange-100/40 pt-1.5">
+            <div className="flex justify-between text-sm text-ink-700 font-semibold border-t border-paper-200 pt-2">
               <span>Total Abonado:</span>
-              <span className="text-orange-600 font-black">${total.toFixed(2)}</span>
+              <span className="text-brand-red-500 font-black text-lg tabular-nums">${total.toFixed(2)}</span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-3 pt-2">
             <button
               onClick={() => navigate('/pedidos')}
-              className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold rounded-2xl text-xs shadow-md shadow-orange-500/10 active:scale-98 transition-all cursor-pointer"
+              className="w-full bg-brand-yellow-400 hover:bg-brand-yellow-500 active:bg-brand-yellow-600 text-ink-900 font-bold py-3.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] cursor-pointer"
             >
-              Rastrear mi Pedido
+              Ver mis pedidos
             </button>
             <button
               onClick={() => navigate('/')}
-              className="w-full py-3.5 border border-gray-250 hover:bg-gray-50 text-gray-600 font-bold rounded-2xl text-xs transition-colors cursor-pointer"
+              className="w-full bg-paper-0 border-2 border-ink-200 hover:border-ink-900 hover:bg-paper-50 text-ink-900 font-semibold py-3 rounded-md transition-all duration-150 cursor-pointer"
             >
               Volver al Menú
             </button>
@@ -296,28 +308,37 @@ export const CheckoutPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-amber-50/30 flex flex-col font-sans">
+    <div className="min-h-screen bg-paper-50 flex flex-col font-sans">
       
       {/* HEADER DE CLIENTE */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between shadow-xs shrink-0">
+      <header className="sticky top-0 z-40 bg-paper-0 border-b-2 border-brand-yellow-400 px-6 py-4 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
-          <Link to="/" className="w-10 h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center text-white font-extrabold text-xl shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-all">
-            FS
+          <Link to="/" className="cursor-pointer hover:scale-105 active:scale-95 transition-transform">
+            <Logo size="md" variant="red" />
           </Link>
           <div>
-            <span className="font-extrabold text-gray-800 text-lg">Food Store</span>
-            <span className="block text-[10px] text-orange-600 tracking-widest uppercase font-black">Checkout Seguro</span>
+            <span className="font-black text-ink-900 text-lg leading-tight block">Food Store</span>
+            <span className={`block ${eyebrow}`}>Checkout Seguro</span>
           </div>
         </div>
 
         <Link
           to="/"
-          className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-orange-500 font-bold transition-colors"
+          className="flex items-center gap-1.5 text-sm text-ink-700 hover:text-brand-red-500 font-semibold transition-colors"
         >
           <ChevronLeft size={16} />
-          <span>Volver al Menú</span>
+          <span className="hidden sm:inline">Volver al menú</span>
         </Link>
       </header>
+
+      {/* STEPPER VISUAL */}
+      <div className="w-full bg-paper-0 border-b border-paper-200 py-4 px-6 flex justify-center items-center gap-2 md:gap-4 overflow-x-auto shrink-0">
+         <span className="bg-brand-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shrink-0">Dirección</span>
+         <span className="text-paper-300">→</span>
+         <span className="bg-brand-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shrink-0">Pago</span>
+         <span className="text-paper-300">→</span>
+         <span className="bg-paper-200 text-ink-500 text-xs font-bold px-3 py-1.5 rounded-full shrink-0">Confirmación</span>
+      </div>
 
       {/* CUERPO DE LA PAGINA */}
       <main className="flex-1 max-w-5xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -325,59 +346,53 @@ export const CheckoutPage = () => {
         {/* COLUMNA IZQUIERDA: LÓGICA DE CHECOUT (2/3 de pantalla) */}
         <section className="lg:col-span-2 space-y-6 min-w-0">
           
-          {/* TÍTULO */}
-          <div>
-            <h2 className="text-2xl font-black text-gray-800 tracking-tight">Finalizar tu Pedido</h2>
-            <p className="text-xs text-gray-500">Selecciona el método de entrega y abona de forma segura</p>
-          </div>
-
           {globalError && (
-            <div className="bg-red-50 border border-red-100 text-red-700 text-xs px-4 py-3 rounded-2xl flex items-start gap-2.5 font-medium leading-relaxed">
+            <div className="bg-danger-50 border border-danger-100 text-danger-700 text-sm px-4 py-3 rounded-md flex items-start gap-2.5 font-medium leading-relaxed">
               <AlertCircle size={18} className="shrink-0 mt-0.5" />
               <span>{globalError}</span>
             </div>
           )}
 
           {/* 1. TIPO DE ENTREGA */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-xxs space-y-4">
-            <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-2">
-              <Truck size={14} className="text-orange-500" />
+          <div className={`${cardBase} p-6 space-y-4`}>
+            <h3 className={eyebrow + " flex items-center gap-2"}>
+              <Truck size={14} />
               <span>1. Método de Entrega</span>
             </h3>
 
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setTipoEntrega('DELIVERY')}
-                className={`py-3 px-4 border rounded-2xl font-extrabold text-xs flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+                className={`py-4 px-4 border rounded-md font-bold text-sm flex flex-col items-center gap-2 transition-all cursor-pointer ${
                   tipoEntrega === 'DELIVERY'
-                    ? 'bg-orange-50 border-orange-500 text-orange-600 shadow-xxs'
-                    : 'bg-white border-gray-150 text-gray-600 hover:bg-gray-50'
+                    ? 'bg-brand-red-50 border-2 border-brand-red-500 text-brand-red-700'
+                    : 'bg-paper-0 border-2 border-paper-200 text-ink-600 hover:bg-paper-50'
                 }`}
               >
-                <Truck size={20} />
+                <Truck size={24} />
                 <span>Envío a Domicilio</span>
               </button>
               <button
                 onClick={() => setTipoEntrega('TAKE_AWAY')}
-                className={`py-3 px-4 border rounded-2xl font-extrabold text-xs flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
+                className={`py-4 px-4 border rounded-md font-bold text-sm flex flex-col items-center gap-2 transition-all cursor-pointer ${
                   tipoEntrega === 'TAKE_AWAY'
-                    ? 'bg-orange-50 border-orange-500 text-orange-600 shadow-xxs'
-                    : 'bg-white border-gray-150 text-gray-600 hover:bg-gray-50'
+                    ? 'bg-brand-red-50 border-2 border-brand-red-500 text-brand-red-700'
+                    : 'bg-paper-0 border-2 border-paper-200 text-ink-600 hover:bg-paper-50'
                 }`}
               >
-                <Store size={20} />
+                <Store size={24} />
                 <span>Retiro en Local</span>
               </button>
             </div>
 
             {/* SELECCIÓN DE DIRECCIÓN (SÓLO SI ES DELIVERY) */}
             {tipoEntrega === 'DELIVERY' && (
-              <div className="pt-3 border-t border-gray-50 space-y-3">
+              <div className="pt-4 border-t border-paper-200 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Dirección de envío:</span>
+                  <span className={labelBase + " mb-0"}>Dirección de envío:</span>
                   <button
                     onClick={() => { setAddrError(null); setIsAddrModalOpen(true); }}
-                    className="text-[10px] text-orange-600 hover:text-orange-700 font-black cursor-pointer flex items-center gap-1 hover:underline"
+                    className="text-[11px] text-brand-red-500 hover:text-brand-red-600 font-bold cursor-pointer flex items-center gap-1 hover:underline uppercase tracking-wider"
                   >
                     <Plus size={12} />
                     <span>Agregar dirección rápida</span>
@@ -385,11 +400,11 @@ export const CheckoutPage = () => {
                 </div>
 
                 {direcciones.length === 0 ? (
-                  <div className="text-center py-6 border border-dashed border-orange-200/50 rounded-2xl p-4 bg-orange-50/10 space-y-3">
-                    <p className="text-[11px] text-gray-500">No tienes ninguna dirección registrada.</p>
+                  <div className="text-center py-6 border border-dashed border-paper-300 rounded-md p-4 bg-paper-50 space-y-3">
+                    <p className="text-sm text-ink-500 font-medium">No tienes ninguna dirección registrada.</p>
                     <button
                       onClick={() => { setAddrError(null); setIsAddrModalOpen(true); }}
-                      className="py-1.5 px-3 bg-orange-100 hover:bg-orange-200 text-orange-700 font-extrabold rounded-xl text-[10px] transition-colors cursor-pointer"
+                      className="bg-paper-0 border-2 border-ink-200 hover:border-ink-900 hover:bg-paper-50 text-ink-900 font-semibold px-4 py-2 rounded-md transition-all duration-150 cursor-pointer text-sm"
                     >
                       Registrar Dirección
                     </button>
@@ -400,22 +415,22 @@ export const CheckoutPage = () => {
                       <div
                         key={dir.id}
                         onClick={() => setSelectedDireccionId(dir.id)}
-                        className={`p-3.5 border rounded-2xl cursor-pointer select-none transition-all ${
+                        className={`p-4 border rounded-md cursor-pointer select-none transition-all ${
                           selectedDireccionId === dir.id
-                            ? 'bg-orange-50/50 border-orange-500 text-orange-950 font-bold shadow-xxs'
-                            : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'
+                            ? 'bg-brand-red-50 border-2 border-brand-red-500 text-brand-red-900'
+                            : 'bg-paper-0 border-2 border-paper-200 hover:bg-paper-50 text-ink-700'
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-black uppercase text-orange-600">{dir.alias}</span>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs font-bold uppercase tracking-wider">{dir.alias}</span>
                           {dir.es_principal && (
-                            <span className="text-[8px] bg-orange-100 text-orange-800 border border-orange-200/20 font-black px-1.5 py-0.5 rounded-md">
+                            <span className="text-[10px] bg-brand-yellow-400 text-ink-900 font-bold px-2 py-0.5 rounded-full">
                               Fav
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-800 font-bold truncate">{dir.calle} {dir.numero}</p>
-                        {dir.piso_depto && <p className="text-[9px] text-gray-400 truncate mt-0.5">{dir.piso_depto}</p>}
+                        <p className="text-sm font-semibold">{dir.calle} {dir.numero}</p>
+                        {dir.piso_depto && <p className="text-xs text-ink-500 mt-1">{dir.piso_depto}</p>}
                       </div>
                     ))}
                   </div>
@@ -424,13 +439,13 @@ export const CheckoutPage = () => {
             )}
 
             {tipoEntrega === 'TAKE_AWAY' && (
-              <div className="bg-orange-50/30 border border-orange-100/50 p-4 rounded-2xl flex gap-3 text-left">
-                <Store className="text-orange-500 shrink-0 mt-0.5" size={18} />
+              <div className="bg-brand-yellow-50 border border-brand-yellow-200 p-4 rounded-md flex gap-3 text-left mt-4">
+                <Store className="text-brand-yellow-700 shrink-0 mt-0.5" size={20} />
                 <div>
-                  <span className="text-xs font-black text-orange-950">Retirás en:</span>
-                  <p className="text-[11px] text-orange-900 leading-normal mt-0.5">
+                  <span className="text-sm font-bold text-ink-900">Retirás en:</span>
+                  <p className="text-xs text-ink-700 leading-relaxed mt-1">
                     Av. Rivadavia 1420, Balvanera, CABA.<br />
-                    Tu pedido estará listo en aproximadamente **20 - 30 minutos**. ¡Te avisaremos por el rastreador!
+                    Tu pedido estará listo en aproximadamente <strong>20 - 30 minutos</strong>. ¡Te avisaremos por el rastreador!
                   </p>
                 </div>
               </div>
@@ -438,25 +453,25 @@ export const CheckoutPage = () => {
           </div>
 
           {/* 2. METODO DE PAGO */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-xxs space-y-4">
-            <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-2">
-              <CreditCard size={14} className="text-orange-500" />
+          <div className={`${cardBase} p-6 space-y-4`}>
+            <h3 className={eyebrow + " flex items-center gap-2"}>
+              <CreditCard size={14} />
               <span>2. Medio de Pago</span>
             </h3>
 
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { id: 'MERCADOPAGO', name: 'MercadoPago', icon: <CreditCard size={16} /> },
-                { id: 'EFECTIVO', name: 'Efectivo', icon: <DollarSign size={16} /> },
-                { id: 'TRANSFERENCIA', name: 'Transferencia', icon: <Sparkles size={16} /> }
+                { id: 'MERCADOPAGO', name: 'MercadoPago', icon: <CreditCard size={20} /> },
+                { id: 'EFECTIVO', name: 'Efectivo', icon: <DollarSign size={20} /> },
+                { id: 'TRANSFERENCIA', name: 'Transferencia', icon: <Sparkles size={20} /> }
               ].map(p => (
                 <button
                   key={p.id}
                   onClick={() => setMetodoPago(p.id as any)}
-                  className={`py-2.5 px-3 border rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  className={`py-3 px-3 border rounded-md font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     metodoPago === p.id
-                      ? 'bg-orange-50 border-orange-500 text-orange-600 shadow-xxs'
-                      : 'bg-white border-gray-150 text-gray-600 hover:bg-gray-50'
+                      ? 'bg-brand-red-50 border-2 border-brand-red-500 text-brand-red-700'
+                      : 'bg-paper-0 border-2 border-paper-200 text-ink-600 hover:bg-paper-50'
                   }`}
                 >
                   {p.icon}
@@ -467,85 +482,82 @@ export const CheckoutPage = () => {
 
             {/* BRICK DE TARJETA INTERACTIVA DE MERCADOPAGO */}
             {metodoPago === 'MERCADOPAGO' && (
-              <div className="pt-4 border-t border-gray-50 space-y-5 animate-slideDown">
+              <div className="pt-5 border-t border-paper-200 space-y-6 animate-slideDown">
                 
                 {/* Visual Card Mock */}
-                <div className="w-full max-w-sm mx-auto aspect-video bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 rounded-2xl p-5 text-white flex flex-col justify-between shadow-lg relative overflow-hidden group select-none">
-                  {/* Chip & Brand */}
+                <div className="w-full max-w-sm mx-auto aspect-video bg-ink-900 rounded-xl p-5 text-paper-0 flex flex-col justify-between shadow-md relative overflow-hidden select-none">
                   <div className="flex items-center justify-between">
-                    <div className="w-10 h-7 bg-gradient-to-br from-amber-200 to-amber-400 rounded-md border border-amber-300 opacity-80 shadow-inner flex items-center justify-center"></div>
-                    <span className="font-black italic text-sm tracking-widest text-amber-500">
+                    <div className="w-10 h-7 bg-brand-yellow-400 rounded-md border border-brand-yellow-500 shadow-inner flex items-center justify-center"></div>
+                    <span className="font-black italic text-sm tracking-widest text-paper-300">
                       {cardBrand === 'VISA' ? 'VISA' : cardBrand === 'MASTERCARD' ? 'mastercard' : 'MOCK SANDBOX'}
                     </span>
                   </div>
 
-                  {/* Card Number */}
-                  <div className="text-lg font-mono tracking-widest text-slate-100 font-bold py-1">
+                  <div className="text-xl font-mono tracking-widest font-bold py-1">
                     {cardNumber || '•••• •••• •••• ••••'}
                   </div>
 
-                  {/* Card Holder & Expiry */}
-                  <div className="flex items-end justify-between font-mono text-[10px] tracking-wider text-slate-400 uppercase">
+                  <div className="flex items-end justify-between font-mono text-xs tracking-wider uppercase text-paper-300">
                     <div className="truncate pr-4 max-w-[200px]">
-                      <span className="block text-[8px] text-slate-500 font-sans font-bold">Titular:</span>
-                      <span className="font-bold text-slate-200 truncate">{cardName || 'JUAN PEREZ'}</span>
+                      <span className="block text-[10px] font-sans font-bold">Titular:</span>
+                      <span className="font-bold text-paper-0 truncate">{cardName || 'JUAN PEREZ'}</span>
                     </div>
                     <div className="shrink-0 text-right">
-                      <span className="block text-[8px] text-slate-500 font-sans font-bold">Vence:</span>
-                      <span className="font-bold text-slate-200">{cardExpiry || 'MM/YY'}</span>
+                      <span className="block text-[10px] font-sans font-bold">Vence:</span>
+                      <span className="font-bold text-paper-0">{cardExpiry || 'MM/YY'}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Formulario del Brick */}
-                <div className="space-y-3.5">
-                  <div className="flex items-center gap-2 text-xs text-slate-500 font-bold border-b border-gray-50 pb-1.5">
-                    <Lock size={12} className="text-green-600" />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-xs text-success-600 font-bold border-b border-paper-200 pb-2">
+                    <Lock size={14} />
                     <span>Tarjeta de Crédito o Débito (Simulador Sandbox MP)</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Número de Tarjeta:</label>
+                      <label className={labelBase}>Número de Tarjeta</label>
                       <input
                         type="text"
                         placeholder="4509 9501 •••• ••••"
                         value={cardNumber}
                         onChange={handleCardNumberChange}
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium"
+                        className={inputBase}
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Nombre Impreso:</label>
+                      <label className={labelBase}>Nombre Impreso</label>
                       <input
                         type="text"
                         placeholder="Ej: JUAN PEREZ"
                         value={cardName}
                         onChange={e => setCardName(e.target.value.toUpperCase())}
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium"
+                        className={inputBase}
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3.5">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Vencimiento (MM/YY):</label>
+                      <label className={labelBase}>Vencimiento (MM/YY)</label>
                       <input
                         type="text"
                         placeholder="MM/YY"
                         value={cardExpiry}
                         onChange={handleExpiryChange}
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium text-center"
+                        className={inputBase + " text-center"}
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Código de Seguridad (CVV):</label>
+                      <label className={labelBase}>Código CVV</label>
                       <input
                         type="password"
                         placeholder="•••"
                         value={cardCvv}
                         onChange={handleCvvChange}
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium text-center"
+                        className={inputBase + " text-center"}
                       />
                     </div>
                   </div>
@@ -554,21 +566,21 @@ export const CheckoutPage = () => {
             )}
 
             {metodoPago === 'EFECTIVO' && (
-              <div className="bg-orange-50/20 border border-orange-100/50 p-4 rounded-2xl text-[11px] text-orange-950 leading-relaxed font-medium animate-slideDown">
-                💵 Abonarás en **efectivo** al momento de recibir el pedido (o al retirarlo en nuestro local). Por favor, ten listo el monto exacto para agilizar la entrega.
+              <div className="bg-brand-yellow-50 border border-brand-yellow-200 p-4 rounded-md text-sm text-ink-900 leading-relaxed font-medium animate-slideDown mt-4">
+                💵 Abonarás en <strong>efectivo</strong> al momento de recibir el pedido (o al retirarlo en nuestro local). Por favor, ten listo el monto exacto para agilizar la entrega.
               </div>
             )}
 
             {metodoPago === 'TRANSFERENCIA' && (
-              <div className="bg-orange-50/20 border border-orange-100/50 p-4 rounded-2xl text-[11px] text-orange-950 space-y-1.5 leading-relaxed font-medium animate-slideDown">
-                <span className="block font-extrabold text-orange-900">Datos bancarios para transferencia:</span>
-                <p>
-                  **Banco**: Galicia<br />
-                  **CBU**: 0070001120000003429810<br />
-                  **Alias**: foodstore.utn.sdd<br />
-                  **Monto**: ${total.toFixed(2)}
+              <div className="bg-info-50 border border-info-200 p-4 rounded-md text-sm text-ink-900 space-y-2 leading-relaxed font-medium animate-slideDown mt-4">
+                <span className="block font-bold text-info-700">Datos bancarios para transferencia:</span>
+                <p className="text-xs">
+                  <strong>Banco</strong>: Galicia<br />
+                  <strong>CBU</strong>: 0070001120000003429810<br />
+                  <strong>Alias</strong>: foodstore.utn.sdd<br />
+                  <strong>Monto</strong>: ${total.toFixed(2)}
                 </p>
-                <p className="text-[10px] text-gray-400 italic pt-1 border-t border-orange-100/30">
+                <p className="text-[11px] text-info-600 italic pt-2 border-t border-info-200">
                   Una vez que confirmes el checkout, coordinaremos vía email o teléfono el envío de tu comprobante de transferencia.
                 </p>
               </div>
@@ -577,27 +589,26 @@ export const CheckoutPage = () => {
         </section>
 
         {/* COLUMNA DERECHA: RESUMEN DE COMPRA (1/3 de pantalla) */}
-        <aside className="bg-white border border-gray-100 rounded-3xl p-6 shadow-xs space-y-6">
-          <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-2 pb-3 border-b border-gray-50">
-            <ShoppingBag size={14} className="text-orange-500" />
+        <aside className={`${cardBase} p-6 space-y-6 sticky top-24`}>
+          <h3 className={eyebrow + " flex items-center gap-2 pb-3 border-b border-paper-200"}>
+            <ShoppingBag size={14} />
             <span>Resumen del Pedido</span>
           </h3>
 
-          {/* Listado de ítems en miniatura */}
-          <div className="space-y-3.5 max-h-64 overflow-y-auto pr-1">
+          <div className="space-y-4 max-h-64 overflow-y-auto pr-1">
             {cartItems.map(item => (
               <div key={item.cart_item_key} className="flex flex-col gap-1.5">
-                <div className="flex items-start justify-between gap-3 text-xs">
+                <div className="flex items-start justify-between gap-3 text-sm">
                   <div className="min-w-0 flex-1">
-                    <span className="font-extrabold text-gray-800 block truncate">{item.nombre}</span>
-                    <span className="text-[10px] text-gray-400 block font-medium">Cant: {item.cantidad} x ${Number(item.precio).toFixed(2)}</span>
+                    <span className="font-bold text-ink-900 block truncate">{item.nombre}</span>
+                    <span className="text-xs text-ink-500 block font-medium">Cant: {item.cantidad} x ${Number(item.precio).toFixed(2)}</span>
                   </div>
-                  <span className="font-black text-gray-700 shrink-0">${(item.precio * item.cantidad).toFixed(2)}</span>
+                  <span className="font-black text-ink-900 shrink-0">${(item.precio * item.cantidad).toFixed(2)}</span>
                 </div>
                 {item.exclusiones_nombres && item.exclusiones_nombres.length > 0 && (
-                  <div className="flex flex-wrap gap-0.5">
+                  <div className="flex flex-wrap gap-1 mt-1">
                     {item.exclusiones_nombres.map((name, i) => (
-                      <span key={i} className="text-[8px] font-extrabold text-gray-500 bg-gray-50 border border-gray-100 px-1 py-0.2 rounded-md shrink-0">
+                      <span key={i} className="inline-flex items-center gap-1 bg-danger-50 text-danger-700 border border-danger-100 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
                         🚫 Sin {name}
                       </span>
                     ))}
@@ -607,35 +618,34 @@ export const CheckoutPage = () => {
             ))}
           </div>
 
-          {/* Cuentas / Totales */}
-          <div className="border-t border-gray-50 pt-4 space-y-2">
-            <div className="flex justify-between text-xs text-gray-500 font-bold">
+          <div className="border-t border-paper-200 pt-4 space-y-2">
+            <div className="flex justify-between text-sm text-ink-500 font-semibold">
               <span>Subtotal:</span>
-              <span className="text-gray-800 font-extrabold">${subtotal.toFixed(2)}</span>
+              <span className="text-ink-900 font-bold">${subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-xs text-gray-500 font-bold">
+            <div className="flex justify-between text-sm text-ink-500 font-semibold">
               <span>Costo de envío:</span>
-              <span className="text-gray-800 font-extrabold">
+              <span className="text-ink-900 font-bold">
                 {costoEnvio === 0 ? '$0.00 (Retiro)' : `$${costoEnvio.toFixed(2)}`}
               </span>
             </div>
-            <div className="flex justify-between text-sm text-gray-800 font-black border-t border-gray-100 pt-3">
+            <div className="flex justify-between text-base text-ink-900 font-black border-t border-paper-200 pt-3">
               <span>Total:</span>
-              <span className="text-orange-600 font-black text-base">${total.toFixed(2)}</span>
+              <span className="text-brand-red-500 font-black tabular-nums text-2xl">${total.toFixed(2)}</span>
             </div>
           </div>
 
-          {/* Botón de Confirmar Compra */}
           <button
             onClick={handleConfirmPurchase}
-            className="w-full py-4.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold rounded-2xl text-xs shadow-md shadow-orange-500/10 active:scale-98 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            disabled={estadoLocal === 'cerrado'}
+            className="w-full bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold py-4 rounded-md shadow-brand hover:shadow-md transition-all duration-150 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer flex items-center justify-center gap-2 text-base"
           >
-            <Lock size={14} />
-            <span>Confirmar y Comprar</span>
+            <Lock size={18} />
+            <span>{estadoLocal === 'cerrado' ? 'Local Cerrado temporalmente' : 'Confirmar y Comprar'}</span>
           </button>
 
-          <div className="flex items-center justify-center gap-1.5 text-[9px] text-gray-400 font-bold uppercase tracking-wider">
-            <Lock size={10} className="text-green-600" />
+          <div className="flex items-center justify-center gap-1.5 text-[10px] text-ink-400 font-bold uppercase tracking-wider">
+            <Lock size={12} className="text-success-600" />
             <span>Encriptación Segura de Extremo a Extremo</span>
           </div>
         </aside>
@@ -643,24 +653,22 @@ export const CheckoutPage = () => {
 
       {/* MODAL MOCK DE CARGA / PROCESANDO TRANSACCIÓN */}
       {isProcessing && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-gray-950/85 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl p-8 text-center space-y-6 animate-scaleUp">
-            
-            {/* Spinner animado official MP style */}
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-ink-900/50 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-paper-0 rounded-xl max-w-sm w-full shadow-lg p-8 text-center space-y-6 animate-scaleUp border border-paper-200">
             <div className="relative w-16 h-16 mx-auto">
-              <div className="absolute inset-0 border-4 border-orange-100 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="absolute inset-0 border-4 border-paper-100 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-brand-red-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
 
-            <div className="space-y-1.5">
-              <span className="text-[10px] text-orange-600 tracking-widest uppercase font-black">Transacción Segura</span>
-              <h4 className="font-extrabold text-gray-800 text-sm">Procesando tu pedido</h4>
-              <p className="text-[10px] text-gray-400 font-bold px-2 py-1 bg-gray-50 border border-gray-100 rounded-xl leading-relaxed">
+            <div className="space-y-2">
+              <span className={eyebrow}>Transacción Segura</span>
+              <h4 className="font-bold text-ink-900 text-sm">Procesando tu pedido</h4>
+              <p className="text-[11px] text-ink-700 font-medium px-2 py-1.5 bg-paper-50 border border-paper-200 rounded-md leading-relaxed">
                 {processingStep}
               </p>
             </div>
 
-            <p className="text-[9px] text-slate-400 leading-relaxed max-w-xs mx-auto">
+            <p className="text-xs text-ink-500 leading-relaxed max-w-xs mx-auto">
               No cierres la ventana ni recargues el navegador. Estamos validando la pasarela bancaria e impactando stock de ingredientes.
             </p>
           </div>
@@ -670,86 +678,86 @@ export const CheckoutPage = () => {
       {/* MODAL RAPIDO AGREGAR DIRECCIÓN INLINE */}
       {isAddrModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div onClick={() => setIsAddrModalOpen(false)} className="fixed inset-0 bg-gray-950/60 backdrop-blur-xs"></div>
+          <div onClick={() => setIsAddrModalOpen(false)} className="fixed inset-0 bg-ink-900/50 backdrop-blur-sm"></div>
           <form 
             onSubmit={handleAddAddressInline}
-            className="relative bg-white rounded-3xl max-w-sm w-full shadow-2xl p-6 z-10 space-y-5 animate-scaleUp border border-gray-100"
+            className="relative bg-paper-0 rounded-xl max-w-sm w-full shadow-lg p-6 z-10 space-y-5 animate-scaleUp border border-paper-200"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="flex items-center justify-between pb-3 border-b border-paper-200">
               <div>
-                <span className="text-[10px] text-orange-600 tracking-widest uppercase font-black block">Dirección Express</span>
-                <h3 className="font-extrabold text-gray-800 text-sm mt-0.5">Agregar Dirección Rápida</h3>
+                <span className={eyebrow}>Dirección Express</span>
+                <h3 className="font-bold text-ink-900 text-sm mt-0.5">Agregar Dirección Rápida</h3>
               </div>
               <button 
                 type="button" 
                 onClick={() => setIsAddrModalOpen(false)} 
-                className="p-1.5 rounded-lg hover:bg-gray-50 text-gray-500 transition-colors cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-md bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors duration-150 cursor-pointer"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
             {addrError && (
-              <div className="bg-red-50 border border-red-100 text-red-700 text-[10px] px-3 py-2 rounded-xl flex items-center gap-1.5 font-medium">
-                <AlertCircle size={14} className="shrink-0" />
+              <div className="bg-danger-50 border border-danger-100 text-danger-700 text-sm px-4 py-3 rounded-md flex items-center gap-2 font-medium">
+                <AlertCircle size={16} className="shrink-0" />
                 <span>{addrError}</span>
               </div>
             )}
 
-            <div className="space-y-3.5">
+            <div className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
-                  <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Calle:</label>
+                  <label className={labelBase}>Calle</label>
                   <input
                     type="text" required placeholder="Ej: Av. Rivadavia" value={newCalle} onChange={e => setNewCalle(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium"
+                    className={inputBase}
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Número:</label>
+                  <label className={labelBase}>Número</label>
                   <input
                     type="text" required placeholder="Ej: 1420" value={newNumero} onChange={e => setNewNumero(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium"
+                    className={inputBase}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Piso (Opcional):</label>
+                  <label className={labelBase}>Piso (Opcional)</label>
                   <input
                     type="text" placeholder="Ej: 3" value={newPiso} onChange={e => setNewPiso(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium"
+                    className={inputBase}
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Depto (Opcional):</label>
+                  <label className={labelBase}>Depto (Opcional)</label>
                   <input
                     type="text" placeholder="Ej: B" value={newDepto} onChange={e => setNewDepto(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 font-medium"
+                    className={inputBase}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Indicaciones (Opcional):</label>
+                <label className={labelBase}>Indicaciones (Opcional)</label>
                 <textarea
                   placeholder="Ej: Tocar timbre 'B'..." rows={2} value={newIndicaciones} onChange={e => setNewIndicaciones(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-xs text-gray-800 placeholder-gray-400 leading-normal font-medium resize-none"
+                  className={inputBase + " resize-none"}
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-2 border-t border-gray-50 shrink-0">
+            <div className="flex items-center gap-3 pt-2 border-t border-paper-200 shrink-0">
               <button
                 type="button" onClick={() => setIsAddrModalOpen(false)}
-                className="flex-1 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold rounded-2xl text-[10px] transition-colors cursor-pointer"
+                className="flex-1 bg-paper-0 border border-paper-200 hover:bg-paper-50 hover:border-ink-900 text-ink-900 font-semibold px-4 py-2 rounded-md transition-all duration-150 cursor-pointer text-sm"
               >
                 Cancelar
               </button>
               <button
                 type="submit" disabled={createAddressMutation.isPending}
-                className="flex-1 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold rounded-2xl text-[10px] shadow-md shadow-orange-500/10 active:scale-98 transition-all cursor-pointer disabled:opacity-40"
+                className="flex-1 bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold px-5 py-2.5 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer text-sm"
               >
                 {createAddressMutation.isPending ? 'Guardando...' : 'Guardar'}
               </button>

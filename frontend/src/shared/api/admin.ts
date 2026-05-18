@@ -49,6 +49,16 @@ export interface Configuracion {
   updated_at: string;
 }
 
+const mapBackendUserToFrontend = (user: any): UsuarioAdmin => {
+  if (!user) return user;
+  return {
+    ...user,
+    roles: Array.isArray(user.roles) 
+      ? user.roles.map((r: any) => typeof r === 'string' ? r : r.codigo)
+      : []
+  };
+};
+
 export const adminApi = {
   getDashboard: async (): Promise<DashboardMetrics> => {
     const response = await api.get<DashboardMetrics>('/admin/dashboard');
@@ -62,13 +72,17 @@ export const adminApi = {
     rol?: string;
     active?: boolean;
   }): Promise<PaginatedUsuarios> => {
-    const response = await api.get<PaginatedUsuarios>('/usuarios', { params });
-    return response.data;
+    const response = await api.get<any>('/usuarios', { params });
+    const rawData = response.data;
+    return {
+      ...rawData,
+      items: (rawData.items || []).map(mapBackendUserToFrontend)
+    };
   },
 
   updateUsuario: async (id: number, data: UsuarioUpdatePayload): Promise<UsuarioAdmin> => {
-    const response = await api.put<UsuarioAdmin>(`/usuarios/${id}`, data);
-    return response.data;
+    const response = await api.put<any>(`/usuarios/${id}`, data);
+    return mapBackendUserToFrontend(response.data);
   },
 
   getConfiguraciones: async (): Promise<Configuracion[]> => {

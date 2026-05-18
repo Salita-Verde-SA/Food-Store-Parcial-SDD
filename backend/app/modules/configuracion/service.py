@@ -15,7 +15,7 @@ class ConfiguracionService:
         Retorna todas las configuraciones persistidas en el sistema.
         """
         async with UnitOfWork() as uow:
-            return uow.configuraciones.get_all()
+            return uow.configuraciones.list_all()
 
     async def get_configuracion_by_key(self, key: str) -> Configuracion:
         """

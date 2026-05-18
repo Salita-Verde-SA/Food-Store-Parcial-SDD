@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../shared/stores/authStore';
 import { api } from '../../shared/api/axios';
 import { useState } from 'react';
+import { AlertCircle, Lock } from 'lucide-react';
+import { Logo } from '../../shared/ui/Logo';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ export const LoginPage = () => {
       try {
         const response = await api.post('/auth/login', value);
         const { user, access_token, refresh_token } = response.data;
-        
+
         setAuth(user, access_token, refresh_token);
         navigate(from, { replace: true });
       } catch (err: any) {
@@ -36,18 +38,38 @@ export const LoginPage = () => {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Iniciar sesión
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Food Store · Gestión de Pedidos
+    <div className="min-h-screen bg-brand-red-500 flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Decorativo: arcos amarillos sutiles */}
+      <svg
+        aria-hidden="true"
+        className="absolute -top-24 -left-24 w-96 h-96 opacity-10 pointer-events-none"
+        viewBox="0 0 200 200"
+        fill="none"
+      >
+        <path d="M20 180 Q20 20 100 20 Q180 20 180 180" stroke="#FFC72C" strokeWidth="40" strokeLinecap="round"/>
+      </svg>
+      <svg
+        aria-hidden="true"
+        className="absolute -bottom-24 -right-24 w-96 h-96 opacity-10 pointer-events-none"
+        viewBox="0 0 200 200"
+        fill="none"
+      >
+        <path d="M20 180 Q20 20 100 20 Q180 20 180 180" stroke="#FFC72C" strokeWidth="40" strokeLinecap="round"/>
+      </svg>
+
+      <div className="relative bg-paper-0 rounded-2xl shadow-lg w-full max-w-md p-8 md:p-10 animate-scaleUp">
+        <div className="flex flex-col items-center text-center">
+          <Logo size="xl" variant="yellow" className="shadow-md" />
+          <h1 className="mt-6 text-3xl md:text-4xl font-extrabold text-ink-900 tracking-tight">
+            Iniciar Sesión
+          </h1>
+          <p className="mt-2 text-xs text-ink-500 font-medium uppercase tracking-widest">
+            Food Store · Panel de Gestión
           </p>
         </div>
+
         <form
-          className="mt-8 space-y-6"
+          className="mt-8 space-y-5"
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -55,64 +77,70 @@ export const LoginPage = () => {
           }}
         >
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-              {error}
+            <div className="bg-danger-50 border border-danger-100 text-danger-700 px-4 py-3 rounded-md text-sm flex items-center gap-2 font-medium animate-shake">
+              <AlertCircle size={18} className="shrink-0" />
+              <span>{error}</span>
             </div>
           )}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <form.Field
-              name="email"
-              children={(field) => (
-                <div>
-                  <label htmlFor={field.name} className="sr-only">
-                    Email
-                  </label>
-                  <input
-                    id={field.name}
-                    name={field.name}
-                    type="email"
-                    required
-                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                    placeholder="Email"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                </div>
-              )}
-            />
-            <form.Field
-              name="password"
-              children={(field) => (
-                <div>
-                  <label htmlFor={field.name} className="sr-only">
-                    Contraseña
-                  </label>
-                  <input
-                    id={field.name}
-                    name={field.name}
-                    type="password"
-                    required
-                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                    placeholder="Contraseña"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                </div>
-              )}
-            />
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
-            >
-              {isLoading ? 'Cargando...' : 'Entrar'}
-            </button>
-          </div>
+          <form.Field
+            name="email"
+            children={(field) => (
+              <div>
+                <label htmlFor={field.name} className="block text-xs font-bold uppercase tracking-wider text-ink-600 mb-1.5">
+                  Email
+                </label>
+                <input
+                  id={field.name}
+                  name={field.name}
+                  type="email"
+                  required
+                  autoComplete="email"
+                  className="w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-md text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/20 transition-colors duration-150"
+                  placeholder="tu@email.com"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+              </div>
+            )}
+          />
+
+          <form.Field
+            name="password"
+            children={(field) => (
+              <div>
+                <label htmlFor={field.name} className="block text-xs font-bold uppercase tracking-wider text-ink-600 mb-1.5">
+                  Contraseña
+                </label>
+                <input
+                  id={field.name}
+                  name={field.name}
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  className="w-full px-4 py-2.5 bg-paper-0 border border-paper-200 rounded-md text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:border-brand-red-500 focus:ring-2 focus:ring-brand-red-500/20 transition-colors duration-150"
+                  placeholder="••••••••"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+              </div>
+            )}
+          />
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-brand-red-500 hover:bg-brand-red-600 active:bg-brand-red-700 text-white font-bold py-3 rounded-md shadow-sm hover:shadow-md transition-all duration-150 active:scale-[0.98] disabled:bg-ink-200 disabled:text-ink-400 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
+          >
+            <Lock size={16} />
+            <span>{isLoading ? 'Cargando...' : 'Entrar'}</span>
+          </button>
+
+          <p className="text-center text-[11px] text-ink-400 font-medium pt-2">
+            Acceso restringido — solo personal autorizado
+          </p>
         </form>
       </div>
     </div>

@@ -150,9 +150,10 @@ class UsuarioService:
         """
         from sqlmodel import or_
         from app.modules.auth.model import Usuario, UsuarioRol
+        from sqlalchemy.orm import selectinload
 
         async with UnitOfWork() as uow:
-            query = select(Usuario).where(Usuario.deleted_at == None)
+            query = select(Usuario).where(Usuario.deleted_at == None).options(selectinload(Usuario.roles))
 
             if search:
                 query = query.where(
@@ -182,9 +183,13 @@ class UsuarioService:
         """
         Obtiene un usuario por ID.
         """
+        from app.modules.auth.model import Usuario
+        from sqlalchemy.orm import selectinload
+
         async with UnitOfWork() as uow:
-            usuario = uow.usuarios.get_by_id(usuario_id)
-            if not usuario or usuario.deleted_at is not None:
+            statement = select(Usuario).where(Usuario.id == usuario_id, Usuario.deleted_at == None).options(selectinload(Usuario.roles))
+            usuario = uow.session.exec(statement).first()
+            if not usuario:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Usuario no encontrado"
@@ -201,12 +206,14 @@ class UsuarioService:
         Actualiza el rol o el estado (activo/inactivo) de un usuario en el sistema.
         Al desactivar la cuenta, revoca de forma atómica todas sus sesiones y refresh tokens activos.
         """
-        from app.modules.auth.model import UsuarioRol
+        from app.modules.auth.model import UsuarioRol, Usuario
         from app.modules.auth.repository import AuthRepository
+        from sqlalchemy.orm import selectinload
 
         async with UnitOfWork() as uow:
-            usuario = uow.usuarios.get_by_id(usuario_id)
-            if not usuario or usuario.deleted_at is not None:
+            statement = select(Usuario).where(Usuario.id == usuario_id, Usuario.deleted_at == None).options(selectinload(Usuario.roles))
+            usuario = uow.session.exec(statement).first()
+            if not usuario:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Usuario no encontrado"
@@ -241,5 +248,9 @@ class UsuarioService:
                 uow.session.add(UsuarioRol(usuario_id=usuario_id, rol_codigo=rol_codigo))
 
             uow.usuarios.update(usuario)
-            return usuario
+            
+            # Recargar una copia fresca con el nuevo rol cargado ansiosamente
+            stmt_fresh = select(Usuario).where(Usuario.id == usuario_id).options(selectinload(Usuario.roles))
+            usuario_fresh = uow.session.exec(stmt_fresh).first()
+            return usuario_fresh
 

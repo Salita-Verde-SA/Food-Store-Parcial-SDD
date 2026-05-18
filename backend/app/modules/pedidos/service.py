@@ -77,6 +77,14 @@ class PedidoService:
         Todo de forma atómica bajo el Unit of Work (UoW).
         """
         async with UnitOfWork() as uow:
+            # 0. Validar estado del local (abierto/cerrado)
+            estado_local_config = uow.configuraciones.get_by_id("estado_local")
+            if estado_local_config and estado_local_config.value != "abierto":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="El restaurante se encuentra cerrado temporalmente y no acepta nuevos pedidos en este momento."
+                )
+
             # 1. Validar forma de pago
             forma_pago = uow.pagos.get_by_id(data.forma_pago_codigo)
             if not forma_pago or not forma_pago.habilitado:
@@ -104,7 +112,16 @@ class PedidoService:
                     f"CP {direccion.codigo_postal}"
                 ]
                 direccion_str = ", ".join(filter(None, parts))
-                costo_envio = Decimal("50.00")  # Costo fijo para envíos a domicilio
+                
+                # Obtener costo de envío dinámico de la base de datos
+                costo_envio_config = uow.configuraciones.get_by_id("costo_envio")
+                if costo_envio_config:
+                    try:
+                        costo_envio = Decimal(costo_envio_config.value)
+                    except Exception:
+                        costo_envio = Decimal("150.00")  # Fallback
+                else:
+                    costo_envio = Decimal("150.00")  # Fallback
 
             # 3. Inicializar Pedido
             pedido = Pedido(

@@ -35,3 +35,19 @@ async def update_configuracion(key: str, data: ConfiguracionUpdate):
     Actualiza el valor de una configuración global (Sólo Admin).
     """
     return await configuracion_service.update_configuracion(key, data)
+
+
+# Router público para que clientes consulten costos y estado
+public_router = APIRouter(
+    prefix="/configuracion",
+    tags=["Configuración Global"]
+)
+
+
+@public_router.get("", response_model=List[ConfiguracionRead])
+async def list_public_configuraciones():
+    """
+    Lista todos los parámetros de configuración global del sistema para consumo público (clientes).
+    """
+    return await configuracion_service.list_configuraciones()
+

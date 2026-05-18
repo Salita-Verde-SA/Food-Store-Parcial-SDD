@@ -86,7 +86,7 @@ from app.modules.usuarios.service import UsuarioService
 usuarios_admin_router = APIRouter(
     prefix="/usuarios",
     tags=["Admin - Usuarios"],
-    dependencies=[require_role(["ADMIN"])]
+    dependencies=[require_role(["ADMIN", "STOCK", "PEDIDOS"])]
 )
 
 usuario_service = UsuarioService()
@@ -101,7 +101,7 @@ async def list_usuarios(
     active: Optional[bool] = Query(None)
 ):
     """
-    Retorna la lista de usuarios registrados con paginación, filtros de rol/estado y buscador (Sólo Admin).
+    Retorna la lista de usuarios registrados con paginación, filtros de rol/estado y buscador (Sólo Admin/Staff).
     """
     items, total = await usuario_service.list_usuarios(
         page=page, limit=limit, search=search, rol=rol, active=active
@@ -112,17 +112,40 @@ async def list_usuarios(
 @usuarios_admin_router.get("/{id}", response_model=UsuarioReadAdmin)
 async def get_usuario(id: int):
     """
-    Obtiene el detalle administrativo de un usuario específico (Sólo Admin).
+    Obtiene el detalle administrativo de un usuario específico (Sólo Admin/Staff).
     """
     return await usuario_service.get_usuario_by_id(id)
 
 
 @usuarios_admin_router.put("/{id}", response_model=UsuarioReadAdmin)
-async def update_usuario(id: int, data: UsuarioUpdateAdmin):
+async def update_usuario(
+    id: int,
+    data: UsuarioUpdateAdmin,
+    current_user: Usuario = Depends(get_current_user)
+):
     """
     Actualiza el rol (RBAC) o estado de cuenta de un usuario.
-    Si se desactiva, de-autentica de forma atómica todas sus sesiones y revoca refresh tokens (Sólo Admin).
+    Si se desactiva, de-autentica de forma atómica todas sus sesiones y revoca refresh tokens (Sólo Admin/Staff autorizado).
     """
+    # 1. Obtener los roles del usuario logueado (updater)
+    updater_roles = [r.codigo for r in current_user.roles]
+    is_updater_admin = "ADMIN" in updater_roles
+
+    # 2. Obtener el usuario objetivo a modificar
+    target_user = await usuario_service.get_usuario_by_id(id)
+    target_roles = [r.codigo for r in target_user.roles]
+    is_target_admin = "ADMIN" in target_roles
+
+    # 3. Verificar si se está intentando promover a ADMIN o modificar a un ADMIN existente
+    is_new_role_admin = data.rol_codigo == "ADMIN"
+
+    from fastapi import HTTPException
+    if (is_target_admin or is_new_role_admin) and not is_updater_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para modificar a un administrador ni asignar el rol de ADMINISTRADOR."
+        )
+
     return await usuario_service.update_usuario_rol_y_estado(
         usuario_id=id, rol_codigo=data.rol_codigo, activo=data.activo
     )

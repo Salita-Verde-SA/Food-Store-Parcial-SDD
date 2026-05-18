@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Layers, 
-  ShoppingBag, 
-  Receipt, 
-  LogOut, 
-  Menu, 
+import {
+  LayoutDashboard,
+  Layers,
+  ShoppingBag,
+  Receipt,
+  LogOut,
+  Menu,
   X,
   Cookie,
   Users,
-  Settings
+  Settings,
+  Store
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
+import { useFeedback } from './FeedbackProvider';
+import { Logo } from './Logo';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -24,83 +27,53 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const { showConfirm } = useFeedback();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    if (window.confirm('¿Deseas cerrar tu sesión de Food Store?')) {
+  const handleLogout = async () => {
+    const ok = await showConfirm({
+      title: 'Cerrar sesión',
+      message: '¿Deseas cerrar tu sesión de Food Store?',
+      variant: 'warning',
+      confirmText: 'Cerrar sesión',
+    });
+    if (ok) {
       logout();
       navigate('/login');
     }
   };
 
-  // Definición de ítems con sus roles requeridos (RBAC)
   const navItems = [
-    { 
-      name: 'Dashboard', 
-      path: '/admin', 
-      icon: <LayoutDashboard size={20} />, 
-      roles: ['ADMIN', 'PEDIDOS'] 
-    },
-    { 
-      name: 'Categorías', 
-      path: '/admin/categorias', 
-      icon: <Layers size={20} />, 
-      roles: ['ADMIN', 'STOCK'] 
-    },
-    { 
-      name: 'Productos', 
-      path: '/admin/productos', 
-      icon: <ShoppingBag size={20} />, 
-      roles: ['ADMIN', 'STOCK'] 
-    },
-    { 
-      name: 'Ingredientes', 
-      path: '/admin/ingredientes', 
-      icon: <Cookie size={20} />, 
-      roles: ['ADMIN', 'STOCK'] 
-    },
-    { 
-      name: 'Pedidos', 
-      path: '/admin/pedidos', 
-      icon: <Receipt size={20} />, 
-      roles: ['ADMIN', 'PEDIDOS'] 
-    },
-    { 
-      name: 'Usuarios', 
-      path: '/admin/usuarios', 
-      icon: <Users size={20} />, 
-      roles: ['ADMIN'] 
-    },
-    { 
-      name: 'Configuración', 
-      path: '/admin/configuracion', 
-      icon: <Settings size={20} />, 
-      roles: ['ADMIN'] 
-    },
+    { name: 'Dashboard',    path: '/admin',                icon: <LayoutDashboard size={20} />, roles: ['ADMIN', 'PEDIDOS'] },
+    { name: 'Categorías',   path: '/admin/categorias',     icon: <Layers size={20} />,         roles: ['ADMIN', 'STOCK'] },
+    { name: 'Productos',    path: '/admin/productos',      icon: <ShoppingBag size={20} />,    roles: ['ADMIN', 'STOCK'] },
+    { name: 'Ingredientes', path: '/admin/ingredientes',   icon: <Cookie size={20} />,         roles: ['ADMIN', 'STOCK'] },
+    { name: 'Pedidos',      path: '/admin/pedidos',        icon: <Receipt size={20} />,        roles: ['ADMIN', 'PEDIDOS'] },
+    { name: 'Usuarios',     path: '/admin/usuarios',       icon: <Users size={20} />,          roles: ['ADMIN', 'STOCK', 'PEDIDOS'] },
+    { name: 'Configuración',path: '/admin/configuracion',  icon: <Settings size={20} />,       roles: ['ADMIN'] },
   ];
 
-  // Filtrado de navegación por roles (RBAC)
   const filteredNavItems = navItems.filter(item => {
     if (!user || !user.roles) return false;
     return user.roles.some((role: string) => item.roles.includes(role));
   });
 
+  const navLinkBase = 'flex items-center gap-3 px-4 py-3 rounded-md font-semibold text-sm transition-colors duration-150';
+  const navLinkActive = 'bg-brand-red-500 text-white shadow-sm';
+  const navLinkIdle = 'text-ink-600 hover:bg-paper-100 hover:text-ink-900';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/70 via-gray-50 to-amber-50/50 flex">
+    <div className="min-h-screen bg-paper-50 flex">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white/80 backdrop-blur-md border-r border-gray-100 p-5 shadow-sm shrink-0">
-        {/* Logo */}
+      <aside className="hidden md:flex flex-col w-64 bg-paper-0 border-r border-paper-200 p-5 shrink-0">
         <div className="flex items-center gap-3 px-2 py-4">
-          <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center text-white font-extrabold text-xl shadow-md">
-            FS
-          </div>
+          <Logo size="md" variant="red" />
           <div>
-            <span className="font-extrabold text-gray-800 text-lg">Food Store</span>
-            <span className="block text-[10px] text-gray-500 tracking-wider uppercase font-semibold">Admin Panel</span>
+            <span className="font-black text-ink-900 text-lg leading-tight block">Food Store</span>
+            <span className="block text-[10px] text-brand-red-500 tracking-widest uppercase font-black">Admin Panel</span>
           </div>
         </div>
 
-        {/* Navegación */}
         <nav className="mt-8 space-y-1.5 flex-1">
           {filteredNavItems.map((item, idx) => {
             const isActive = location.pathname === item.path;
@@ -108,11 +81,7 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
               <Link
                 key={idx}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                  isActive 
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/10'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                className={`${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`}
               >
                 {item.icon}
                 <span>{item.name}</span>
@@ -121,11 +90,17 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
           })}
         </nav>
 
-        {/* Footer Sidebar */}
-        <div className="border-t border-gray-100 pt-4 mt-auto">
+        <div className="border-t border-paper-200 pt-4 mt-auto space-y-1">
+          <Link
+            to="/"
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-md text-ink-600 hover:bg-brand-red-50 hover:text-brand-red-600 font-semibold text-sm transition-colors duration-150"
+          >
+            <Store size={20} />
+            <span>Volver a la Tienda</span>
+          </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 font-semibold text-sm transition-all duration-200 cursor-pointer"
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-md text-ink-600 hover:bg-danger-50 hover:text-danger-700 font-semibold text-sm transition-colors duration-150 cursor-pointer"
           >
             <LogOut size={20} />
             <span>Cerrar Sesión</span>
@@ -136,29 +111,27 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
       {/* Área del Contenido Principal */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white/50 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between shadow-sm">
-          {/* Botón menú mobile */}
+        <header className="bg-paper-0 border-b border-paper-200 px-6 py-4 flex items-center justify-between shadow-xs">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+            className="md:hidden w-10 h-10 flex items-center justify-center rounded-md bg-paper-0 border border-paper-200 hover:bg-paper-100 text-ink-700 transition-colors duration-150 cursor-pointer"
           >
             <Menu size={20} />
           </button>
 
           <div className="hidden sm:block">
-            <h1 className="text-xl font-extrabold text-gray-800">{title}</h1>
-            <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+            <h1 className="text-xl font-extrabold text-ink-900 tracking-tight">{title}</h1>
+            <p className="text-xs text-ink-500 mt-0.5">{subtitle}</p>
           </div>
 
-          {/* Perfil del Usuario */}
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <span className="block font-bold text-gray-800 text-sm">{user?.nombre} {user?.apellido}</span>
-              <span className="block text-[10px] bg-orange-100 text-orange-800 border border-orange-200 px-2.5 py-0.5 rounded-full mt-0.5 uppercase font-bold tracking-wider">
+              <span className="block font-bold text-ink-900 text-sm">{user?.nombre} {user?.apellido}</span>
+              <span className="inline-flex items-center mt-0.5 text-[10px] bg-brand-yellow-100 text-brand-yellow-800 border border-brand-yellow-200 px-2.5 py-0.5 rounded-full uppercase font-black tracking-wider">
                 {user?.roles && user.roles[0]}
               </span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-orange-100 border border-orange-200 flex items-center justify-center text-orange-600 font-bold shadow-sm">
+            <div className="w-10 h-10 rounded-md bg-brand-yellow-100 border border-brand-yellow-300 flex items-center justify-center text-ink-900 font-bold">
               {user ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}` : 'US'}
             </div>
           </div>
@@ -167,24 +140,20 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
         {/* Drawer de Menú Mobile */}
         {isMobileMenuOpen && (
           <div className="fixed inset-0 z-45 flex md:hidden animate-fadeIn">
-            {/* Backdrop */}
-            <div 
+            <div
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 bg-gray-900/60 backdrop-blur-xs"
+              className="fixed inset-0 bg-ink-900/40 backdrop-blur-sm"
             ></div>
-            
-            {/* Drawer */}
-            <aside className="relative flex flex-col w-64 bg-white p-5 shadow-2xl z-50">
+
+            <aside className="relative flex flex-col w-64 bg-paper-0 p-5 shadow-lg z-50 animate-slideInRight">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white font-black text-sm shadow">
-                    FS
-                  </div>
-                  <span className="font-extrabold text-gray-800">Food Store</span>
+                  <Logo size="sm" variant="red" />
+                  <span className="font-black text-ink-900">Food Store</span>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-1 rounded-lg hover:bg-gray-50 text-gray-500"
+                  className="p-1.5 rounded-md hover:bg-paper-100 text-ink-500 transition-colors cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -198,11 +167,7 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
                       key={idx}
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                        isActive 
-                          ? 'bg-orange-500 text-white shadow'
-                          : 'text-gray-600 hover:bg-gray-50'
-                      }`}
+                      className={`${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`}
                     >
                       {item.icon}
                       <span>{item.name}</span>
@@ -211,10 +176,18 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
                 })}
               </nav>
 
-              <div className="border-t border-gray-100 pt-4 mt-auto">
+              <div className="border-t border-paper-200 pt-4 mt-auto space-y-1">
+                <Link
+                  to="/"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-md text-ink-600 hover:bg-brand-red-50 hover:text-brand-red-600 font-semibold text-sm transition-colors duration-150"
+                >
+                  <Store size={20} />
+                  <span>Volver a la Tienda</span>
+                </Link>
                 <button
                   onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 font-semibold text-sm transition-all cursor-pointer"
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-md text-ink-600 hover:bg-danger-50 hover:text-danger-700 font-semibold text-sm transition-colors duration-150 cursor-pointer"
                 >
                   <LogOut size={20} />
                   <span>Cerrar Sesión</span>
@@ -224,12 +197,10 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
           </div>
         )}
 
-        {/* Contenido Principal de la Página */}
         <main className="flex-1 p-6 overflow-y-auto max-w-7xl w-full mx-auto space-y-6">
-          {/* Título móvil */}
           <div className="sm:hidden mb-2">
-            <h1 className="text-2xl font-black text-gray-800">{title}</h1>
-            <p className="text-xs text-gray-500">{subtitle}</p>
+            <h1 className="text-2xl font-extrabold text-ink-900 tracking-tight">{title}</h1>
+            <p className="text-xs text-ink-500">{subtitle}</p>
           </div>
 
           {children}

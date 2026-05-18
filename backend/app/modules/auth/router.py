@@ -20,7 +20,7 @@ def get_auth_service(session: Session = Depends(get_db)) -> AuthService:
 
 
 @router.post("/login", response_model=LoginResponse)
-@limiter.limit("5/15 minutes")
+@limiter.limit("100/15 minutes")
 def login(
     request: Request,
     login_data: LoginRequest,

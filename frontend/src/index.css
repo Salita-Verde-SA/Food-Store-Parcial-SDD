@@ -1,13 +1,132 @@
 @import "tailwindcss";
 
+/* Fuente principal: Inter (alternativa libre al Speedee de McDonald's) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+@theme {
+  /* ===== TIPOGRAFÍA ===== */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* ===== PALETA DE MARCA — Rojo McDonald's ===== */
+  --color-brand-red-50:  #FFF1F0;
+  --color-brand-red-100: #FFD9D5;
+  --color-brand-red-200: #FFB3AB;
+  --color-brand-red-300: #FF8A7E;
+  --color-brand-red-400: #F25444;
+  --color-brand-red-500: #DA291C;  /* Rojo oficial McDonald's */
+  --color-brand-red-600: #B71C12;
+  --color-brand-red-700: #8F140A;
+  --color-brand-red-800: #6E0F08;
+  --color-brand-red-900: #4A0905;
+
+  /* ===== PALETA DE MARCA — Amarillo Arcos Dorados ===== */
+  --color-brand-yellow-50:  #FFFBEB;
+  --color-brand-yellow-100: #FFF3C4;
+  --color-brand-yellow-200: #FFE58A;
+  --color-brand-yellow-300: #FFD45E;
+  --color-brand-yellow-400: #FFC72C;  /* Amarillo oficial McDonald's */
+  --color-brand-yellow-500: #FFB400;
+  --color-brand-yellow-600: #E09E00;
+  --color-brand-yellow-700: #B57E00;
+  --color-brand-yellow-800: #8A6000;
+  --color-brand-yellow-900: #5A3E00;
+
+  /* ===== NEUTRALES — Tinta (texto) ===== */
+  --color-ink-50:  #F7F7F7;
+  --color-ink-100: #E8E8E8;
+  --color-ink-200: #CFCFCF;
+  --color-ink-300: #A8A8A8;
+  --color-ink-400: #7A7A7A;
+  --color-ink-500: #595959;
+  --color-ink-600: #404040;
+  --color-ink-700: #292929;  /* Texto fuerte / botones secundarios sobre amarillo */
+  --color-ink-800: #1F1F1F;
+  --color-ink-900: #141414;  /* Headings principales */
+
+  /* ===== NEUTRALES — Papel (superficies) ===== */
+  --color-paper-0:   #FFFFFF;  /* Tarjetas, modales */
+  --color-paper-50:  #FAFAFA;  /* Fondo de página */
+  --color-paper-100: #F4F4F5;  /* Fondos sutiles, hover de filas */
+  --color-paper-200: #E7E7E9;  /* Bordes suaves */
+  --color-paper-300: #D4D4D8;  /* Bordes activos */
+
+  /* ===== SEMÁNTICOS — calibrados a la misma temperatura que la marca ===== */
+  --color-success-50:  #E8F5E9;
+  --color-success-100: #C8E6C9;
+  --color-success-500: #2E7D32;
+  --color-success-600: #256628;
+  --color-success-700: #1B501F;
+
+  --color-warning-50:  #FFF3E0;
+  --color-warning-100: #FFE0B2;
+  --color-warning-500: #F57C00;
+  --color-warning-600: #E66C00;
+  --color-warning-700: #C25A00;
+
+  --color-danger-50:  #FFEBEE;
+  --color-danger-100: #FFCDD2;
+  --color-danger-500: #C62828;   /* Familia roja para coherencia con marca */
+  --color-danger-600: #A52020;
+  --color-danger-700: #7F1818;
+
+  --color-info-50:  #E3F2FD;
+  --color-info-100: #BBDEFB;
+  --color-info-500: #1565C0;
+  --color-info-600: #104F9C;
+  --color-info-700: #0B3B78;
+
+  /* ===== RADIOS — Escala atómica ===== */
+  --radius-xs: 4px;    /* Badges chicos */
+  --radius-sm: 6px;    /* Inputs, chips */
+  --radius-md: 10px;   /* Botones */
+  --radius-lg: 14px;   /* Cards */
+  --radius-xl: 20px;   /* Modales, hero containers */
+  --radius-2xl: 28px;  /* Bloques destacados */
+
+  /* ===== SOMBRAS — sutiles ===== */
+  --shadow-xs: 0 1px 2px 0 rgba(20, 20, 20, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(20, 20, 20, 0.06), 0 1px 2px -1px rgba(20, 20, 20, 0.04);
+  --shadow-md: 0 4px 12px -2px rgba(20, 20, 20, 0.08), 0 2px 4px -2px rgba(20, 20, 20, 0.04);
+  --shadow-lg: 0 12px 24px -6px rgba(20, 20, 20, 0.12), 0 4px 8px -4px rgba(20, 20, 20, 0.06);
+  --shadow-brand: 0 8px 20px -6px rgba(218, 41, 28, 0.30);  /* Para CTAs primarios destacados */
+  --shadow-yellow: 0 8px 20px -6px rgba(255, 199, 44, 0.45);
+}
+
+/* ===== RESET / BASE ===== */
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light dark;
+  color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  margin: 0;
+  background-color: var(--color-paper-50);
+  color: var(--color-ink-900);
 }
 
 body {
-  margin: 0;
   min-height: 100vh;
+  font-family: var(--font-sans);
 }
+
+/* ===== UTILS GLOBALES ===== */
+*::selection {
+  background: var(--color-brand-yellow-400);
+  color: var(--color-ink-900);
+}
+
+/* Animación de pulso suave para skeletons y loading */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn { animation: fadeIn 0.25s ease-out; }
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+.animate-slideInRight { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); }

@@ -92,7 +92,7 @@ export const pedidosApi = {
   },
 
   avanzarEstado: async (id: number, data: AvanzarEstadoRequest): Promise<Pedido> => {
-    const response = await api.post<any>(`/pedidos/${id}/avanzar`, data);
+    const response = await api.patch<any>(`/pedidos/${id}/estado`, data);
     return mapBackendPedidoToFrontend(response.data);
   },
 
