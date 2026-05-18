@@ -40,3 +40,27 @@ export interface ProductoFiltros {
   limit?: number;
 }
 
+export interface CartItem {
+  cart_item_key: string; // Clave única compuesta: producto_id-[exclusiones ordenadas]
+  producto_id: number;
+  nombre: string;
+  precio: number;
+  cantidad: number;
+  imagen_url?: string | null;
+  exclusiones: number[]; // Array de IDs de ingredientes excluidos
+  exclusiones_nombres: string[]; // Nombres de los ingredientes excluidos para renderizado offline
+}
+
+export interface CartStore {
+  items: CartItem[];
+  addItem: (producto: Producto, cantidad: number, exclusiones: number[], exclusiones_nombres: string[]) => void;
+  updateQuantity: (cartItemKey: string, cantidad: number) => void;
+  removeItem: (cartItemKey: string) => void;
+  clearCart: () => void;
+  // Selectores y computados derivados
+  getSubtotal: (item: CartItem) => number;
+  getTotalItems: () => number;
+  getTotalPrice: () => number;
+}
+
+

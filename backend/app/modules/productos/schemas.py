@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, List
 from decimal import Decimal
 
@@ -16,6 +16,13 @@ class ProductoCreate(BaseModel):
     categoria_ids: List[int] = Field(default_factory=list, description="Categorías asociadas")
     ingrediente_ids: List[int] = Field(default_factory=list, description="Ingredientes que lo componen")
 
+    @field_validator("categoria_ids")
+    @classmethod
+    def validate_exactly_one_category(cls, v: List[int]) -> List[int]:
+        if len(v) != 1:
+            raise ValueError("El producto debe tener exactamente una categoría asociada.")
+        return v
+
 
 class ProductoUpdate(BaseModel):
     nombre: Optional[str] = Field(default=None, min_length=1, max_length=100)
@@ -26,6 +33,13 @@ class ProductoUpdate(BaseModel):
     imagen_url: Optional[str] = Field(default=None, max_length=255)
     categoria_ids: Optional[List[int]] = Field(default=None)
     ingrediente_ids: Optional[List[int]] = Field(default=None)
+
+    @field_validator("categoria_ids")
+    @classmethod
+    def validate_exactly_one_category_optional(cls, v: Optional[List[int]]) -> Optional[List[int]]:
+        if v is not None and len(v) != 1:
+            raise ValueError("El producto debe tener exactamente una categoría asociada.")
+        return v
 
 
 class ProductoStockUpdate(BaseModel):

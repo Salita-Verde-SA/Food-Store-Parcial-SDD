@@ -193,8 +193,8 @@ export const ProductosManager = () => {
       return;
     }
 
-    if (selectedCategoriaIds.length === 0) {
-      setFormError('Debe asociar el producto a al menos una categoría.');
+    if (selectedCategoriaIds.length !== 1) {
+      setFormError('Debe asociar el producto a exactamente una categoría.');
       return;
     }
 
@@ -224,7 +224,7 @@ export const ProductosManager = () => {
 
   const toggleCategory = (id: number) => {
     setSelectedCategoriaIds(prev => 
-      prev.includes(id) ? prev.filter(cId => cId !== id) : [...prev, id]
+      prev.includes(id) ? [] : [id]
     );
   };
 
@@ -571,9 +571,9 @@ export const ProductosManager = () => {
                 />
               </div>
 
-              {/* Multiselect - Categorías */}
+              {/* Selección - Categoría Única */}
               <div className="space-y-2">
-                <span className="block text-sm font-semibold text-gray-700">Categorías Relacionadas * (Mínimo 1)</span>
+                <span className="block text-sm font-semibold text-gray-700">Categoría del Producto * (Selecciona una)</span>
                 <div className="bg-gray-50/50 border border-gray-200 p-4 rounded-2xl flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                   {flatCategorias.map(cat => {
                     const isSelected = selectedCategoriaIds.includes(cat.id);

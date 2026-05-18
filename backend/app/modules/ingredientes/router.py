@@ -17,12 +17,10 @@ async def get_ingredientes(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=200),
     es_alergeno: Optional[bool] = Query(default=None),
-    service: IngredienteService = Depends(get_ingrediente_service),
-    current_user = require_role(["ADMIN", "STOCK"])
+    service: IngredienteService = Depends(get_ingrediente_service)
 ):
     """
-    Lista todos los ingredientes registrados.
-    Requiere rol ADMIN o STOCK.
+    Lista todos los ingredientes registrados de forma pública (útil para filtros de alérgenos).
     """
     return await service.list_ingredientes(skip=skip, limit=limit, es_alergeno=es_alergeno)
 

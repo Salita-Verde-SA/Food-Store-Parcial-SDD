@@ -1,5 +1,6 @@
 from sqlmodel import Session, select, func
 from typing import List, Tuple, Optional
+from sqlalchemy.orm import selectinload
 from app.core.repository import BaseRepository
 from app.modules.productos.model import Producto, ProductoCategoria, ProductoIngrediente
 
@@ -7,6 +8,15 @@ from app.modules.productos.model import Producto, ProductoCategoria, ProductoIng
 class ProductoRepository(BaseRepository[Producto]):
     def __init__(self, session: Session):
         super().__init__(Producto, session)
+
+    def get_by_id(self, id: int) -> Optional[Producto]:
+        """Obtiene un producto por ID con carga ansiosa de relaciones."""
+        query = select(Producto).where(Producto.id == id).where(Producto.deleted_at == None)
+        query = query.options(
+            selectinload(Producto.categorias),
+            selectinload(Producto.ingredientes)
+        )
+        return self.session.exec(query).first()
 
     def get_by_nombre(self, nombre: str, include_deleted: bool = False) -> Optional[Producto]:
         """Obtiene un producto por su nombre."""
@@ -64,8 +74,12 @@ class ProductoRepository(BaseRepository[Producto]):
         # Obtener total para metadatos de paginación
         total = self.session.exec(count_query).one()
 
-        # Ordenar por nombre, paginar y ejecutar
+        # Ordenar por nombre, paginar y ejecutar con carga ansiosa de colecciones
         query = query.order_by(Producto.nombre).offset(skip).limit(limit)
+        query = query.options(
+            selectinload(Producto.categorias),
+            selectinload(Producto.ingredientes)
+        )
         productos = self.session.exec(query).all()
 
         return productos, total

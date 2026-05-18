@@ -11,7 +11,10 @@ import {
   X,
   Sparkles,
   UtensilsCrossed,
-  Utensils
+  Utensils,
+  Plus,
+  Minus,
+  AlertTriangle
 } from 'lucide-react';
 
 import { productosApi } from '../shared/api/productos';
@@ -21,7 +24,16 @@ import { useCartStore } from '../shared/stores/cartStore';
 import type { Producto, CategoriaTree, Ingrediente } from '../shared/types';
 
 export const CatalogPage = () => {
-  const { items: cartItems, addItem, removeItem, clearCart } = useCartStore();
+  const { 
+    items: cartItems, 
+    addItem, 
+    updateQuantity, 
+    removeItem, 
+    clearCart,
+    getSubtotal,
+    getTotalItems,
+    getTotalPrice 
+  } = useCartStore();
 
   // Filtros reactivos locales
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,6 +44,12 @@ export const CatalogPage = () => {
   // Paginación reactiva
   const [page, setPage] = useState(0);
   const limit = 12;
+
+  // NUEVO: Estados para personalización interactiva
+  const [customizingProduct, setCustomizingProduct] = useState<Producto | null>(null);
+  const [exclusions, setExclusions] = useState<number[]>([]);
+
+
 
   // Query - Obtener categorías
   const { data: categoriasTree = [] } = useQuery<CategoriaTree[]>({
@@ -90,18 +108,18 @@ export const CatalogPage = () => {
     setPage(0); // Reiniciar paginación
   };
 
-  // Agregar al carrito con formato tipado
+  // Manejo de la acción de agregar al pedido
   const handleAddToCart = (prod: Producto) => {
-    addItem({
-      id: prod.id,
-      nombre: prod.nombre,
-      precio: Number(prod.precio),
-      cantidad: 1
-    });
+    if (prod.ingredientes.length === 0) {
+      // Regla de Negocio: Si el plato no tiene ingredientes, agregarlo directamente
+      addItem(prod, 1, [], []);
+      setIsCartOpen(true); // Abrir carrito para brindar feedback visual instantáneo
+    } else {
+      // Si el plato tiene ingredientes, abrir el modal de personalización
+      setCustomizingProduct(prod);
+      setExclusions([]); // Resetear exclusiones temporales
+    }
   };
-
-  // Calcular precio total del carrito
-  const totalCartPrice = cartItems.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/40 via-white to-amber-50/30 flex flex-col font-sans">
@@ -118,7 +136,7 @@ export const CatalogPage = () => {
           </div>
         </div>
 
-        {/* Floating Cart Button */}
+        {/* Floating Cart Button (Badge reactivo) */}
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setIsCartOpen(!isCartOpen)}
@@ -126,16 +144,16 @@ export const CatalogPage = () => {
           >
             <ShoppingCart size={18} />
             <span className="font-bold text-xs">Carrito</span>
-            {cartItems.length > 0 && (
+            {getTotalItems() > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-gray-900 border border-white text-white font-black text-[9px] w-5 h-5 rounded-full flex items-center justify-center animate-bounce">
-                {cartItems.length}
+                {getTotalItems()}
               </span>
             )}
           </button>
         </div>
       </header>
 
-      {/* HERO BANNER BANNER */}
+      {/* HERO BANNER */}
       <section className="bg-gradient-to-r from-gray-900 via-orange-950 to-gray-900 py-12 px-6 text-center relative overflow-hidden shrink-0">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:16px_16px]"></div>
         <div className="max-w-2xl mx-auto space-y-4 relative z-10">
@@ -360,7 +378,114 @@ export const CatalogPage = () => {
         </main>
       </div>
 
-      {/* DRAWER DEL CARRITO FLOTANTE */}
+      {/* MODAL DE PERSONALIZACIÓN DE INGREDIENTES */}
+      {customizingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+          {/* Backdrop */}
+          <div 
+            onClick={() => setCustomizingProduct(null)}
+            className="fixed inset-0 bg-gray-950/60 backdrop-blur-xs"
+          ></div>
+          
+          {/* Modal Container */}
+          <div className="relative bg-white rounded-3xl max-w-md w-full shadow-2xl p-6 z-10 space-y-6 animate-scaleUp border border-gray-100">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div>
+                <span className="text-[10px] text-orange-600 tracking-widest uppercase font-black block">Personalización</span>
+                <h3 className="font-extrabold text-gray-800 text-lg leading-tight mt-0.5">
+                  {customizingProduct.nombre}
+                </h3>
+              </div>
+              <button 
+                onClick={() => setCustomizingProduct(null)}
+                className="p-1.5 rounded-lg hover:bg-gray-50 text-gray-500 transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-orange-50/50 border border-orange-100/50 p-4 rounded-2xl flex gap-3">
+                <Sparkles className="text-orange-600 shrink-0 mt-0.5" size={18} />
+                <p className="text-[11px] text-orange-950 leading-relaxed font-medium">
+                  Desmarcá los ingredientes que **NO** querés que incluyamos en tu plato. Ideal para alérgenos y preferencias.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Ingredientes del plato:</span>
+                <div className="grid grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1">
+                  {customizingProduct.ingredientes.map(ing => {
+                    // Si está en el array de exclusiones, es que NO lo queremos (está desmarcado)
+                    const isExcluded = exclusions.includes(ing.id);
+                    return (
+                      <div 
+                        key={ing.id}
+                        onClick={() => {
+                          setExclusions(prev => 
+                            prev.includes(ing.id) 
+                              ? prev.filter(id => id !== ing.id) 
+                              : [...prev, ing.id]
+                          );
+                        }}
+                        className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer select-none transition-all duration-200 ${
+                          isExcluded 
+                            ? 'bg-gray-50/50 border-gray-200/50 text-gray-400 line-through' 
+                            : 'bg-white border-orange-100 hover:border-orange-200 text-gray-800 hover:bg-orange-50/10'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-5 h-5 rounded-lg flex items-center justify-center border transition-all ${
+                            isExcluded 
+                              ? 'border-gray-300 bg-gray-100' 
+                              : 'border-orange-500 bg-orange-500 text-white shadow-xs'
+                          }`}>
+                            {!isExcluded && <span className="font-bold text-[10px]">✓</span>}
+                          </div>
+                          <span className="text-xs font-bold">{ing.nombre}</span>
+                        </div>
+
+                        {ing.es_alergeno && (
+                          <span className="text-[8px] font-black uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
+                            ⚠️ Alérgeno
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+              <button
+                onClick={() => setCustomizingProduct(null)}
+                className="flex-1 py-3 border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold rounded-2xl text-xs transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  const excludedNames = customizingProduct.ingredientes
+                    .filter(ing => exclusions.includes(ing.id))
+                    .map(ing => ing.nombre);
+
+                  addItem(customizingProduct, 1, exclusions, excludedNames);
+                  setCustomizingProduct(null);
+                  setIsCartOpen(true); // Desplegar el Drawer del pedido para feedback visual
+                }}
+                className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold rounded-2xl text-xs shadow-md shadow-orange-500/10 active:scale-98 transition-all cursor-pointer"
+              >
+                Confirmar y Agregar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+      {/* DRAWER DEL CARRITO FLOTANTE (CartDrawer lateral premium) */}
       {isCartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end animate-fadeIn">
           {/* Backdrop */}
@@ -378,14 +503,14 @@ export const CatalogPage = () => {
               </h3>
               <button 
                 onClick={() => setIsCartOpen(false)}
-                className="p-1 rounded-lg hover:bg-gray-50 text-gray-500"
+                className="p-1 rounded-lg hover:bg-gray-50 text-gray-500 transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* Listado de items */}
-            <div className="flex-1 overflow-y-auto py-4 space-y-3">
+            {/* Listado de items con clave compuesta */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
               {cartItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center text-gray-400 gap-3">
                   <ShoppingCart size={48} className="stroke-1" />
@@ -395,25 +520,61 @@ export const CatalogPage = () => {
               ) : (
                 cartItems.map(item => (
                   <div 
-                    key={item.id} 
-                    className="bg-gray-50 border border-gray-100 p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-xxs"
+                    key={item.cart_item_key} 
+                    className="bg-gray-50 border border-gray-100 p-4 rounded-2xl flex flex-col gap-2.5 shadow-xxs"
                   >
-                    <div className="min-w-0 flex-1">
-                      <h5 className="font-extrabold text-gray-800 text-xs break-words">{item.nombre}</h5>
-                      <span className="text-[10px] text-gray-500 font-bold block mt-0.5">${item.precio} c/u</span>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h5 className="font-extrabold text-gray-800 text-xs break-words leading-tight">{item.nombre}</h5>
+                        <span className="text-[10px] text-gray-500 font-bold block mt-0.5">${Number(item.precio).toFixed(2)} c/u</span>
+                      </div>
+
+                      {/* Controles de cantidad interactivos +/- */}
+                      <div className="flex items-center gap-1.5 shrink-0 select-none">
+                        <button
+                          disabled={item.cantidad <= 1}
+                          onClick={() => updateQuantity(item.cart_item_key, item.cantidad - 1)}
+                          className="w-7 h-7 bg-white border border-gray-200 hover:border-orange-200 rounded-lg flex items-center justify-center text-gray-500 hover:text-orange-500 font-bold text-sm cursor-pointer shadow-xs active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-gray-500 disabled:hover:border-gray-200"
+                        >
+                          <Minus size={10} />
+                        </button>
+                        <span className="text-xs font-black text-gray-800 w-6 text-center">
+                          {item.cantidad}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.cart_item_key, item.cantidad + 1)}
+                          className="w-7 h-7 bg-white border border-gray-200 hover:border-orange-200 rounded-lg flex items-center justify-center text-gray-500 hover:text-orange-500 font-bold text-sm cursor-pointer shadow-xs active:scale-95 transition-all"
+                        >
+                          <Plus size={10} />
+                        </button>
+                        <button
+                          onClick={() => removeItem(item.cart_item_key)}
+                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors cursor-pointer ml-1"
+                          title="Quitar plato"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      <span className="text-xs font-black bg-white border border-gray-200 w-8 h-8 rounded-lg flex items-center justify-center text-gray-700">
-                        x{item.cantidad}
-                      </span>
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
-                        title="Quitar plato"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                    {/* Exclusiones de alérgenos / ingredientes del item */}
+                    {item.exclusiones_nombres && item.exclusiones_nombres.length > 0 && (
+                      <div className="flex flex-wrap gap-1 bg-white p-2 border border-gray-150 rounded-xl">
+                        {item.exclusiones_nombres.map((name, i) => (
+                          <span 
+                            key={i}
+                            className="inline-flex items-center gap-0.5 text-[8px] font-extrabold text-gray-500 bg-gray-50 border border-gray-150 px-1.5 py-0.5 rounded-md"
+                          >
+                            🚫 Sin {name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Subtotal del item */}
+                    <div className="flex items-center justify-between border-t border-gray-200/50 pt-2 text-[10px]">
+                      <span className="text-gray-400 font-bold">Subtotal:</span>
+                      <span className="font-black text-gray-700">${getSubtotal(item).toFixed(2)}</span>
                     </div>
                   </div>
                 ))
@@ -425,7 +586,7 @@ export const CatalogPage = () => {
               <div className="border-t border-gray-100 pt-4 mt-auto space-y-4 shrink-0">
                 <div className="flex items-center justify-between text-base font-black text-gray-800">
                   <span>Total:</span>
-                  <span className="text-orange-600">${totalCartPrice.toFixed(2)}</span>
+                  <span className="text-orange-600 font-black">${getTotalPrice().toFixed(2)}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -437,7 +598,7 @@ export const CatalogPage = () => {
                     <span>Vaciar</span>
                   </button>
                   <button
-                    onClick={() => alert('🛒 ¡Pedido Simulado!\nEn la próxima US integraremos MercadoPago para que puedas abonar de forma real.')}
+                    onClick={() => alert('🛒 ¡Pedido Simulado!\nEn la próxima US integraremos la creación de pedidos en el backend y los flujos transaccionales.')}
                     className="flex items-center justify-center bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-md transition-all cursor-pointer"
                   >
                     Confirmar

@@ -27,8 +27,12 @@ class Producto(SQLModel, table=True):
     deleted_at: Optional[datetime] = Field(default=None)
 
     # Relaciones multidimensionales M2M
-    categorias: List[Categoria] = Relationship(link_model=ProductoCategoria)
+    categorias: List[Categoria] = Relationship(
+        link_model=ProductoCategoria,
+        sa_relationship_kwargs={"lazy": "selectin"}
+    )
     ingredientes: List[Ingrediente] = Relationship(
         back_populates="productos",
-        link_model=ProductoIngrediente
+        link_model=ProductoIngrediente,
+        sa_relationship_kwargs={"lazy": "selectin"}
     )
