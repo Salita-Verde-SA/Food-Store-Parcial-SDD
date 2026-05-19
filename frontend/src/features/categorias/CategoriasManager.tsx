@@ -21,7 +21,7 @@ import { useFeedback } from '../../shared/ui/FeedbackProvider';
 
 export const CategoriasManager = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
+  const user = useAuthStore(state => state.user);
   const isManager = user?.roles.some((r: string) => ['ADMIN', 'STOCK'].includes(r)) ?? false;
   const isAdmin = user?.roles.some((r: string) => r === 'ADMIN') ?? false;
   const { showAlert, showConfirm } = useFeedback();

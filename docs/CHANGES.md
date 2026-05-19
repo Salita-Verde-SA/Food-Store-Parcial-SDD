@@ -190,7 +190,7 @@ Revisás la propuesta, la discutís, la ajustás si hace falta — y recién ent
 
 ---
 
-Última actualización: 2026-05-18
+Última actualización: 2026-05-19
 
 ## Ya realizado (archivado en OPSX)
 
@@ -204,5 +204,6 @@ Revisás la propuesta, la discutís, la ajustás si hace falta — y recién ent
 | 5 | us-005-pedidos | Gestión de Pedidos, Direcciones y FSM con stock | US-024 a US-028, US-035 a US-044, US-049 a US-052, US-069, US-070, US-071 | us-004-carrito | ✅ Hecho (archivado 2026-05-18) | [openspec/changes/archive/2026-05-18-us-005-pedidos/](file:///c:/Users/eduar/OneDrive/Escritorio/UTN%204/Gestion%20desarrollo%20de%20software/RepositorioBaseFoodStore-SDD/openspec/changes/archive/2026-05-18-us-005-pedidos/) |
 | 6 | us-006-pagos-mercadopago | Integración de MercadoPago Checkout API (Preferencia, Webhook IPN, Idempotencia y Reintentos) | US-029 a US-034, US-045 a US-048 | us-005-pedidos | ✅ Hecho (archivado 2026-05-18) | [openspec/changes/archive/2026-05-18-us-006-pagos-mercadopago/](file:///c:/Users/eduar/OneDrive/Escritorio/UTN%204/Gestion%20desarrollo%20de%20software/RepositorioBaseFoodStore-SDD/openspec/changes/archive/2026-05-18-us-006-pagos-mercadopago/) |
 | 7 | us-007-admin | Panel de administración completo, gestión de usuarios (RBAC), dashboard con gráficos de recharts y configuraciones key-value | US-053 a US-060, US-064, US-065 | us-006-pagos-mercadopago | ✅ Hecho (archivado 2026-05-18) | [openspec/changes/archive/2026-05-18-us-007-admin/](file:///c:/Users/jmlun/Desktop/parcial%20SDD/Food-Store-Parcial-SDD/openspec/changes/archive/2026-05-18-us-007-admin/) |
+| 8 | refactor-dashboard | Refactorización de infraestructura CSS, selectores atómicos de Zustand y compatibilidad con React Compiler en el Dashboard | US-053 a US-060, US-064, US-065 | us-007-admin | ✅ Hecho (archivado 2026-05-19) | [openspec/changes/archive/2026-05-19-refactor-dashboard/](file:///c:/Users/eduar/OneDrive/Escritorio/UTN%204/Gestion%20desarrollo%20de%20software/RepositorioBaseFoodStore-SDD/openspec/changes/archive/2026-05-19-refactor-dashboard/) |
 
 

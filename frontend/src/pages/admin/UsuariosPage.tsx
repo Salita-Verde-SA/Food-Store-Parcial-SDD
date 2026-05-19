@@ -29,7 +29,7 @@ const ROLES_LIST = [
 
 export const UsuariosPage = () => {
   const queryClient = useQueryClient();
-  const { user: currentUser } = useAuthStore();
+  const currentUser = useAuthStore(state => state.user);
   const { showAlert, showConfirm } = useFeedback();
 
   const [searchTerm, setSearchTerm] = useState('');

@@ -19,7 +19,7 @@ import { useFeedback } from '../../shared/ui/FeedbackProvider';
 
 export const IngredientesManager = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
+  const user = useAuthStore(state => state.user);
   const isManager = user?.roles.some((r: string) => ['ADMIN', 'STOCK'].includes(r)) ?? false;
   const { showAlert, showConfirm } = useFeedback();
 
