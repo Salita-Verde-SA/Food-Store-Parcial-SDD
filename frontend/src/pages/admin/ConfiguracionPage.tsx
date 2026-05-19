@@ -17,7 +17,9 @@ import { useFeedback } from '../../shared/ui/FeedbackProvider';
 
 export const ConfiguracionPage = () => {
   const queryClient = useQueryClient();
-  const { setConfigs, costoEnvio, estadoLocal } = useConfigStore();
+  const setConfigs = useConfigStore(state => state.setConfigs);
+  const costoEnvio = useConfigStore(state => state.costoEnvio);
+  const estadoLocal = useConfigStore(state => state.estadoLocal);
   const { showAlert } = useFeedback();
 
   const [localCost, setLocalCost] = useState<string>('0.00');
