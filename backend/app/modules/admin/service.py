@@ -30,7 +30,7 @@ class AdminService:
             pedidos_por_estado: Dict[str, int] = {estado: count for estado, count in estados_raw}
 
             # Asegurar estados clave inicializados en 0 por consistencia si no hay pedidos
-            for est in ["PENDIENTE", "CONFIRMADO", "PREPARACION", "ENVIO", "ENTREGADO", "CANCELADO"]:
+            for est in ["PENDIENTE", "CONFIRMADO", "EN_PREP", "EN_CAMINO", "ENTREGADO", "CANCELADO"]:
                 if est not in pedidos_por_estado:
                     pedidos_por_estado[est] = 0
 

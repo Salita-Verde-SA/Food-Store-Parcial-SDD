@@ -28,8 +28,8 @@ def seed_data():
         estados = [
             EstadoPedido(codigo="PENDIENTE", descripcion="Esperando pago/confirmación", orden=1),
             EstadoPedido(codigo="CONFIRMADO", descripcion="Pago recibido, listo para cocina", orden=2),
-            EstadoPedido(codigo="PREPARACION", descripcion="En cocina", orden=3),
-            EstadoPedido(codigo="ENVIO", descripcion="En camino", orden=4),
+            EstadoPedido(codigo="EN_PREP", descripcion="En cocina", orden=3),
+            EstadoPedido(codigo="EN_CAMINO", descripcion="En camino", orden=4),
             EstadoPedido(codigo="ENTREGADO", descripcion="Recibido por cliente", orden=5, es_terminal=True),
             EstadoPedido(codigo="CANCELADO", descripcion="Pedido anulado", orden=6, es_terminal=True),
         ]
