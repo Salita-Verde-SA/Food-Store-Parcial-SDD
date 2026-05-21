@@ -44,6 +44,15 @@ export const CocinaPage: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [now, setNow] = useState<Date>(new Date());
   
+  // Refs para evitar "stale closures" en los callbacks de los eventos SSE
+  const isAudioEnabledRef = useRef(false);
+  const isMutedRef = useRef(false);
+
+  useEffect(() => {
+    isAudioEnabledRef.current = isAudioEnabled;
+    isMutedRef.current = isMuted;
+  }, [isAudioEnabled, isMuted]);
+
   // Catálogo rápido
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -75,7 +84,8 @@ export const CocinaPage: React.FC = () => {
 
   // Reproducir sonido beep usando Web Audio API
   const playAlertSound = () => {
-    if (!isAudioEnabled || isMuted) return;
+    // Usamos los refs para evitar el bug de stale closure en los event listeners
+    if (!isAudioEnabledRef.current || isMutedRef.current) return;
     try {
       if (!audioCtxRef.current) {
         audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -111,6 +121,7 @@ export const CocinaPage: React.FC = () => {
     try {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       setIsAudioEnabled(true);
+      isAudioEnabledRef.current = true; // Forzar el ref sincrónicamente para que suene el test beep
       playAlertSound();
     } catch (e) {
       console.error("No se pudo iniciar Web Audio Context:", e);

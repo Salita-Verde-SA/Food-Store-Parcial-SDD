@@ -109,7 +109,7 @@ async def get_producto_detalle(
 async def list_productos_admin(
     include_deleted: bool = Query(default=False),
     service: ProductoService = Depends(get_producto_service),
-    current_user = require_role(["ADMIN", "STOCK"])
+    current_user = require_role(["ADMIN", "STOCK", "COCINA"])
 ):
     """
     Endpoint administrativo para listar todos los productos detallando stock cuantitativo exacto.

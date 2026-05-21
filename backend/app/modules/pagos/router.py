@@ -32,9 +32,21 @@ async def webhook_mercadopago(
 ):
     """
     Endpoint público que recibe las notificaciones de MercadoPago (Webhooks / IPN).
-    Responde HTTP 200 inmediatamente para evitar reintentos de MercadoPago y procesa en segundo plano.
+    - Sandbox/test: Procesa de forma síncrona para que el frontend pueda esperar la confirmación.
+    - Producción: Responde HTTP 200 inmediatamente y procesa en segundo plano.
     """
-    background_tasks.add_task(pago_service.procesar_webhook_ipn, payload)
+    # Detectar si es una simulación de sandbox (payment_id empieza con "test_")
+    payment_id = payload.get("data", {}).get("id", "")
+    is_sandbox = str(payment_id).startswith("test_")
+
+    if is_sandbox:
+        # Ejecutar de forma síncrona para que el pedido transite a CONFIRMADO
+        # antes de que el frontend continúe con el flujo de éxito
+        await pago_service.procesar_webhook_ipn(payload)
+    else:
+        # Producción: responder rápido a MercadoPago para evitar reintentos
+        background_tasks.add_task(pago_service.procesar_webhook_ipn, payload)
+
     return {"status": "ok"}
 
 

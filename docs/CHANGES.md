@@ -190,7 +190,7 @@ Revisás la propuesta, la discutís, la ajustás si hace falta — y recién ent
 
 ---
 
-Última actualización: 2026-05-19
+Última actualización: 2026-05-21
 
 ## Ya realizado (archivado en OPSX)
 
@@ -205,5 +205,6 @@ Revisás la propuesta, la discutís, la ajustás si hace falta — y recién ent
 | 6 | us-006-pagos-mercadopago | Integración de MercadoPago Checkout API (Preferencia, Webhook IPN, Idempotencia y Reintentos) | US-029 a US-034, US-045 a US-048 | us-005-pedidos | ✅ Hecho (archivado 2026-05-18) | [openspec/changes/archive/2026-05-18-us-006-pagos-mercadopago/](file:///c:/Users/eduar/OneDrive/Escritorio/UTN%204/Gestion%20desarrollo%20de%20software/RepositorioBaseFoodStore-SDD/openspec/changes/archive/2026-05-18-us-006-pagos-mercadopago/) |
 | 7 | us-007-admin | Panel de administración completo, gestión de usuarios (RBAC), dashboard con gráficos de recharts y configuraciones key-value | US-053 a US-060, US-064, US-065 | us-006-pagos-mercadopago | ✅ Hecho (archivado 2026-05-18) | [openspec/changes/archive/2026-05-18-us-007-admin/](file:///c:/Users/jmlun/Desktop/parcial%20SDD/Food-Store-Parcial-SDD/openspec/changes/archive/2026-05-18-us-007-admin/) |
 | 8 | refactor-dashboard | Refactorización de infraestructura CSS, selectores atómicos de Zustand y compatibilidad con React Compiler en el Dashboard | US-053 a US-060, US-064, US-065 | us-007-admin | ✅ Hecho (archivado 2026-05-19) | [openspec/changes/archive/2026-05-19-refactor-dashboard/](file:///c:/Users/eduar/OneDrive/Escritorio/UTN%204/Gestion%20desarrollo%20de%20software/RepositorioBaseFoodStore-SDD/openspec/changes/archive/2026-05-19-refactor-dashboard/) |
+| 9 | c-11-display-cocina | Kitchen Display System (KDS) con Server-Sent Events (SSE) y gestión de roles KDS | US-COCINA-01 a US-COCINA-07 | refactor-dashboard | ✅ Hecho (archivado 2026-05-21) | [openspec/changes/archive/2026-05-21-c-11-display-cocina/](file:///c:/Users/eduar/OneDrive/Escritorio/UTN%204/Gestion%20desarrollo%20de%20software/RepositorioBaseFoodStore-SDD/openspec/changes/archive/2026-05-21-c-11-display-cocina/) |
 
 
