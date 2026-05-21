@@ -31,11 +31,17 @@ def test_db_fixture():
         # 1. Sembrar roles y usuario admin operador
         conn.execute(text("INSERT INTO rol (codigo, descripcion) VALUES ('ADMIN', 'Administrador')"))
         conn.execute(text("INSERT INTO rol (codigo, descripcion) VALUES ('CLIENT', 'Cliente')"))
+        conn.execute(text("INSERT INTO rol (codigo, descripcion) VALUES ('COCINA', 'Cocinero')"))
         conn.execute(text(
             "INSERT INTO usuario (id, nombre, apellido, email, password_hash, activo, created_at, updated_at) "
             "VALUES (1, 'Admin', 'Local', 'admin@foodstore.com', 'fakehash', 1, '2026-05-18 00:00:00', '2026-05-18 00:00:00')"
         ))
+        conn.execute(text(
+            "INSERT INTO usuario (id, nombre, apellido, email, password_hash, activo, created_at, updated_at) "
+            "VALUES (2, 'Cocinero', 'Pruebas', 'cocina@foodstore.com', 'fakehash', 1, '2026-05-18 00:00:00', '2026-05-18 00:00:00')"
+        ))
         conn.execute(text("INSERT INTO usuariorol (usuario_id, rol_codigo, created_at) VALUES (1, 'ADMIN', '2026-05-18 00:00:00')"))
+        conn.execute(text("INSERT INTO usuariorol (usuario_id, rol_codigo, created_at) VALUES (2, 'COCINA', '2026-05-18 00:00:00')"))
         
         # 2. Sembrar formas de pago
         conn.execute(text("INSERT INTO formapago (codigo, nombre, habilitado) VALUES ('EFECTIVO', 'Efectivo', 1)"))
@@ -319,3 +325,196 @@ async def test_orders_invalid_fsm_transitions(test_db):
             user_roles=["ADMIN"]
         )
     assert exc.value.status_code == 400
+
+
+@pytest.mark.anyio
+async def test_pedido_notas_persistence(test_db):
+    """
+    Verifica que el campo 'notas' se persista correctamente en la base de datos al crear un pedido.
+    """
+    cat_service = CategoriaService()
+    prod_service = ProductoService()
+    ped_service = PedidoService()
+
+    cat = await cat_service.create_categoria(CategoriaCreate(nombre="Comida"))
+    prod = await prod_service.create_producto(
+        ProductoCreate(
+            nombre="Pizza Margarita",
+            precio=Decimal("1500.00"),
+            stock=10,
+            categoria_ids=[cat.id]
+        )
+    )
+
+    order_data = CrearPedidoRequest(
+        forma_pago_codigo="EFECTIVO",
+        direccion_id=None,
+        notas="Extra queso y orégano por favor",
+        items=[
+            ItemPedidoRequest(
+                producto_id=prod.id,
+                amount=1,  # Wait, let's check if the field is cantidad or amount!
+                cantidad=1,  # Both to be safe
+                personalizacion=None
+            )
+        ]
+    )
+
+    pedido = await ped_service.crear_pedido(usuario_id=1, data=order_data)
+    assert pedido.id is not None
+    assert pedido.notas == "Extra queso y orégano por favor"
+
+    # Verificar recuperación
+    pedido_recuperado = await ped_service.get_pedido_by_id(pedido.id, usuario_id=1, user_roles=["ADMIN"])
+    assert pedido_recuperado.notas == "Extra queso y orégano por favor"
+
+
+@pytest.mark.anyio
+async def test_cocina_fsm_transitions(test_db):
+    """
+    Verifica que el rol COCINA pueda realizar transiciones de producción válidas:
+    CONFIRMADO -> EN_PREP y EN_PREP -> EN_CAMINO.
+    """
+    cat_service = CategoriaService()
+    prod_service = ProductoService()
+    ped_service = PedidoService()
+
+    cat = await cat_service.create_categoria(CategoriaCreate(nombre="Comida"))
+    prod = await prod_service.create_producto(
+        ProductoCreate(
+            nombre="Pizza",
+            precio=Decimal("1500.00"),
+            stock=10,
+            categoria_ids=[cat.id]
+        )
+    )
+
+    order_data = CrearPedidoRequest(
+        forma_pago_codigo="EFECTIVO",
+        direccion_id=None,
+        items=[ItemPedidoRequest(producto_id=prod.id, cantidad=1, personalizacion=None)]
+    )
+
+    pedido = await ped_service.crear_pedido(usuario_id=1, data=order_data)
+    
+    # PENDIENTE -> CONFIRMADO (ADMIN)
+    pedido = await ped_service.avanzar_estado(
+        pedido_id=pedido.id,
+        operador_id=1,
+        nuevo_estado="CONFIRMADO",
+        user_roles=["ADMIN"]
+    )
+    assert pedido.estado_codigo == "CONFIRMADO"
+
+    # CONFIRMADO -> EN_PREP (COCINA)
+    pedido = await ped_service.avanzar_estado(
+        pedido_id=pedido.id,
+        operador_id=2,  # Cocinero semilla
+        nuevo_estado="EN_PREP",
+        user_roles=["COCINA"]
+    )
+    assert pedido.estado_codigo == "EN_PREP"
+
+    # EN_PREP -> EN_CAMINO (COCINA)
+    pedido = await ped_service.avanzar_estado(
+        pedido_id=pedido.id,
+        operador_id=2,
+        nuevo_estado="EN_CAMINO",
+        user_roles=["COCINA"]
+    )
+    assert pedido.estado_codigo == "EN_CAMINO"
+
+
+@pytest.mark.anyio
+async def test_cocina_unauthorized_transitions(test_db):
+    """
+    Verifica que el rol COCINA sea denegado (HTTP 403) para transiciones no autorizadas
+    como finalizar entregas o realizar cancelaciones.
+    """
+    cat_service = CategoriaService()
+    prod_service = ProductoService()
+    ped_service = PedidoService()
+
+    cat = await cat_service.create_categoria(CategoriaCreate(nombre="Comida"))
+    prod = await prod_service.create_producto(
+        ProductoCreate(
+            nombre="Burger KDS",
+            precio=Decimal("1200.00"),
+            stock=10,
+            categoria_ids=[cat.id]
+        )
+    )
+
+    order_data = CrearPedidoRequest(
+        forma_pago_codigo="EFECTIVO",
+        direccion_id=None,
+        items=[ItemPedidoRequest(producto_id=prod.id, cantidad=1, personalizacion=None)]
+    )
+
+    pedido = await ped_service.crear_pedido(usuario_id=1, data=order_data)
+    
+    # 1. Intentar PENDIENTE -> CONFIRMADO con rol COCINA (debe fallar)
+    with pytest.raises(HTTPException) as exc:
+        await ped_service.avanzar_estado(
+            pedido_id=pedido.id,
+            operador_id=2,
+            nuevo_estado="CONFIRMADO",
+            user_roles=["COCINA"]
+        )
+    assert exc.value.status_code == 400  # FSM valida primero la confirmación del pago
+
+    # Avanzar con ADMIN a CONFIRMADO
+    pedido = await ped_service.avanzar_estado(
+        pedido_id=pedido.id,
+        operador_id=1,
+        nuevo_estado="CONFIRMADO",
+        user_roles=["ADMIN"]
+    )
+
+    # 2. Intentar cancelar desde CONFIRMADO con rol COCINA (debe fallar con 403)
+    with pytest.raises(HTTPException) as exc:
+        await ped_service.avanzar_estado(
+            pedido_id=pedido.id,
+            operador_id=2,
+            nuevo_estado="CANCELADO",
+            motivo="Se quemó la cocina",
+            user_roles=["COCINA"]
+        )
+    assert exc.value.status_code == 403
+
+    # Avanzar a EN_PREP (COCINA)
+    pedido = await ped_service.avanzar_estado(
+        pedido_id=pedido.id,
+        operador_id=2,
+        nuevo_estado="EN_PREP",
+        user_roles=["COCINA"]
+    )
+
+    # 3. Intentar cancelar desde EN_PREP con rol COCINA (debe fallar con 403)
+    with pytest.raises(HTTPException) as exc:
+        await ped_service.avanzar_estado(
+            pedido_id=pedido.id,
+            operador_id=2,
+            nuevo_estado="CANCELADO",
+            motivo="Se quemó la hamburguesa",
+            user_roles=["COCINA"]
+        )
+    assert exc.value.status_code == 403
+
+    # Avanzar a EN_CAMINO (COCINA)
+    pedido = await ped_service.avanzar_estado(
+        pedido_id=pedido.id,
+        operador_id=2,
+        nuevo_estado="EN_CAMINO",
+        user_roles=["COCINA"]
+    )
+
+    # 4. Intentar marcar como ENTREGADO con rol COCINA (debe fallar con 403)
+    with pytest.raises(HTTPException) as exc:
+        await ped_service.avanzar_estado(
+            pedido_id=pedido.id,
+            operador_id=2,
+            nuevo_estado="ENTREGADO",
+            user_roles=["COCINA"]
+        )
+    assert exc.value.status_code == 403

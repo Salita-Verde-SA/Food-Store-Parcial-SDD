@@ -11,18 +11,28 @@ from app.core.security import ALGORITHM
 from app.modules.auth.model import Usuario
 from app.modules.usuarios.repository import UsuarioRepository
 
+from fastapi import Query
+
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/auth/login"
+    tokenUrl=f"{settings.API_V1_STR}/auth/login",
+    auto_error=False
 )
 
 
 def get_current_user(
     session: Session = Depends(get_db),
-    token: str = Depends(reusable_oauth2)
+    token: Optional[str] = Depends(reusable_oauth2),
+    token_query: Optional[str] = Query(default=None, alias="token")
 ) -> Usuario:
+    resolved_token = token or token_query
+    if not resolved_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token no proporcionado",
+        )
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[ALGORITHM]
+            resolved_token, settings.SECRET_KEY, algorithms=[ALGORITHM]
         )
         user_id: str = payload.get("sub")
         if user_id is None:

@@ -188,6 +188,23 @@ class ProductoService:
             updated = uow.productos.update(producto)
             return updated
 
+    async def patch_disponibilidad(self, producto_id: int, disponible: bool) -> Producto:
+        """
+        Permite modificar de forma atómica la disponibilidad del producto en el catálogo.
+        """
+        async with UnitOfWork() as uow:
+            producto = uow.productos.get_by_id(producto_id)
+            if not producto or producto.deleted_at is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Producto no encontrado"
+                )
+
+            producto.disponible = disponible
+            producto.updated_at = datetime.utcnow()
+            updated = uow.productos.update(producto)
+            return updated
+
     async def delete_producto(self, producto_id: int) -> None:
         """
         Aplica soft delete al producto.

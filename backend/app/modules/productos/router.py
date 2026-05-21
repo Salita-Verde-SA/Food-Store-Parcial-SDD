@@ -178,6 +178,24 @@ async def patch_producto_stock(
     return await service.patch_stock(id, data.cantidad)
 
 
+class ProductoDisponibilidadUpdate(BaseModel):
+    disponible: bool
+
+
+@router.patch("/{id}/disponibilidad", response_model=ProductoRead)
+async def patch_producto_disponibilidad(
+    id: int,
+    data: ProductoDisponibilidadUpdate,
+    service: ProductoService = Depends(get_producto_service),
+    current_user = require_role(["ADMIN", "STOCK", "COCINA"])
+):
+    """
+    Permite cambiar la disponibilidad (disponible flag) de un producto.
+    Requiere rol ADMIN, STOCK o COCINA.
+    """
+    return await service.patch_disponibilidad(id, data.disponible)
+
+
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_producto(
     id: int,

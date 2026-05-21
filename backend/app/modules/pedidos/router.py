@@ -101,7 +101,7 @@ async def create_pedido(
 async def avanzar_estado(
     id: int,
     data: AvanzarEstadoRequest,
-    current_user: Usuario = require_role(["ADMIN", "PEDIDOS"])
+    current_user: Usuario = require_role(["ADMIN", "PEDIDOS", "COCINA"])
 ):
     """
     Avanza el estado del pedido en la FSM (ciclo operativo de preparación y logística).

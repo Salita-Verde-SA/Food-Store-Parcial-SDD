@@ -50,6 +50,16 @@ class PedidoService:
             items = uow.session.exec(paginated_stmt).all()
             return items, total
 
+    async def list_cocina_pedidos(self) -> List[Pedido]:
+        """
+        Obtiene los pedidos activos para cocina (CONFIRMADO y EN_PREP) ordenados cronológicamente.
+        """
+        async with UnitOfWork() as uow:
+            statement = select(Pedido).where(
+                Pedido.estado_codigo.in_(["CONFIRMADO", "EN_PREP"])
+            ).order_by(Pedido.created_at.asc())
+            return uow.session.exec(statement).all()
+
     async def get_pedido_by_id(self, pedido_id: int, usuario_id: int, user_roles: List[str]) -> Pedido:
         """
         Obtiene el detalle de un pedido verificando estrictamente la pertenencia (CLIENT) o permisos (staff).
@@ -198,6 +208,7 @@ class PedidoService:
         """
         is_admin = "ADMIN" in user_roles
         is_pedidos = "PEDIDOS" in user_roles
+        is_cocina = "COCINA" in user_roles
 
         async with UnitOfWork() as uow:
             # 1. Bloqueo de fila del pedido para prevenir colisiones concurrentes
@@ -254,11 +265,18 @@ class PedidoService:
             else:
                 # Transiciones operativas (ej: EN_PREP, EN_CAMINO, ENTREGADO) requieren staff
                 if nuevo_estado in ["EN_PREP", "EN_CAMINO", "ENTREGADO"]:
-                    if not (is_admin or is_pedidos):
-                        raise HTTPException(
-                            status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Acción no autorizada para clientes"
-                        )
+                    if nuevo_estado in ["EN_PREP", "EN_CAMINO"]:
+                        if not (is_admin or is_pedidos or is_cocina):
+                            raise HTTPException(
+                                status_code=status.HTTP_403_FORBIDDEN,
+                                detail="Acción no autorizada. Requiere rol de administración o cocina."
+                            )
+                    elif nuevo_estado == "ENTREGADO":
+                        if not (is_admin or is_pedidos):
+                            raise HTTPException(
+                                status_code=status.HTTP_403_FORBIDDEN,
+                                detail="Acción no autorizada. Cocina no puede entregar pedidos."
+                            )
                 # PENDIENTE -> CONFIRMADO: Validado externamente por webhook o ADMIN
                 if nuevo_estado == "CONFIRMADO" and not (is_admin or operador_id == 0): # 0 = SISTEMA
                     raise HTTPException(
@@ -311,4 +329,23 @@ class PedidoService:
             )
             uow.historial_pedidos.create(historial)
 
-            return pedido
+        # Broadcast al KDS en tiempo real fuera de la transacción para seguridad
+        event_map = {
+            "CONFIRMADO": "PEDIDO_CONFIRMADO",
+            "EN_PREP": "PEDIDO_EN_PREPARACION",
+            "EN_CAMINO": "PEDIDO_EN_CAMINO",
+            "ENTREGADO": "PEDIDO_ENTREGADO",
+            "CANCELADO": "PEDIDO_CANCELADO"
+        }
+        if nuevo_estado in event_map:
+            from app.modules.cocina.service import cocina_service
+            payload = {
+                "id": pedido.id,
+                "estado_codigo": nuevo_estado,
+                "notas": pedido.notas,
+                "created_at": pedido.created_at.isoformat() if pedido.created_at else None,
+                "total": float(pedido.total) if pedido.total else 0.0
+            }
+            await cocina_service.broadcast_event(event_map[nuevo_estado], payload)
+
+        return pedido

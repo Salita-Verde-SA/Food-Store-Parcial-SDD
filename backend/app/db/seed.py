@@ -19,6 +19,7 @@ def seed_data():
             Rol(codigo="STOCK", descripcion="Gestor de productos e ingredientes"),
             Rol(codigo="PEDIDOS", descripcion="Gestor de despacho de pedidos"),
             Rol(codigo="CLIENTE", descripcion="Cliente final"),
+            Rol(codigo="COCINA", descripcion="Operador de cocina / KDS"),
         ]
         for rol in roles:
             if not session.get(Rol, rol.codigo):
@@ -62,6 +63,23 @@ def seed_data():
             
             # Asignar rol ADMIN
             session.add(UsuarioRol(usuario_id=admin.id, rol_codigo="ADMIN"))
+
+        # 4b. COOK USER
+        cook_email = "cocina@foodstore.com"
+        existing_cook = session.exec(select(Usuario).where(Usuario.email == cook_email)).first()
+        if not existing_cook:
+            cook = Usuario(
+                nombre="Cocinero",
+                apellido="Principal",
+                email=cook_email,
+                password_hash=bcrypt.hash("cocina123"),
+                activo=True
+            )
+            session.add(cook)
+            session.flush()
+            
+            # Asignar rol COCINA
+            session.add(UsuarioRol(usuario_id=cook.id, rol_codigo="COCINA"))
 
         # 5. CATEGORIAS BASICAS
         pizza_cat = session.exec(select(Categoria).where(Categoria.nombre == "Pizzas")).first()

@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   LogOut,
   ChevronDown,
+  Layers,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useFeedback } from './FeedbackProvider';
@@ -50,6 +51,7 @@ export const ClientHeader = ({
   };
 
   const isAdminLike = user?.roles?.some((r: string) => ['ADMIN', 'PEDIDOS', 'STOCK'].includes(r)) ?? false;
+  const isCocinaLike = user?.roles?.some((r: string) => ['ADMIN', 'PEDIDOS', 'COCINA'].includes(r)) ?? false;
 
   const eyebrowClass = 'text-[10px] sm:text-[11px] font-black uppercase tracking-[0.18em] text-brand-red-600';
   const menuItemBase =
@@ -179,6 +181,17 @@ export const ClientHeader = ({
                       >
                         <Briefcase size={15} />
                         <span>Panel Admin</span>
+                      </Link>
+                    )}
+
+                    {isCocinaLike && (
+                      <Link
+                        to="/cocina"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className={`${menuItemBase} text-ink-700 hover:bg-white/60 hover:text-ink-900`}
+                      >
+                        <Layers size={15} className="text-orange-500" />
+                        <span>Display Cocina</span>
                       </Link>
                     )}
 
