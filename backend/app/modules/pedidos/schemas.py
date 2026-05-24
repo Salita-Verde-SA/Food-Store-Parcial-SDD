@@ -13,6 +13,18 @@ class ItemPedidoRequest(BaseModel):
         default=None, description="IDs de ingredientes removidos (opcional)"
     )
 
+    @field_validator("personalizacion", mode="before")
+    @classmethod
+    def parse_personalizacion(cls, v):
+        if isinstance(v, str):
+            if not v.strip():
+                return []
+            try:
+                return [int(x) for x in v.split(",") if x.strip()]
+            except ValueError:
+                return []
+        return v
+
 
 class CrearPedidoRequest(BaseModel):
     items: List[ItemPedidoRequest] = Field(..., min_length=1, description="Mínimo 1 ítem requerido")

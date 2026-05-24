@@ -160,18 +160,24 @@ export const CheckoutPage = () => {
 
   const handleConfirmPurchase = async () => {
     setGlobalError(null);
+    const showError = (msg: string) => {
+      setGlobalError(msg);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      console.warn('Checkout error:', msg);
+    };
+
     if (estadoLocal === 'cerrado') {
-      return setGlobalError('El restaurante se encuentra cerrado temporalmente y no acepta nuevos pedidos en este momento.');
+      return showError('El restaurante se encuentra cerrado temporalmente y no acepta nuevos pedidos en este momento.');
     }
     if (tipoEntrega === 'DELIVERY' && !selectedDireccionId) {
-      return setGlobalError('Debes ingresar o seleccionar una dirección de envío');
+      return showError('Debes ingresar o seleccionar una dirección de envío');
     }
     if (metodoPago === 'MERCADOPAGO') {
       const cleanCard = cardNumber.replace(/\s/g, '');
-      if (cleanCard.length < 16) return setGlobalError('El número de tarjeta debe tener 16 dígitos');
-      if (!cardName.trim()) return setGlobalError('El nombre del titular es obligatorio');
-      if (cardExpiry.length < 5) return setGlobalError('La fecha de vencimiento es inválida (MM/YY)');
-      if (cardCvv.length < 3) return setGlobalError('El código CVV es obligatorio');
+      if (cleanCard.length < 16) return showError('El número de tarjeta debe tener 16 dígitos');
+      if (!cardName.trim()) return showError('El nombre del titular es obligatorio');
+      if (cardExpiry.length < 5) return showError('La fecha de vencimiento es inválida (MM/YY)');
+      if (cardCvv.length < 3) return showError('El código CVV es obligatorio');
     }
 
     setIsProcessing(true);
@@ -183,7 +189,7 @@ export const CheckoutPage = () => {
         items: cartItems.map(item => ({
           producto_id: item.producto_id,
           cantidad: item.cantidad,
-          personalizacion: item.exclusiones.length > 0 ? item.exclusiones.map(Number) : null,
+          personalizacion: item.exclusiones && item.exclusiones.length > 0 ? item.exclusiones.map(Number) : null,
         })),
         forma_pago_codigo,
         direccion_id: tipoEntrega === 'DELIVERY' ? selectedDireccionId : null,
@@ -215,7 +221,9 @@ export const CheckoutPage = () => {
       }
     } catch (err: any) {
       setIsProcessing(false);
-      setGlobalError(extractErrorMessage(err));
+      const errMsg = extractErrorMessage(err);
+      showError(errMsg);
+      console.error('Error in handleConfirmPurchase:', err);
     }
   };
 
