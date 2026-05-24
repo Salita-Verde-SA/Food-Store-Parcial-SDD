@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import List, Optional
 from decimal import Decimal
 from datetime import datetime
@@ -39,6 +39,18 @@ class DetallePedidoRead(BaseModel):
     personalizacion: Optional[List[int]] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("personalizacion", mode="before")
+    @classmethod
+    def parse_personalizacion(cls, v):
+        if isinstance(v, str):
+            if not v.strip():
+                return []
+            try:
+                return [int(x) for x in v.split(",") if x.strip()]
+            except ValueError:
+                return []
+        return v
 
 
 class HistorialEstadoPedidoRead(BaseModel):

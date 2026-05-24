@@ -231,6 +231,9 @@ class PagoService:
         except ValueError:
             return
 
+        # Variable para saber si debemos avanzar estado
+        debe_avanzar = False
+
         # Transacción atómica en Base de Datos (UoW)
         async with UnitOfWork() as uow:
             # Bloqueo de fila del Pago para evitar condiciones de carrera (idempotencia RN-PA02)
@@ -249,6 +252,8 @@ class PagoService:
                     payment_id=str(payment_id)
                 )
                 uow.pagos.create(pago)
+                if mp_status == "approved":
+                    debe_avanzar = True
             else:
                 # Idempotencia: Si ya está aprobado, salimos de inmediato sin realizar operaciones extras
                 if pago.status == "approved":
@@ -259,13 +264,16 @@ class PagoService:
                 pago.payment_id = str(payment_id)
                 pago.updated_at = datetime.utcnow()
                 uow.pagos.update(pago)
+                if mp_status == "approved":
+                    debe_avanzar = True
 
-            # Si el pago es aprobado, avanzamos el pedido en la FSM a CONFIRMADO (RN-PA05 / RN-FS03)
-            if mp_status == "approved":
-                await self.pedido_service.avanzar_estado(
-                    pedido_id=pedido_id,
-                    operador_id=0,  # 0 = SISTEMA (Webhook MercadoPago)
-                    nuevo_estado="CONFIRMADO",
-                    motivo=f"Pago acreditado vía MercadoPago. Transacción ID: {payment_id}",
-                    user_roles=["ADMIN"]  # Rol inyectado para autorizar la acción automática
-                )
+        # Si el pago es aprobado, avanzamos el pedido en la FSM a CONFIRMADO (RN-PA05 / RN-FS03)
+        # IMPORTANTE: Se ejecuta FUERA del bloque UoW anterior para evitar deadlocks de transacciones anidadas
+        if debe_avanzar:
+            await self.pedido_service.avanzar_estado(
+                pedido_id=pedido_id,
+                operador_id=0,  # 0 = SISTEMA (Webhook MercadoPago)
+                nuevo_estado="CONFIRMADO",
+                motivo=f"Pago acreditado vía MercadoPago. Transacción ID: {payment_id}",
+                user_roles=["ADMIN"]  # Rol inyectado para autorizar la acción automática
+            )

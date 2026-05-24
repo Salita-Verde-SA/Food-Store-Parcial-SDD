@@ -16,6 +16,7 @@ from app.modules.pedidos.router import router as pedidos_router
 from app.modules.pagos.router import router as pagos_router
 from app.modules.configuracion.router import router as configuracion_router, public_router as public_configuracion_router
 from app.modules.admin.router import router as admin_router
+from app.modules.cocina.router import router as cocina_router
 
 def create_application() -> FastAPI:
     application = FastAPI(
@@ -60,6 +61,7 @@ def create_application() -> FastAPI:
     application.include_router(usuarios_router, prefix=settings.API_V1_STR)
     application.include_router(usuarios_admin_router, prefix=settings.API_V1_STR)
     application.include_router(admin_router, prefix=settings.API_V1_STR)
+    application.include_router(cocina_router, prefix=settings.API_V1_STR)
     application.include_router(pedidos_router, prefix=settings.API_V1_STR)
     application.include_router(pagos_router, prefix=settings.API_V1_STR)
     application.include_router(configuracion_router, prefix=settings.API_V1_STR)

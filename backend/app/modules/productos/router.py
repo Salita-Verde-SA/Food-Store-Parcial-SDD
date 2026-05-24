@@ -109,7 +109,7 @@ async def get_producto_detalle(
 async def list_productos_admin(
     include_deleted: bool = Query(default=False),
     service: ProductoService = Depends(get_producto_service),
-    current_user = require_role(["ADMIN", "STOCK"])
+    current_user = require_role(["ADMIN", "STOCK", "COCINA"])
 ):
     """
     Endpoint administrativo para listar todos los productos detallando stock cuantitativo exacto.
@@ -176,6 +176,24 @@ async def patch_producto_stock(
     Requiere rol ADMIN o STOCK.
     """
     return await service.patch_stock(id, data.cantidad)
+
+
+class ProductoDisponibilidadUpdate(BaseModel):
+    disponible: bool
+
+
+@router.patch("/{id}/disponibilidad", response_model=ProductoRead)
+async def patch_producto_disponibilidad(
+    id: int,
+    data: ProductoDisponibilidadUpdate,
+    service: ProductoService = Depends(get_producto_service),
+    current_user = require_role(["ADMIN", "STOCK", "COCINA"])
+):
+    """
+    Permite cambiar la disponibilidad (disponible flag) de un producto.
+    Requiere rol ADMIN, STOCK o COCINA.
+    """
+    return await service.patch_disponibilidad(id, data.disponible)
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)

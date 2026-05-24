@@ -12,6 +12,7 @@ import { CatalogPage } from '../pages/CatalogPage';
 import { AddressesPage } from '../pages/AddressesPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
 import { OrdersPage } from '../pages/OrdersPage';
+import { CocinaPage } from '../pages/cocina/CocinaPage';
 
 export const router = createBrowserRouter([
   {
@@ -73,6 +74,16 @@ export const router = createBrowserRouter([
       {
         path: '/admin/pedidos',
         element: <AdminPedidosPage />,
+      },
+    ],
+  },
+  // Rutas protegidas para admin, pedidos y cocina (KDS)
+  {
+    element: <ProtectedRoute allowedRoles={['ADMIN', 'PEDIDOS', 'COCINA']} />,
+    children: [
+      {
+        path: '/cocina',
+        element: <CocinaPage />,
       },
     ],
   },

@@ -28,6 +28,7 @@ class Pedido(SQLModel, table=True):
     direccion_snapshot: str = Field(sa_column=Column(Text, nullable=False))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    notas: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
 
     # Relaciones
     usuario: Usuario = Relationship()
