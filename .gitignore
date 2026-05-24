@@ -40,3 +40,8 @@ logs/
 # Agents CLI cache
 .agents/
 
+# Bases de Datos
+*.db
+*.sqlite
+*.sqlite3
+backend/test.db
